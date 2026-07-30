@@ -1,16 +1,120 @@
-# React + Vite
+## Project Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This project is a prototype web application for a university Open Day event.
 
-Currently, two official plugins are available:
+Visitors scan a QR code to join a live quiz game on their phones, while the game is displayed on a large screen. An administrator manages questions, controls the game flow, and announces winners.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This is a prototype intended for demonstration purposes rather than a production-ready application.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Main Features
 
-## Expanding the Oxlint configuration
+## Admin Panel
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+* Create, edit and delete quiz games
+* Manage questions and answers
+* Start and stop game sessions
+* Display QR code for joining
+* Control game flow
+* View connected players
+* View leaderboard
+* Announce winner
+
+---
+
+## Player
+
+* Join via QR Code
+* Enter player name
+* Wait in lobby
+* Answer quiz questions
+* Receive score updates
+* View leaderboard
+* Winner can choose one of three mystery prize boxes
+
+---
+
+## Display Screen
+
+Designed for a projector or large monitor.
+
+Shows:
+
+* Lobby
+* QR Code
+* Player count
+* Current question
+* Countdown timer
+* Live leaderboard
+* Winner screen
+* Three mystery prize boxes
+
+---
+
+# Prize Boxes
+
+When the winner is announced:
+
+* Display three mystery boxes.
+* The position of each prize should be randomized every game.
+* The winner selects one box.
+* Reveal the selected prize with a simple animation.
+
+Example prizes:
+
+* Course Magnet
+* Personalized FabLab Sticker
+* 3D Printed Figure
+
+---
+
+# General Rules
+
+* Keep the UI clean and minimal.
+* White background with university-style design.
+* Responsive for desktop and mobile.
+* Prioritize readability over visual effects.
+* Keep animations lightweight.
+
+---
+
+# State Management
+
+Keep state simple.
+
+Only introduce additional complexity when necessary.
+
+---
+
+# Performance
+
+Because this is a prototype:
+
+* Simplicity is preferred over optimization.
+* Avoid unnecessary abstractions.
+* Do not over-engineer.
+
+---
+
+# Deliverables
+
+The final project should include:
+
+* Source code
+* Installation guide
+* Usage guide
+* Architecture documentation
+
+---
+
+# Development Philosophy
+
+This project values:
+
+* simplicity
+* maintainability
+* clean architecture
+* readable code
+
+When multiple implementations are possible, choose the simplest solution that satisfies the requirements.

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Claude Code (ghi chú nội bộ, không đẩy lên GitHub)
+CLAUDE.md
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
