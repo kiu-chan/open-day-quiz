@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Check,
   ListChecks,
+  LoaderCircle,
   Plus,
   Timer,
   TriangleAlert,
@@ -12,8 +13,78 @@ import AdminShell from './components/AdminShell.jsx'
 import Panel from './components/Panel.jsx'
 import QuestionEditor from './components/QuestionEditor.jsx'
 
+/**
+ * Whether the last change reached the server. Saving is a network round trip
+ * now, so this has to be shown rather than assumed — the icon carries the
+ * meaning, the colour never does.
+ */
+const SAVE_BADGES = {
+  saving: { Icon: LoaderCircle, label: 'Saving…', iconClass: 'animate-spin' },
+  saved: { Icon: Check, label: 'Saved', iconClass: '' },
+  error: {
+    Icon: TriangleAlert,
+    label: 'Not saved — the server did not answer',
+    iconClass: '',
+  },
+}
+
+function SaveBadge({ state }) {
+  const { Icon, label, iconClass } = SAVE_BADGES[state]
+  // A failed save is marked by a heavier dashed border, not by a colour.
+  const border =
+    state === 'error' ? 'border-accent-border border-2 border-dashed' : 'border-border'
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs ${border}`}
+    >
+      <Icon className={`size-4 shrink-0 ${iconClass}`} aria-label={label} />
+      {label}
+    </span>
+  )
+}
+
 function AdminQuizEditorPage({ quizId }) {
   const editor = useQuizEditorController(quizId)
+
+  if (editor.loadError) {
+    return (
+      <AdminShell current="list" title="Cannot reach the server">
+        <Panel dashed className="items-start">
+          <p className="flex items-center gap-2 text-base">
+            <TriangleAlert className="size-5 shrink-0" aria-label="Error" />
+            {editor.loadError}
+          </p>
+          <p className="text-sm opacity-70">
+            The quizzes live on the game server — check that it is running, then
+            reload the page.
+          </p>
+          <a
+            href={`#${ROUTES.ADMIN}`}
+            className="inline-flex items-center gap-2 no-underline"
+          >
+            <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+            Back to the quiz list
+          </a>
+        </Panel>
+      </AdminShell>
+    )
+  }
+
+  if (editor.isLoading) {
+    return (
+      <AdminShell current="list" title="Edit quiz">
+        <Panel dashed className="items-center py-14 text-center">
+          <LoaderCircle
+            className="text-text-h size-10 animate-spin"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+          <p className="text-base">Loading…</p>
+        </Panel>
+      </AdminShell>
+    )
+  }
 
   if (editor.notFound) {
     return (
@@ -40,13 +111,8 @@ function AdminQuizEditorPage({ quizId }) {
     <AdminShell
       current="list"
       title="Edit quiz"
-      subtitle="Every change is saved on this machine right away"
-      actions={
-        <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs">
-          <Check className="size-4 shrink-0" aria-hidden="true" />
-          Saved
-        </span>
-      }
+      subtitle="Every change is saved on the server right away"
+      actions={<SaveBadge state={editor.saveState} />}
     >
       <Panel>
         <label className="flex flex-col gap-2 text-sm" htmlFor="quiz-title">

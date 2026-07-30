@@ -132,9 +132,13 @@ the networking section of [installation.md](installation.md).
 also cancels the old one.
 
 **Wiping all data.** The game: press **End session**, or restart the server. The
-quizzes: delete the `open-day-quiz:quizzes` key from the admin machine's
-`localStorage`. On visitors' phones, the identity lives under the key
+quizzes: delete `server/quizzes.json` and start the server again — it comes back
+with the sample set. On visitors' phones, the identity lives under the key
 `open-day-quiz:player`.
+
+**Backing the quizzes up.** They are all in `server/quizzes.json`; copy that one
+file. It is gitignored, so it is not carried along by a `git pull` on another
+machine.
 
 ## Current limitations
 

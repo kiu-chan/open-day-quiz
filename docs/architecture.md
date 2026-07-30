@@ -39,7 +39,9 @@ boundary; everything else in `models/` stays pure.
 server/                            # game server, node:http only
 ├── index.js                       #   serves dist/ + prints the LAN URLs
 ├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
+│                                  #   + REST /api/quizzes
 ├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
+├── quizStore.js                   #   the quizzes, written to quizzes.json
 └── imageStore.js                  #   question images, hash-named, written to uploads/
 
 src/
@@ -67,7 +69,8 @@ src/
     │   ├── controllers/useHomeController.js
     │   └── views/
     ├── admin/                     # A1 list, A2 quiz editor, A3 control desk
-    │   ├── models/                #   QuizRepository + sample data
+    │   ├── models/                #   QuizRepository (talks to /api/quizzes)
+    │   │                          #   + the seed data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
     │   │                          #   useLiveController
     │   └── views/
@@ -196,7 +199,7 @@ travel exactly once, while the admin is writing the question:
 ```
 admin ── POST /api/images (already shrunk) ──→ server/uploads/<hash>.jpg
                                     ↓ returns the path
-                          the quiz in localStorage only stores the path
+                          the stored quiz only keeps the path
 phones, projector ── GET /api/images/<hash>.jpg ──→ cached forever
 ```
 
@@ -208,10 +211,41 @@ images to a 1200px long edge before sending; a 4MB phone photo sent as-is would
 both blow past the limit and make visitors wait.
 
 Unlike the session state, images are **written to disk** (`server/uploads/`,
-gitignored) rather than kept in RAM: quizzes live in the admin machine's
-localStorage and survive server restarts, and if the images did not survive too,
-writing questions one evening would leave everything broken when the machine
-boots the next morning.
+gitignored) rather than kept in RAM: quizzes survive server restarts, and if the
+images did not survive too, writing questions one evening would leave everything
+broken when the machine boots the next morning.
+
+**Quizzes are content, so they are stored, and stored on the server.** They used
+to sit in the admin browser's `localStorage`, which meant a quiz existed on the
+one machine that typed it: open the admin page from another laptop and the list
+was empty, clear the site data and the evening's work was gone. `quizStore.js`
+now owns them and writes them to `server/quizzes.json` (gitignored), seeded from
+`src/features/admin/models/data/` the first time the server starts.
+
+They deliberately do *not* go through the intent/SSE path — that path exists for
+match state the whole room must watch, while a quiz is content one person edits.
+Plain REST is enough:
+
+| | |
+| --- | --- |
+| `GET /api/quizzes` | the whole list |
+| `PUT /api/quizzes/<id>` | insert or overwrite (the id in the URL wins over the body) |
+| `DELETE /api/quizzes/<id>` | remove |
+
+Two details worth knowing. Everything written goes through `Quiz.fromJSON(…)
+.toJSON()` on the way in, so the file only ever holds the canonical shape and the
+rules stay in one copy — the same reasoning as `sessionStore` importing
+`SessionModel`. And because the editor saves on every keystroke, several requests
+are in flight at once: `quizStore` chains its writes through one promise so two
+`writeFile` calls cannot interleave, while the editor controller lets only the
+newest request update the "Saved" badge so a slow early reply cannot claim a
+later change has landed.
+
+`QuizRepository` is where all of this stops: every method became `async` and
+`localStorage` became `fetch`, and nothing outside the admin controllers noticed
+— `Quiz`, `Question` and every view were untouched. It also carries a one-time
+migration that hands whatever an older version left in `localStorage` to the
+server and then clears the key.
 
 **One copy of the game rules.** `server/sessionStore.js` imports the exact
 `SessionModel.js` the client uses — there is no parallel "server-side rulebook" to

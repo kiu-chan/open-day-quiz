@@ -29,3 +29,6 @@ CLAUDE.md
 *.njsproj
 *.sln
 *.sw?
+
+# Quizzes written in the admin page — event content, not source
+server/quizzes.json

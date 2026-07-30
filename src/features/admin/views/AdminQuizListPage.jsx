@@ -4,6 +4,7 @@ import {
   Copy,
   FileQuestion,
   ListChecks,
+  LoaderCircle,
   Play,
   Plus,
   Radio,
@@ -31,6 +32,8 @@ function Meta({ Icon, children }) {
 function AdminQuizListPage() {
   const {
     quizzes,
+    isLoading,
+    error,
     isLive,
     openSession,
     editQuiz,
@@ -46,7 +49,11 @@ function AdminQuizListPage() {
     <AdminShell
       current="list"
       title="Quizzes"
-      subtitle={`${quizzes.length} question set(s) saved on this machine`}
+      subtitle={
+        isLoading
+          ? 'Reading the quizzes from the server…'
+          : `${quizzes.length} question set(s) saved on the server`
+      }
       actions={
         <Button variant="primary" onClick={createQuiz}>
           <Plus className="size-4" aria-hidden="true" />
@@ -63,7 +70,26 @@ function AdminQuizListPage() {
         </p>
       )}
 
-      {quizzes.length === 0 ? (
+      {error && (
+        <p className="border-accent-border text-text-h flex flex-wrap items-center gap-2 rounded-2xl border-2 border-dashed px-5 py-4 text-sm">
+          <TriangleAlert className="size-4 shrink-0" aria-label="Error" />
+          <span className="font-medium">The server did not answer: {error}</span>
+          <span className="opacity-70">
+            — check that it is running, then reload the page.
+          </span>
+        </p>
+      )}
+
+      {isLoading ? (
+        <Panel dashed className="items-center py-14 text-center">
+          <LoaderCircle
+            className="text-text-h size-10 animate-spin"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+          <p className="text-base">Loading…</p>
+        </Panel>
+      ) : quizzes.length === 0 ? (
         <Panel dashed className="items-center py-14 text-center">
           <FileQuestion
             className="text-text-h size-10"

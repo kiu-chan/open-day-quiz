@@ -5,13 +5,19 @@
  * prototype has no undo, and retyping a whole question set because a tab was
  * closed by accident is thoroughly annoying.
  *
+ * The save goes to the server and the local state is updated *first*, without
+ * waiting for it: typing must never wait for a round trip. What the round trip
+ * feeds is `saveState`, so the page can show whether the last change actually
+ * landed — with the writing now happening over the network, "saved" stops being
+ * something the page may simply assume.
+ *
  * Every editing rule (where `correctIndex` goes when an option is removed, the
  * minimum duration, reordering questions) lives in Quiz/Question — this file
  * only calls into them.
  *
  * Public API: useQuizEditorController(quizId)
  */
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { newId } from '@common/ids.js'
 import { Question } from '@common/session/models/Question.js'
 import { imageRepository } from '../models/ImageRepository.js'
@@ -23,7 +29,51 @@ function emptyQuestion() {
 }
 
 export function useQuizEditorController(quizId) {
-  const [quiz, setQuiz] = useState(() => quizRepository.findById(quizId))
+  const [quiz, setQuiz] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  /** 'saved' | 'saving' | 'error' */
+  const [saveState, setSaveState] = useState('saved')
+
+  useEffect(() => {
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const found = await quizRepository.findById(quizId)
+        if (!cancelled) setQuiz(found)
+      } catch (cause) {
+        if (!cancelled) setLoadError(cause.message)
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [quizId])
+
+  /**
+   * Typing fires one save per keystroke, so several are in flight at once and
+   * they can come back out of order. Each save takes a ticket and only the
+   * newest one is allowed to set the badge — otherwise a slow early response
+   * would report "saved" over a later change that has not landed yet.
+   */
+  const latestSave = useRef(0)
+
+  const save = useCallback(async (next) => {
+    const ticket = (latestSave.current += 1)
+    setSaveState('saving')
+
+    try {
+      await quizRepository.save(next)
+      if (latestSave.current === ticket) setSaveState('saved')
+    } catch {
+      if (latestSave.current === ticket) setSaveState('error')
+    }
+  }, [])
 
   const apply = useCallback(
     (mutate) => {
@@ -31,10 +81,10 @@ export function useQuizEditorController(quizId) {
       const next = mutate(quiz)
       if (next === quiz) return
 
-      quizRepository.save(next)
       setQuiz(next)
+      save(next)
     },
-    [quiz],
+    [quiz, save],
   )
 
   /** Edit one question in place: takes the old question, returns the new one. */
@@ -133,7 +183,10 @@ export function useQuizEditorController(quizId) {
 
   return {
     quiz,
-    notFound: quiz === null,
+    isLoading,
+    loadError,
+    saveState,
+    notFound: !isLoading && !loadError && quiz === null,
     errors: quiz?.errors ?? [],
     setTitle,
     addQuestion,

@@ -10,6 +10,9 @@
  *    broadcasts to everyone.
  *  - `POST /api/images` — the admin uploads an illustration and gets a path back.
  *  - `GET  /api/images/<name>` — serves images to phones and the projector.
+ *  - `GET /api/quizzes`, `PUT|DELETE /api/quizzes/<id>` — the quizzes the admin
+ *    writes. Plain REST rather than intents: these are content edited by one
+ *    person, not shared match state the whole room has to watch.
  *
  * Why SSE rather than WebSocket / Socket.IO:
  *  - `EventSource` reconnects by itself when the network hiccups — a phone that
@@ -25,6 +28,7 @@
  * Public API: handleApi(req, res, next)
  */
 import { imageStore, MAX_IMAGE_BYTES } from './imageStore.js'
+import { quizStore } from './quizStore.js'
 import { sessionStore } from './sessionStore.js'
 
 /** Wifi and proxies like to drop connections silently when no bytes flow. */
@@ -136,6 +140,30 @@ export async function handleApi(req, res, next) {
       return sendJson(res, 415, { error: 'only jpg, png, webp and gif accepted' })
     }
     return sendJson(res, 201, { url: `/api/images/${name}` })
+  }
+
+  if (req.method === 'GET' && path === '/api/quizzes') {
+    return sendJson(res, 200, { quizzes: await quizStore.list() })
+  }
+
+  if (path.startsWith('/api/quizzes/')) {
+    const id = decodeURIComponent(path.slice('/api/quizzes/'.length))
+
+    if (req.method === 'PUT') {
+      const raw = await readJson(req)
+      if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
+      // The id in the URL wins over the one in the body: no request can rename a
+      // quiz onto another one and quietly overwrite it.
+      const quiz = await quizStore.save({ ...raw, id })
+      if (!quiz) return sendJson(res, 400, { error: 'a quiz needs an id' })
+
+      return sendJson(res, 200, { quiz })
+    }
+
+    if (req.method === 'DELETE') {
+      await quizStore.remove(id)
+      return sendJson(res, 200, { ok: true })
+    }
   }
 
   if (req.method === 'GET' && path.startsWith('/api/images/')) {
