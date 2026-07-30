@@ -41,7 +41,7 @@ server/                            # máy chủ trận đấu, chỉ node:http
 
 src/
 ├── main.jsx
-├── App.jsx                        # bảng phân tuyến 5 route
+├── App.jsx                        # bảng phân tuyến 6 route
 ├── index.css                      # @import tailwindcss + token trong @theme
 ├── common/                        # dùng chung ≥2 feature
 │   ├── ids.js
@@ -60,6 +60,9 @@ src/
 │   └── views/                     # Button, Countdown, ProgressBar,
 │                                  # LeaderboardTable, JoinQr, ConnectionBanner
 └── features/
+    ├── home/                      # H1 trang chủ `/` — giới thiệu + lối vào 3 màn
+    │   ├── controllers/useHomeController.js
+    │   └── views/
     ├── admin/                     # A1 danh sách, A2 soạn quiz, A3 bàn điều khiển
     │   ├── models/                #   QuizRepository + dữ liệu mẫu
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,

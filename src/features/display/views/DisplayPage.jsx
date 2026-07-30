@@ -30,7 +30,10 @@ function DisplayBody({ display }) {
             Quét QR để vào chơi
           </h1>
 
-          <JoinQr url={display.joinUrl} size={320} />
+          {/* Trên máy chiếu cỡ QR tính theo chiều cao khung hình: màn 4:3 của
+              hội trường thấp hơn màn laptop, để cứng 320px là hoặc bé quá hoặc
+              tràn mất phần chữ bên dưới. */}
+          <JoinQr url={display.joinUrl} size="min(42vh, 80vw)" zoomable />
 
           <p className="font-mono text-lg break-all lg:text-xl">{display.joinUrl}</p>
 

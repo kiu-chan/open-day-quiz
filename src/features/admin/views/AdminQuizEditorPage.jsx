@@ -1,8 +1,15 @@
-import { Check, Plus, TriangleAlert } from 'lucide-react'
+import {
+  ArrowLeft,
+  Check,
+  ListChecks,
+  Plus,
+  Timer,
+  TriangleAlert,
+} from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
-import Button from '@common/views/Button.jsx'
 import { useQuizEditorController } from '../controllers/useQuizEditorController.js'
 import AdminShell from './components/AdminShell.jsx'
+import Panel from './components/Panel.jsx'
 import QuestionEditor from './components/QuestionEditor.jsx'
 
 function AdminQuizEditorPage({ quizId }) {
@@ -10,14 +17,19 @@ function AdminQuizEditorPage({ quizId }) {
 
   if (editor.notFound) {
     return (
-      <AdminShell current="list">
-        <h1 className="text-text-h text-3xl tracking-tight">
-          Không tìm thấy bộ quiz
-        </h1>
-        <p className="text-sm">
-          Bộ quiz <span className="font-mono">{quizId}</span> đã bị xoá.{' '}
-          <a href={`#${ROUTES.ADMIN}`}>Về danh sách quiz</a>
-        </p>
+      <AdminShell current="list" title="Không tìm thấy bộ quiz">
+        <Panel dashed className="items-start">
+          <p className="text-base">
+            Bộ quiz <span className="font-mono">{quizId}</span> đã bị xoá.
+          </p>
+          <a
+            href={`#${ROUTES.ADMIN}`}
+            className="inline-flex items-center gap-2 no-underline"
+          >
+            <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+            Về danh sách quiz
+          </a>
+        </Panel>
       </AdminShell>
     )
   }
@@ -25,37 +37,65 @@ function AdminQuizEditorPage({ quizId }) {
   const { quiz } = editor
 
   return (
-    <AdminShell current="list">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-text-h text-3xl tracking-tight">Soạn quiz</h1>
-        <span className="flex items-center gap-1.5 text-xs opacity-70">
-          <Check className="size-4" aria-hidden="true" />
-          Mọi thay đổi tự lưu
+    <AdminShell
+      current="list"
+      title="Soạn quiz"
+      subtitle="Mọi thay đổi được lưu ngay trên máy này"
+      actions={
+        <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs">
+          <Check className="size-4 shrink-0" aria-hidden="true" />
+          Đã lưu
         </span>
-      </div>
+      }
+    >
+      <Panel>
+        <label className="flex flex-col gap-2 text-sm" htmlFor="quiz-title">
+          Tên bộ quiz
+          <input
+            id="quiz-title"
+            value={quiz.title}
+            onChange={(event) => editor.setTitle(event.target.value)}
+            placeholder="Ví dụ: Quiz Open Day 2026"
+            className="border-border focus:border-accent-border text-text-h rounded-xl border-2 px-4 py-3 text-2xl font-semibold outline-none"
+          />
+        </label>
 
-      <label className="flex flex-col gap-2 text-sm">
-        Tên bộ quiz
-        <input
-          value={quiz.title}
-          onChange={(event) => editor.setTitle(event.target.value)}
-          placeholder="Ví dụ: Quiz Open Day 2026"
-          className="border-border focus:border-accent-border text-text-h rounded-xl border-2 px-4 py-2.5 text-lg outline-none"
-        />
-      </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
+            <ListChecks className="size-3.5 shrink-0" aria-hidden="true" />
+            {quiz.total} câu
+          </span>
+          <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
+            <Timer className="size-3.5 shrink-0" aria-hidden="true" />
+            {quiz.totalSeconds}s
+          </span>
+        </div>
 
-      {editor.errors.length > 0 && (
-        <ul className="border-border flex flex-col gap-1 rounded-xl border border-dashed p-4 text-sm">
-          {editor.errors.map((error) => (
-            <li key={error} className="flex items-center gap-2">
-              <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
-              {error}
-            </li>
-          ))}
-        </ul>
-      )}
+        {editor.errors.length > 0 ? (
+          <ul className="border-border flex list-none flex-col gap-1.5 rounded-xl border border-dashed p-3 text-sm">
+            {editor.errors.map((error) => (
+              <li key={error} className="flex items-center gap-2">
+                <TriangleAlert
+                  className="size-4 shrink-0"
+                  aria-label="Chưa chơi được"
+                />
+                {error}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-text-h flex items-center gap-2 text-sm font-medium">
+            <Check
+              className="size-4 shrink-0"
+              strokeWidth={2.5}
+              aria-label="Sẵn sàng chơi"
+            />
+            Bộ quiz này đã chơi được.
+          </p>
+        )}
+      </Panel>
 
-      <ul className="flex flex-col gap-4">
+      <ul className="flex list-none flex-col gap-5 p-0">
         {quiz.questions.map((question, index) => (
           <QuestionEditor
             key={question.id}
@@ -80,13 +120,25 @@ function AdminQuizEditorPage({ quizId }) {
         ))}
       </ul>
 
-      <Button variant="primary" className="self-start" onClick={editor.addQuestion}>
-        <Plus className="size-4" aria-hidden="true" />
+      {/* Nút thêm câu chiếm trọn chiều ngang, nét đứt: nhìn ra ngay là chỗ nối
+          tiếp danh sách chứ không phải một câu hỏi nữa. */}
+      <button
+        type="button"
+        onClick={editor.addQuestion}
+        className="border-border text-text-h hover:border-accent-border flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-transparent py-6 text-base font-medium transition hover:opacity-85"
+      >
+        <Plus className="size-5 shrink-0" aria-hidden="true" />
         Thêm câu hỏi
-      </Button>
+      </button>
 
       <footer className="border-border mt-auto border-t pt-4 text-sm">
-        <a href={`#${ROUTES.ADMIN}`}>Về danh sách quiz</a>
+        <a
+          href={`#${ROUTES.ADMIN}`}
+          className="inline-flex items-center gap-2 no-underline"
+        >
+          <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+          Về danh sách quiz
+        </a>
       </footer>
     </AdminShell>
   )

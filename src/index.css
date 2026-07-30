@@ -17,6 +17,67 @@
   --font-mono: var(--mono);
 
   --shadow-card: var(--shadow);
+
+  /* Trang chủ không được dùng màu để tạo không khí lễ hội, nên phần "sinh động"
+     dồn hết vào chuyển động: băng chữ chạy, khối trồi lên khi vào trang, lưới
+     chấm trôi chậm, hộp quà lắc nhẹ. */
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-drift: drift 60s linear infinite;
+  --animate-wobble: wobble 3.4s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  /* Nội dung băng được lặp đúng hai lần, nên chạy hết một nửa là quay về vị trí
+     nhìn y hệt lúc đầu — vòng lặp không thấy mối nối. */
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 240px 240px;
+  }
+}
+
+@keyframes wobble {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-0.5rem) rotate(2deg);
+  }
+}
+
+/* Người bật giảm chuyển động vẫn phải đọc được trang: tắt animation thay vì để
+   họ chịu trận băng chữ chạy suốt. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Layout đen trắng: chỉ đen, trắng và các mức xám. Không màu nhấn,

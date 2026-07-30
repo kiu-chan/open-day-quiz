@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 
 export const ROUTES = {
+  HOME: '/',
   ADMIN: '/admin',
   ADMIN_QUIZ: '/admin/quiz/:id',
   ADMIN_LIVE: '/admin/live',
@@ -42,11 +43,11 @@ function matchRoute(path) {
     const params = matchPattern(pattern, path)
     if (params) return { pattern, params }
   }
-  return { pattern: ROUTES.ADMIN, params: {} }
+  return { pattern: ROUTES.HOME, params: {} }
 }
 
 function currentPath() {
-  return window.location.hash.slice(1) || ROUTES.ADMIN
+  return window.location.hash.slice(1) || ROUTES.HOME
 }
 
 export function navigate(path) {

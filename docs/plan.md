@@ -45,7 +45,13 @@ stateDiagram-v2
 
 ## 2. Trang cần thiết
 
-Tổng cộng **5 route**, 11 màn hình.
+Tổng cộng **6 route**, 12 màn hình.
+
+### 2.0 Trang chủ — `features/home/`
+
+| # | Trang | Route | Nội dung |
+| --- | --- | --- | --- |
+| H1 | Trang chủ | `/` | Giới thiệu trò chơi, ba bước chơi, teaser hộp quà, lối vào ba màn. Đọc phiên để hiện trạng thái trực tiếp ("Phòng chờ đang mở", số người đã vào) — chỉ đọc, không gửi intent |
 
 ### 2.1 Admin — `features/admin/`
 

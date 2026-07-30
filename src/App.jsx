@@ -3,6 +3,7 @@ import AdminLivePage from '@features/admin/views/AdminLivePage.jsx'
 import AdminQuizEditorPage from '@features/admin/views/AdminQuizEditorPage.jsx'
 import AdminQuizListPage from '@features/admin/views/AdminQuizListPage.jsx'
 import DisplayPage from '@features/display/views/DisplayPage.jsx'
+import HomePage from '@features/home/views/HomePage.jsx'
 import PlayerPage from '@features/player/views/PlayerPage.jsx'
 
 /** Vỏ ứng dụng: bảng phân tuyến, mỗi route trỏ tới đúng một *Page.jsx. */
@@ -10,6 +11,8 @@ function App() {
   const { pattern, params } = useHashRoute()
 
   switch (pattern) {
+    case ROUTES.ADMIN:
+      return <AdminQuizListPage />
     case ROUTES.ADMIN_QUIZ:
       return <AdminQuizEditorPage quizId={params.id} />
     case ROUTES.ADMIN_LIVE:
@@ -19,7 +22,7 @@ function App() {
     case ROUTES.DISPLAY:
       return <DisplayPage />
     default:
-      return <AdminQuizListPage />
+      return <HomePage />
   }
 }
 

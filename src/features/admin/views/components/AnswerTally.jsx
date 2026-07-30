@@ -7,17 +7,26 @@ import { Check } from 'lucide-react'
  */
 function AnswerTally({ question, distribution, playerCount }) {
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex list-none flex-col gap-3 p-0">
       {question.options.map((option, i) => {
         const count = distribution[i] ?? 0
         const percent = playerCount > 0 ? (count / playerCount) * 100 : 0
         const isAnswer = question.isCorrect(i)
 
         return (
-          <li key={i} className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-mono text-xs">{question.labelOf(i)}</span>
-              <span className={`flex-1 ${isAnswer ? 'text-text-h font-medium' : ''}`}>
+          <li
+            key={i}
+            className={`flex flex-col gap-2 rounded-xl border-2 px-3 py-2.5 ${
+              isAnswer ? 'border-accent-border' : 'border-border border-dashed'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 text-sm">
+              <span className="w-4 shrink-0 font-mono text-xs">
+                {question.labelOf(i)}
+              </span>
+              <span
+                className={`flex-1 ${isAnswer ? 'text-text-h font-semibold' : ''}`}
+              >
                 {option}
               </span>
               {isAnswer && (
@@ -27,7 +36,12 @@ function AnswerTally({ question, distribution, playerCount }) {
                   aria-label="Đáp án đúng"
                 />
               )}
-              <span className="font-mono tabular-nums">{count}</span>
+              <span className="text-text-h shrink-0 font-mono tabular-nums">
+                {count}
+              </span>
+              <span className="w-12 shrink-0 text-right font-mono text-xs tabular-nums opacity-60">
+                {Math.round(percent)}%
+              </span>
             </div>
 
             <div className="bg-code-bg h-2 w-full overflow-hidden rounded-full">

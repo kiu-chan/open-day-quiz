@@ -6,50 +6,100 @@ const NAV = [
   { key: 'live', label: 'Bàn điều khiển', href: `#${ROUTES.ADMIN_LIVE}` },
 ]
 
-/** Khung chung của ba trang admin: điều hướng trên, nội dung dưới. */
-function AdminShell({ current, children }) {
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8">
-      <header className="border-border flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-        <nav className="flex items-center gap-5">
-          {NAV.map((item) => (
-            <a
-              key={item.key}
-              href={item.href}
-              className={`text-sm ${
-                item.key === current
-                  ? 'text-text-h font-medium underline underline-offset-4'
-                  : 'no-underline'
-              }`}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+const EXTERNAL = [
+  {
+    key: 'display',
+    label: 'Màn hình lớn',
+    href: `#${ROUTES.DISPLAY}`,
+    Icon: MonitorPlay,
+  },
+  {
+    key: 'play',
+    label: 'Trang người chơi',
+    href: `#${ROUTES.PLAY}`,
+    Icon: Smartphone,
+  },
+]
 
-        <div className="flex items-center gap-4 text-sm">
-          <a
-            href={`#${ROUTES.DISPLAY}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 no-underline"
-          >
-            <MonitorPlay className="size-4" aria-hidden="true" />
-            Màn hình lớn
-          </a>
-          <a
-            href={`#${ROUTES.PLAY}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 no-underline"
-          >
-            <Smartphone className="size-4" aria-hidden="true" />
-            Trang người chơi
-          </a>
+/**
+ * Khung chung của ba trang admin: thanh điều hướng dính trên đầu, tiêu đề trang,
+ * rồi nội dung.
+ *
+ * Tiêu đề nằm ở khung chứ không ở từng trang để ba trang admin luôn cùng một
+ * nhịp: cùng cỡ chữ, cùng khoảng cách, cùng chỗ đặt nút hành động (`actions`).
+ * Tab đang mở phân biệt bằng nền đen chứ không bằng màu.
+ */
+function AdminShell({ current, title, subtitle, actions, children }) {
+  return (
+    <div className="flex flex-1 flex-col">
+      <header className="border-border bg-bg/90 sticky top-0 z-10 border-b backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-3">
+          <div className="flex items-center gap-4">
+            <a
+              href={`#${ROUTES.HOME}`}
+              className="text-text-h flex items-center gap-2.5 no-underline"
+            >
+              <span className="bg-accent flex size-9 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold text-white">
+                OD
+              </span>
+              <span className="hidden text-sm font-semibold tracking-tight sm:inline">
+                Open Day Quiz
+              </span>
+            </a>
+
+            <nav className="flex items-center gap-1.5">
+              {NAV.map((item) => (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  aria-current={item.key === current ? 'page' : undefined}
+                  className={`rounded-full border-2 px-3.5 py-1.5 text-sm no-underline transition ${
+                    item.key === current
+                      ? 'bg-accent border-accent-border font-medium text-white'
+                      : 'text-text hover:border-border border-transparent'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm">
+            {EXTERNAL.map(({ key, label, href, Icon }) => (
+              <a
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="text-text hover:text-text-h inline-flex items-center gap-1.5 no-underline transition"
+              >
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                <span className="hidden md:inline">{label}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </header>
 
-      {children}
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-5 py-8">
+        {title && (
+          <div className="animate-rise flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <h1 className="text-text-h text-4xl font-bold tracking-tight sm:text-5xl">
+                {title}
+              </h1>
+              {subtitle && <p className="text-base">{subtitle}</p>}
+            </div>
+
+            {actions && (
+              <div className="flex flex-wrap items-center gap-2">{actions}</div>
+            )}
+          </div>
+        )}
+
+        {children}
+      </div>
     </div>
   )
 }

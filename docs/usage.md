@@ -45,6 +45,9 @@ Bộ quiz lưu trong trình duyệt của máy admin, nên soạn ở máy nào 
 | 8 | Người thắng chọn hộp | tên phần quà | hộp mở ra, tên quà chữ lớn |
 | 9 | Bấm **Kết thúc phiên** | về màn hình chờ | về màn hình chờ |
 
+**Khách khó quét QR?** Bấm vào mã QR — ở bàn điều khiển hoặc trên màn hình lớn —
+để phóng nó ra kín màn hình. Bấm chỗ nào cũng được hoặc nhấn `Esc` để đóng.
+
 Chỉ bàn điều khiển phát ra lệnh điều khiển. Điện thoại chỉ gửi đáp án và lượt chọn
 hộp quà; máy chiếu chỉ đọc. Mọi thay đổi đi qua máy chủ nên ba màn hình luôn khớp
 nhau — không có chuyện máy chiếu đang ở câu 3 mà điện thoại còn ở câu 2.
