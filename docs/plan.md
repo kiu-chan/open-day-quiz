@@ -1,8 +1,13 @@
 # Kế hoạch thiết kế — Open Day Quiz
 
-Tài liệu này liệt kê **các trang và tính năng cần làm**, thứ tự làm, và những gì còn phải quyết. Chưa có code nào cho phần này.
+Tài liệu này liệt kê **các trang và tính năng cần làm**, thứ tự làm, và những gì còn phải quyết.
 
 Nguồn: [README.md](../README.md) (spec sản phẩm). Luật viết code: `CLAUDE.md`.
+
+**Tình trạng:** Phase 0, 1, 2, 4, 5, 6 đã xong. Chỉ còn **Phase 3 (realtime)** vì
+nó chờ chủ dự án chốt transport. Kiến trúc đã dựng xong được ghi ở
+[architecture.md](architecture.md); cách chạy ở [installation.md](installation.md)
+và [usage.md](usage.md).
 
 ---
 
@@ -86,7 +91,7 @@ Một route `/display`, nội dung đổi theo trạng thái phiên. Máy chiế
 | Thực thể | Trường | Ghi chú |
 | --- | --- | --- |
 | `Quiz` | `id`, `title`, `questions[]` | Admin tạo, tồn tại giữa các phiên |
-| `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | Mở rộng từ [Question.js](../src/features/quiz/models/Question.js) hiện có, thêm `durationSeconds` |
+| `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
 | `Session` | `id`, `quizId`, `state`, `currentIndex`, `questionEndsAt` | Một phiên chơi; `state` là máy trạng thái ở mục 1 |
 | `Player` | `id`, `name`, `joinedAt`, `score` | `id` sinh ở client, lưu `localStorage` để refresh không mất chỗ |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` cần cho điểm theo tốc độ |
@@ -104,16 +109,19 @@ Một route `/display`, nội dung đổi theo trạng thái phiên. Máy chiế
 
 Mỗi feature theo khung `models/ controllers/ views/` như CLAUDE.md quy định.
 
+Bảng dưới là **tình trạng thật sau khi làm**, có hai chỗ lệch với dự kiến ban đầu — ghi rõ ở dưới bảng.
+
 | Feature | Model (luật) | Controller | View |
 | --- | --- | --- | --- |
-| `common/session` | máy trạng thái, chuyển trạng thái hợp lệ, `questionEndsAt` | `useSession()` — đọc phiên, subscribe | — |
-| `admin` | validate bộ quiz (≥1 câu, có đáp án đúng) | `useQuizEditorController`, `useControlController` | A1, A2, A3 |
-| `player` | — (đọc session) | `usePlayerController` — join, gửi đáp án | P1–P6 |
+| `common/session` | `SessionModel` (máy trạng thái, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
+| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr` |
+| `admin` | `QuizRepository` + dữ liệu mẫu | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
+| `player` | — (đọc session) | `usePlayerController` — join, gửi đáp án, chọn hộp quà | P1–P6 |
 | `display` | — (đọc session) | `useDisplayController` | D1–D5 |
-| `leaderboard` | tính điểm, sắp hạng, xử lý đồng điểm | `useLeaderboard` | bảng hạng (3 cỡ: điện thoại / admin / máy chiếu) |
-| `prizes` | xáo vị trí quà, chốt hộp đã chọn | `usePrizeController` | 3 hộp + reveal |
 
-`features/quiz/` hiện tại đổi tên thành `features/player/` khi tới Phase 2; `Question.js` và phần chấm điểm chuyển sang `common/session/`.
+**Lệch 1 — không có feature `leaderboard` và `prizes` riêng.** Luật chấm điểm và xáo quà là thứ cả ba surface đều đọc, nên theo đúng luật của CLAUDE.md nó thuộc `common/session/models/` (`Leaderboard.js`, `PrizeBoxes.js`). Còn view thì mỗi surface một kiểu hẳn (hộp quà trên điện thoại là nút bấm, trên máy chiếu là hình tĩnh chữ to), nên không gom được thành một feature. Tách riêng chỉ tạo thêm tầng mà không giảm được dòng code nào.
+
+**Lệch 2 — `features/quiz/` bị bỏ, không phải đổi tên.** Bản demo một người chơi cũ có model và controller riêng, không dùng lại được khi trạng thái chuyển sang session dùng chung. Các component trình bày thì viết lại cho vừa điện thoại (vùng bấm to hơn, thêm trạng thái "đã chọn nhưng chưa lộ đáp án").
 
 ---
 
@@ -121,31 +129,41 @@ Mỗi feature theo khung `models/ controllers/ views/` như CLAUDE.md quy địn
 
 Nguyên tắc: mỗi phase kết thúc phải **demo được**, và **hoãn quyết định realtime càng lâu càng tốt**.
 
-| Phase | Nội dung | Cỡ | Demo được gì |
-| --- | --- | --- | --- |
-| **0. Nền** | Routing 5 route; máy trạng thái `common/session`; repository phiên chạy bằng bộ nhớ/`localStorage` | M | Bấm qua đủ 3 surface bằng dữ liệu giả, một máy |
-| **1. Soạn quiz** | A1 + A2, lưu `localStorage` | M | Tạo được bộ quiz thật |
-| **2. Vòng chơi một máy** | A3 + P1–P4 + D1–D3, chạy chung một tab | L | Chơi trọn một lượt, chưa cần mạng |
-| **3. Realtime** | Cắm transport đã chọn vào repository | L | Điện thoại thật + máy chiếu thật đồng bộ |
-| **4. Điểm & leaderboard** | Chấm điểm theo tốc độ, hạng, đồng điểm, P5 + D4 | M | Có người thắng |
-| **5. Hộp quà** | Xáo quà, P6 + D5, animation mở | S | Trọn kịch bản tới lúc trao quà |
-| **6. Hoàn thiện** | Sinh QR, cỡ chữ cho máy chiếu, responsive, `docs/installation.md` + `docs/usage.md` | M | Bản giao được |
+| Phase | Nội dung | Tình trạng |
+| --- | --- | --- |
+| **0. Nền** | Routing 5 route; máy trạng thái `common/session`; repository phiên chạy bằng `localStorage` | ✅ xong |
+| **1. Soạn quiz** | A1 + A2, lưu `localStorage`, tự lưu sau mỗi thay đổi | ✅ xong |
+| **2. Vòng chơi một máy** | A3 + P1–P4 + D1–D3 | ✅ xong — chạy được nhiều tab trên cùng máy, không chỉ một tab |
+| **3. Realtime** | Cắm transport đã chọn vào `SessionRepository` | ⏸ chờ chốt transport |
+| **4. Điểm & leaderboard** | Chấm điểm theo tốc độ, hạng, đồng điểm, P5 + D4 | ✅ xong |
+| **5. Hộp quà** | Xáo quà, P6 + D5, animation mở | ✅ xong |
+| **6. Hoàn thiện** | Mã QR thật (`qrcode.react`), cỡ chữ máy chiếu, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ xong |
 
-Điểm mấu chốt của thứ tự này: **Phase 0–2 làm được mà không cần biết sẽ chọn Firebase hay Socket.IO**, vì repository là lớp cách ly. Đến Phase 3 mới cần quyết. Nếu chọn sai ở Phase 3 thì cũng chỉ sửa lại repository.
+Điểm mấu chốt của thứ tự này đã được kiểm chứng: **mọi phase khác làm xong mà không cần biết sẽ chọn Firebase hay Socket.IO**, vì `SessionRepository` là lớp cách ly. Phase 3 chỉ đổi đúng file đó — `SessionModel` và toàn bộ view không phải sửa.
+
+Phase 3 khi làm sẽ cần: đổi `read()/update()/subscribe()` thành `async`, thêm cờ loading/lỗi ở controller, và quyết ai là "nguồn sự thật" khi hai admin bấm cùng lúc (hiện chỉ có một bàn điều khiển nên chưa phải lo).
 
 ---
 
 ## 6. Còn phải quyết
 
-| # | Việc | Khi nào cần | Đề xuất |
+### Còn treo
+
+| # | Việc | Ghi chú |
+| --- | --- | --- |
+| 1 | **Realtime**: Firebase/Supabase hay Node + Socket.IO tự dựng | **Quyết định của chủ dự án.** Phụ thuộc wifi hội trường: mạng không tin được → server LAN tự dựng. Đây là thứ duy nhất chặn Phase 3 |
+| 6 | **Nội dung câu hỏi thật** | Không phải việc code — cần người của trường soạn, gõ thẳng vào trang admin. Hiện có một bộ mẫu 5 câu |
+| 7 | **Quà thật** | Đang dùng đúng ví dụ trong README. Sửa hằng `PRIZES` trong `PrizeBoxes.js` |
+
+### Đã chốt khi làm
+
+| # | Việc | Chốt thế nào | Vì sao |
 | --- | --- | --- | --- |
-| 1 | **Realtime**: Firebase/Supabase hay Node + Socket.IO tự dựng | Phase 3 | Phụ thuộc wifi hội trường. Mạng không tin được → server LAN tự dựng |
-| 2 | **Routing**: react-router hay tự switch trên `location.hash` | Phase 0 | Hash tự viết (~15 dòng), khỏi cấu hình SPA fallback, QR không bị 404 |
-| 3 | **Thư viện QR** | Phase 6 (hoặc sớm hơn để test) | `qrcode.react` — nhỏ, render SVG đen trắng đúng luật layout |
-| 4 | **Cách chấm điểm** | Phase 4 | Đúng = điểm cơ bản + thưởng theo tốc độ. Nếu chỉ 1 điểm/câu thì với ~5 câu sẽ đồng điểm hàng loạt, không chọn ra được **một** người thắng |
-| 5 | **Đồng điểm ở ngôi nhất** | Phase 4 | Hơn nhau ở tổng thời gian trả lời; vẫn bằng thì admin bấm chọn |
-| 6 | **Nội dung câu hỏi thật** | Trước sự kiện | Không phải việc code — cần người của trường soạn |
-| 7 | **Quà thật** | Trước sự kiện | README ví dụ: Course Magnet, FabLab Sticker, 3D Printed Figure |
+| 2 | **Routing** | Tự viết trên `location.hash`, ~60 dòng ở `common/routing/useHashRoute.js` | Khỏi thêm react-router, khỏi cấu hình SPA fallback, và QR không bao giờ ra 404 |
+| 3 | **Thư viện QR** | `qrcode.react`, render SVG | Nét khi phóng lên máy chiếu, mặc định đen trên trắng nên đúng luật layout |
+| 4 | **Cách chấm điểm** | Đúng = 1000 điểm + thưởng tốc độ tối đa 500, giảm dần đều theo thời gian đã dùng | Với ~5 câu, chấm 1 điểm/câu thì đồng điểm hàng loạt, không chọn ra được **một** người thắng để trao quà |
+| 5 | **Đồng điểm ở ngôi nhất** | Hơn nhau ở tổng thời gian trả lời. Bằng cả hai thì cùng hạng nhất, và bàn điều khiển hiện danh sách để admin bấm chọn người nhận quà | Tự động xử lý được gần hết trường hợp, chỉ trường hợp bằng nhau tuyệt đối mới cần người quyết |
+| 8 | **Ai là người thắng** | Lưu `winnerId` vào session lúc công bố, không suy ra từ bảng hạng | Bước chọn quà cần biết chắc của ai; và cho phép admin chọn tay khi đồng hạng |
 
 ---
 
@@ -166,8 +184,9 @@ README nói rõ *"do not over-engineer"*, nên chốt trước những thứ **s
 
 Không phải code, nhưng thiếu là vỡ trận:
 
-- Chạy thử với **số điện thoại thật** ở gần mức dự kiến, trên **wifi thật của hội trường**.
-- Nhìn máy chiếu từ hàng ghế cuối — chữ ở D2 có đọc được không.
+- Chạy thử với **số điện thoại thật** ở gần mức dự kiến, trên **wifi thật của hội trường**. *(Cần Phase 3 trước — hiện chỉ đồng bộ giữa các tab trên cùng một máy.)*
+- Nhìn máy chiếu từ hàng ghế cuối — chữ ở D2 và mã QR ở D1 có đọc/quét được không.
 - Thử tình huống một điện thoại tắt màn hình giữa câu rồi mở lại.
-- Thử admin bấm "câu tiếp" hai lần liên tiếp (máy trạng thái phải chặn).
+- ✅ Admin bấm "câu tiếp" hai lần liên tiếp: máy trạng thái đã chặn, đã thử.
 - Chuẩn bị phương án dự phòng nếu mạng chết giữa game.
+- Nhớ mở mọi màn hình bằng **địa chỉ IP** (`npm run dev:lan`), không phải `localhost`, nếu không mã QR sẽ vô dụng.

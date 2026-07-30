@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
@@ -12,6 +13,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.28.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tailwindcss": "^4.3.3"

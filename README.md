@@ -102,9 +102,11 @@ Because this is a prototype:
 The final project should include:
 
 * Source code
-* Installation guide
-* Usage guide
-* Architecture documentation
+* Installation guide — [docs/installation.md](docs/installation.md)
+* Usage guide — [docs/usage.md](docs/usage.md)
+* Architecture documentation — [docs/architecture.md](docs/architecture.md)
+
+Build plan and open decisions: [docs/plan.md](docs/plan.md).
 
 ---
 
