@@ -1,7 +1,7 @@
 /**
- * Khối nội dung có viền của trang admin. Mọi mảng trong bàn điều khiển và trang
- * soạn quiz đều dùng chung khối này để các cạnh thẳng hàng nhau; `dashed` dành
- * cho khối chưa có nội dung thật (trạng thái rỗng, hướng dẫn).
+ * The bordered content block of the admin pages. Every section of the control
+ * desk and the quiz editor uses it so the edges line up; `dashed` is for blocks
+ * without real content yet (empty states, instructions).
  */
 function Panel({ title, Icon, aside, dashed = false, className = '', children }) {
   return (

@@ -1,9 +1,10 @@
 /**
- * Controller của màn hình người chơi (P1–P6).
+ * Controller of the player screen (P1–P6).
  *
- * Danh tính người chơi lưu ở localStorage: điện thoại rất dễ bị tắt màn hình
- * hoặc refresh giữa trận, vào lại phải nhận đúng người cũ chứ không tạo người
- * mới — nếu không, điểm của họ biến mất và leaderboard đầy tên trùng.
+ * The player identity is kept in localStorage: phones get their screen locked or
+ * refreshed mid-game all the time, and coming back has to recognise the same
+ * person rather than create a new one — otherwise their score disappears and the
+ * leaderboard fills up with duplicate names.
  *
  * Public API: usePlayerController()
  */
@@ -35,7 +36,7 @@ export function usePlayerController() {
       const trimmed = name.trim()
       if (trimmed.length === 0) return
 
-      const next = { id: identity?.id ?? newId('nguoi'), name: trimmed }
+      const next = { id: identity?.id ?? newId('player'), name: trimmed }
       localStorage.setItem(IDENTITY_KEY, JSON.stringify(next))
       setIdentity(next)
       send({ type: 'join', ...next })
@@ -44,10 +45,12 @@ export function usePlayerController() {
   )
 
   /**
-   * Đã có tên lưu sẵn mà phiên không thấy mình thì tự vào lại. Cần vì trạng thái
-   * giờ nằm ở máy chủ: máy chủ khởi động lại, hoặc admin mở lượt mới, là danh
-   * sách người chơi trắng — không lẽ bắt cả phòng gõ lại tên.
-   * `join` của model bỏ qua người đã có nên gọi lặp cũng vô hại.
+   * If a name is already stored but the session cannot see us, rejoin
+   * automatically. Needed now that the state lives on the server: a server
+   * restart, or the admin opening a new round, wipes the player list — and we
+   * are not about to make the whole room retype their names.
+   * The model's `join` ignores players who already exist, so calling it
+   * repeatedly is harmless.
    */
   useEffect(() => {
     if (!identity || me || session.isIdle) return
@@ -77,7 +80,7 @@ export function usePlayerController() {
       sessionState: session.state,
       isOffline,
       hasJoined: me !== null,
-      /** Tên đã nhập lần trước, để phiên sau khỏi phải gõ lại. */
+      /** The name entered last time, so the next session needs no retyping. */
       name: me?.name ?? identity?.name ?? '',
       playerCount: session.playerCount,
       question: session.currentQuestion,

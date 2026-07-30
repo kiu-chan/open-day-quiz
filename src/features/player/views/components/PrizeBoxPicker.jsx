@@ -1,9 +1,10 @@
 import { Gift, PackageOpen } from 'lucide-react'
 
 /**
- * Ba hộp quà cho người thắng bấm.
- * Hộp đã mở đổi icon, viền dày và hiện tên quà; hai hộp còn lại mờ đi và không
- * bấm được nữa — đã chọn là không đổi ý.
+ * The three prize boxes for the winner to tap.
+ * The opened box swaps its icon, thickens its border and shows the prize name;
+ * the other two fade back and stop being clickable — once picked, no changing
+ * your mind.
  */
 function PrizeBoxPicker({ boxes, onPick }) {
   return (
@@ -27,7 +28,7 @@ function PrizeBoxPicker({ boxes, onPick }) {
               className={`text-text-h flex w-full flex-col items-center gap-2 rounded-2xl border-2 bg-transparent px-2 py-5 transition duration-300 ${tone}`}
             >
               <Icon className="size-9" strokeWidth={1.5} aria-hidden="true" />
-              <span className="font-mono text-xs">Hộp {i + 1}</span>
+              <span className="font-mono text-xs">Box {i + 1}</span>
               {isPicked && (
                 <span className="text-center text-xs font-medium">{prize}</span>
               )}

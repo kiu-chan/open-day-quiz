@@ -1,19 +1,20 @@
 /**
- * Model: máy trạng thái của một phiên chơi — trái tim của cả ba màn hình.
+ * Model: the state machine of a game session — the heart of all three screens.
  *
- * Admin / player / display không phải ba ứng dụng riêng: cả ba đọc **cùng một**
- * SessionModel, chỉ khác nhau ở cách vẽ trạng thái đó ra. Vì vậy model này nằm
- * ở `common/` chứ không thuộc feature nào.
+ * Admin / player / display are not three separate apps: all three read the
+ * **same** SessionModel and only differ in how they draw that state. That is why
+ * this model lives in `common/` instead of belonging to a feature.
  *
- * Bất biến: mọi hành động trả về instance mới; hành động không hợp lệ trả về
- * đúng `this`. Nhờ vậy admin bấm "câu tiếp" hai lần liên tiếp không nhảy mất
- * một câu, và repository biết là không có gì thay đổi nên không phát tín hiệu.
+ * Immutable: every action returns a new instance; an invalid action returns
+ * `this` unchanged. That is what keeps the admin from skipping a question by
+ * double-clicking "Next", and lets the repository know nothing changed so it
+ * broadcasts nothing.
  *
- * Model không tự gọi `Date.now()` — thời điểm luôn do controller truyền vào,
- * để luật chơi vẫn là hàm thuần.
+ * The model never calls `Date.now()` itself — the timestamp is always passed in
+ * by the caller, so the game rules stay pure functions.
  *
- * Public API: SESSION_STATES, SessionModel.empty()/fromJSON(), các getter, và
- * các hành động openLobby / cancel / start / reveal / next / announceWinner /
+ * Public API: SESSION_STATES, SessionModel.empty()/fromJSON(), the getters, and
+ * the actions openLobby / cancel / start / reveal / next / announceWinner /
  * reset / join / submitAnswer.
  */
 import { Leaderboard, pointsOf } from './Leaderboard.js'
@@ -31,8 +32,8 @@ export const SESSION_STATES = {
 }
 
 /**
- * Bảng chuyển trạng thái hợp lệ. Đây là chỗ duy nhất quyết định "được đi đâu
- * từ đâu" — không rải `if` về trạng thái ra khắp controller và view.
+ * The table of valid transitions. This is the single place that decides "where
+ * can we go from here" — no state `if`s scattered across controllers and views.
  */
 const ALLOWED_NEXT = {
   idle: ['lobby'],
@@ -44,7 +45,7 @@ const ALLOWED_NEXT = {
   prizeRevealed: ['idle'],
 }
 
-/** Về vạch xuất phát: dùng khi mở phiên mới hoặc huỷ phiên. */
+/** Back to the starting line: used when opening a new session or cancelling one. */
 const CLEARED_ROUND = {
   currentIndex: 0,
   questionStartedAt: null,
@@ -68,15 +69,15 @@ export class SessionModel {
     this.quiz = quiz
     this.state = state
     this.currentIndex = currentIndex
-    /** Mốc bắt đầu câu hiện tại — dùng để tính người trả lời nhanh cỡ nào. */
+    /** When the current question started — used to measure how fast people answer. */
     this.questionStartedAt = questionStartedAt
-    /** Mốc kết thúc câu hiện tại, xem ghi chú "đếm ngược" ở dưới. */
+    /** When the current question ends, see the "countdown" note below. */
     this.questionEndsAt = questionEndsAt
     this.players = players
     this.answers = answers
-    /** Người nhận quà, admin chốt ở bước công bố (thường là hạng nhất). */
+    /** Who gets the prize; the admin confirms it at the announcement step (usually rank 1). */
     this.winnerId = winnerId
-    /** Ba hộp quà, chỉ có từ lúc công bố người thắng. */
+    /** The three prize boxes, only present once the winner has been announced. */
     this.prizeBoxes = prizeBoxes
   }
 
@@ -96,16 +97,17 @@ export class SessionModel {
     return new SessionModel({ ...this, ...patch })
   }
 
-  /** Đổi trạng thái nếu ALLOWED_NEXT cho phép, không thì đứng im. */
+  /** Change state when ALLOWED_NEXT permits it, otherwise stand still. */
   #to(state, patch = {}) {
     if (!ALLOWED_NEXT[this.state].includes(state)) return this
     return this.#with({ state, ...patch })
   }
 
   /**
-   * Mốc thời gian của một câu. Lưu **thời điểm kết thúc** thay vì "còn N giây"
-   * để mọi máy tự trừ theo đồng hồ của mình: nếu mỗi máy đếm độc lập từ N giây
-   * thì sau vài câu điện thoại và máy chiếu sẽ lệch nhau vài giây.
+   * Timing for one question. Stores the **end timestamp** instead of "N seconds
+   * left" so every device subtracts against its own clock: if each device
+   * counted down independently from N seconds, after a few questions the phones
+   * and the projector would drift seconds apart.
    */
   #timingOf(index, now) {
     const question = this.quiz.questionAt(index)
@@ -115,7 +117,7 @@ export class SessionModel {
     }
   }
 
-  // ---- trạng thái suy ra ----
+  // ---- derived state ----
 
   get total() {
     return this.quiz?.total ?? 0
@@ -133,7 +135,7 @@ export class SessionModel {
     return this.total > 0 && this.currentIndex === this.total - 1
   }
 
-  /** Đã chơi xong phần câu hỏi, đang ở khúc vinh danh và trao quà. */
+  /** The questions are done; we are in the podium and prize-giving stretch. */
   get isAfterPlay() {
     return [
       SESSION_STATES.PODIUM,
@@ -142,12 +144,12 @@ export class SessionModel {
     ].includes(this.state)
   }
 
-  /** Đã đi qua bao nhiêu phần trận đấu, 0 → 100. */
+  /** How much of the game has been played, 0 → 100. */
   get progress() {
     if (this.total === 0) return 0
     if (this.isAfterPlay) return 100
 
-    // Ở bước reveal thì câu hiện tại coi như đã xong.
+    // At the reveal step the current question counts as finished.
     const done =
       this.state === SESSION_STATES.REVEAL
         ? this.questionNumber
@@ -163,7 +165,7 @@ export class SessionModel {
     return this.state === SESSION_STATES.QUESTION
   }
 
-  // ---- đếm ngược ----
+  // ---- countdown ----
 
   remainingMs(now) {
     if (this.questionEndsAt === null) return 0
@@ -178,7 +180,7 @@ export class SessionModel {
     return this.questionEndsAt !== null && now >= this.questionEndsAt
   }
 
-  // ---- người chơi và đáp án ----
+  // ---- players and answers ----
 
   get playerCount() {
     return this.players.length
@@ -209,21 +211,22 @@ export class SessionModel {
     )
   }
 
-  /** Người này trả lời đúng câu hiện tại không? null = chưa trả lời. */
+  /** Did this player get the current question right? null = has not answered. */
   isCorrectOf(playerId) {
     const answer = this.currentAnswerOf(playerId)
     if (!answer) return null
     return this.currentQuestion.isCorrect(answer.optionIndex)
   }
 
-  /** Điểm người này vừa kiếm được ở câu hiện tại. */
+  /** Points this player just earned on the current question. */
   currentPointsOf(playerId) {
     return pointsOf(this.currentQuestion, this.currentAnswerOf(playerId))
   }
 
   /**
-   * Bảng hạng tính lại từ đáp án mỗi lần gọi thay vì lưu điểm vào player: chỉ
-   * vài chục người và vài câu, mà tránh được cảnh điểm lưu sẵn lệch với đáp án.
+   * The leaderboard is recomputed from the answers on every call instead of
+   * storing a score on each player: only a few dozen people and a handful of
+   * questions, and it rules out stored scores drifting out of sync with answers.
    */
   get leaderboard() {
     return Leaderboard.from(this)
@@ -233,7 +236,7 @@ export class SessionModel {
     return this.winnerId ? this.findPlayer(this.winnerId) : null
   }
 
-  /** Số người chọn từng đáp án ở câu hiện tại — display vẽ phân bố lúc reveal. */
+  /** How many people picked each option on the current question — the display draws this at reveal. */
   get currentDistribution() {
     const question = this.currentQuestion
     if (!question) return []
@@ -243,7 +246,7 @@ export class SessionModel {
     )
   }
 
-  // ---- hành động của admin ----
+  // ---- admin actions ----
 
   openLobby(quiz) {
     return this.#to(SESSION_STATES.LOBBY, {
@@ -266,12 +269,12 @@ export class SessionModel {
     })
   }
 
-  /** Chốt câu và lộ đáp án. Xoá mốc kết thúc để đồng hồ dừng ở mọi máy. */
+  /** Close the question and reveal the answer. Clearing the deadline stops the clock everywhere. */
   reveal() {
     return this.#to(SESSION_STATES.REVEAL, { questionEndsAt: null })
   }
 
-  /** Còn câu thì sang câu mới, hết câu thì lên bục vinh danh. */
+  /** Move to the next question, or to the podium when there are none left. */
   next(now) {
     if (this.state !== SESSION_STATES.REVEAL) return this
     if (this.isLastQuestion) return this.#to(SESSION_STATES.PODIUM)
@@ -284,15 +287,16 @@ export class SessionModel {
   }
 
   /**
-   * Công bố người thắng. Phải chỉ rõ ai — bước chọn quà cần biết của ai.
-   * Ba hộp quà được xáo ngay lúc này, mỗi lượt chơi một cách xáo khác.
+   * Announce the winner. The winner has to be named explicitly — the prize step
+   * needs to know whose it is. The three boxes are shuffled right here, so every
+   * round gets a different arrangement.
    */
   announceWinner(winnerId, boxes = PrizeBoxes.shuffled()) {
     if (!winnerId || !this.findPlayer(winnerId)) return this
     return this.#to(SESSION_STATES.PRIZE, { winnerId, prizeBoxes: boxes })
   }
 
-  /** Chọn hộp quà. Chỉ người thắng được chọn, và chỉ được chọn một lần. */
+  /** Pick a prize box. Only the winner may pick, and only once. */
   pickBox({ playerId, index }) {
     if (this.state !== SESSION_STATES.PRIZE) return this
     if (playerId !== this.winnerId) return this
@@ -307,12 +311,13 @@ export class SessionModel {
     return SessionModel.empty()
   }
 
-  // ---- hành động của người chơi ----
+  // ---- player actions ----
 
   /**
-   * Vào phiên. Vào muộn giữa trận vẫn cho — khách Open Day đến lẻ tẻ, người vào
-   * muộn chỉ mất điểm những câu đã qua. Người cũ vào lại (refresh, tắt màn hình)
-   * thì giữ nguyên tên và điểm, không tạo người mới.
+   * Join the session. Joining late mid-game is allowed — Open Day visitors turn
+   * up in dribs and drabs, and a latecomer only misses the points of the
+   * questions already played. A returning player (refresh, screen lock) keeps
+   * their name and score instead of becoming a new person.
    */
   join({ id, name, joinedAt }) {
     if (this.isIdle) return this
@@ -322,7 +327,7 @@ export class SessionModel {
     })
   }
 
-  /** Nhận đáp án: chỉ khi đang ở câu hỏi, chưa hết giờ, và mỗi câu một lần. */
+  /** Accept an answer: only during a question, before time is up, once per question. */
   submitAnswer({ playerId, optionIndex, now }) {
     const question = this.currentQuestion
     if (this.state !== SESSION_STATES.QUESTION || !question) return this

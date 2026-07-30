@@ -1,9 +1,10 @@
 import { Timer } from 'lucide-react'
 
 /**
- * Đồng hồ đếm ngược. Sắp hết giờ thì viền dày lên và chữ đậm hơn — không đổi
- * màu, để máy chiếu bạc màu và người mù màu vẫn thấy.
- * Cỡ chữ do nơi dùng quyết định (`className`); icon scale theo bằng `size-[1em]`.
+ * The countdown clock. As time runs out the border thickens and the text gets
+ * bolder — no colour change, so washed-out projectors and colour-blind viewers
+ * still see it.
+ * The caller sets the font size (`className`); the icon scales with `size-[1em]`.
  */
 const URGENT_SECONDS = 5
 

@@ -1,6 +1,6 @@
 /**
- * Sinh id cho quiz, câu hỏi và người chơi.
- * Đủ độc nhất cho một sự kiện — không cần chống trùng ở mức toàn cầu.
+ * Generates ids for quizzes, questions and players.
+ * Unique enough for one event — no need for globally collision-proof ids.
  */
 export function newId(prefix) {
   const time = Date.now().toString(36)

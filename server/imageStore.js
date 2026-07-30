@@ -1,20 +1,21 @@
 /**
- * Kho ảnh minh hoạ của câu hỏi.
+ * The store for question illustration images.
  *
- * Vì sao ảnh không nằm thẳng trong bộ quiz dưới dạng data URI: mỗi thay đổi của
- * phiên đều phát lại **ảnh chụp đầy đủ** cho mọi máy qua SSE. Nhét vài trăm KB
- * base64 vào đó thì mỗi lần một người bấm đáp án là cả phòng tải lại toàn bộ số
- * ảnh ấy. Nên quiz chỉ giữ đường dẫn `/api/images/<tên>`, còn byte ảnh đi một
- * lần lúc admin soạn câu hỏi.
+ * Why images do not sit inside the quiz as data URIs: every session change
+ * rebroadcasts a **full snapshot** to every device over SSE. Stuffing a few
+ * hundred KB of base64 in there would mean the whole room re-downloads all of it
+ * each time one person taps an answer. So the quiz only keeps the path
+ * `/api/images/<name>`, and the image bytes travel once, while the admin is
+ * writing the question.
  *
- * Ảnh ghi ra đĩa (`server/uploads/`) chứ không giữ trong RAM như trạng thái
- * phiên: bộ quiz nằm trong localStorage của máy admin nên sống qua lần khởi động
- * lại: ảnh cũng phải sống theo, không thì soạn câu hỏi tối hôm trước, sáng hôm
- * sau bật máy chủ lên là ảnh vỡ hết.
+ * Images are written to disk (`server/uploads/`) rather than kept in RAM like the
+ * session state: quizzes live in the admin machine's localStorage and therefore
+ * survive restarts, so the images must survive too — otherwise writing questions
+ * one evening and booting the server the next morning leaves every image broken.
  *
- * Tên file là 32 ký tự đầu của sha256 nội dung: dán cùng một ảnh vào mười câu
- * thì trên đĩa vẫn chỉ có một file, và tên đã cố định theo nội dung nên trình
- * duyệt cache vĩnh viễn được.
+ * The filename is the first 32 characters of the sha256 of the content: pasting
+ * the same image into ten questions still leaves one file on disk, and since the
+ * name is fixed by the content, browsers can cache it forever.
  *
  * Public API: MAX_IMAGE_BYTES, imageStore.save(), imageStore.read()
  */
@@ -25,7 +26,7 @@ import { fileURLToPath } from 'node:url'
 
 const DIR = fileURLToPath(new URL('./uploads', import.meta.url))
 
-/** Ảnh đã được thu nhỏ ở phía admin trước khi gửi; 2MB là mức chặn rác. */
+/** Images are already shrunk on the admin side before sending; 2MB is the junk cutoff. */
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
 const EXTENSION_OF = {
@@ -43,13 +44,14 @@ const TYPE_OF = {
 }
 
 /**
- * Chỉ chấp nhận đúng hình dạng tên do chính `save()` sinh ra. Máy chủ này mở ra
- * cả LAN nên tên file đến từ URL không bao giờ được ghép thẳng vào đường dẫn.
+ * Accept only the exact filename shape that `save()` itself produces. This
+ * server is open to the whole LAN, so a filename arriving from a URL must never
+ * be joined straight into a path.
  */
 const NAME_PATTERN = /^[a-f0-9]{32}\.(jpg|png|webp|gif)$/
 
 export const imageStore = {
-  /** Trả về tên file, hoặc null nếu kiểu ảnh không nhận. */
+  /** Returns the filename, or null when the image type is not accepted. */
   async save(body, contentType) {
     const extension = EXTENSION_OF[contentType]
     if (!extension) return null
@@ -62,7 +64,7 @@ export const imageStore = {
     return name
   },
 
-  /** Trả về `{ body, type }`, hoặc null nếu tên sai hoặc file không còn. */
+  /** Returns `{ body, type }`, or null when the name is invalid or the file is gone. */
   async read(name) {
     if (!NAME_PATTERN.test(name)) return null
 

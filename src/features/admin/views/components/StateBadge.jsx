@@ -1,18 +1,18 @@
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 
 const LABELS = {
-  [SESSION_STATES.IDLE]: 'Chưa mở phiên',
-  [SESSION_STATES.LOBBY]: 'Đang chờ người chơi',
-  [SESSION_STATES.QUESTION]: 'Đang trả lời',
-  [SESSION_STATES.REVEAL]: 'Đã lộ đáp án',
-  [SESSION_STATES.PODIUM]: 'Vinh danh',
-  [SESSION_STATES.PRIZE]: 'Chọn hộp quà',
-  [SESSION_STATES.PRIZE_REVEALED]: 'Đã mở quà',
+  [SESSION_STATES.IDLE]: 'No session open',
+  [SESSION_STATES.LOBBY]: 'Waiting for players',
+  [SESSION_STATES.QUESTION]: 'Answering',
+  [SESSION_STATES.REVEAL]: 'Answer revealed',
+  [SESSION_STATES.PODIUM]: 'Results',
+  [SESSION_STATES.PRIZE]: 'Choosing a prize box',
+  [SESSION_STATES.PRIZE_REVEALED]: 'Prize opened',
 }
 
 /**
- * Phiên chưa mở thì viền nét đứt; đang chạy thì viền liền, đậm, kèm chấm nhấp
- * nháy — dấu hiệu "đang phát" quen thuộc mà không cần tới màu.
+ * A closed session gets a dashed border; a running one gets a solid, heavier
+ * border plus a pulsing dot — the familiar "on air" cue, without needing colour.
  */
 function StateBadge({ state }) {
   const isIdle = state === SESSION_STATES.IDLE

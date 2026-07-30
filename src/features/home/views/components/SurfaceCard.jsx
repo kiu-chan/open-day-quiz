@@ -1,8 +1,9 @@
 import { ArrowRight } from 'lucide-react'
 
 /**
- * Thẻ dẫn tới một trong ba màn của app. Thẻ nổi bật (`featured`) đổ đen thay vì
- * đổi màu — cùng một cách phân cấp với Button.
+ * A card linking to one of the app's three screens. The highlighted card
+ * (`featured`) is filled black rather than recoloured — the same hierarchy trick
+ * Button uses.
  */
 function SurfaceCard({ href, Icon, title, description, featured = false, delay = '0ms' }) {
   const tone = featured
@@ -25,7 +26,7 @@ function SurfaceCard({ href, Icon, title, description, featured = false, delay =
       <p className={`text-base ${featured ? 'opacity-80' : ''}`}>{description}</p>
 
       <span className="mt-auto inline-flex items-center gap-2 pt-3 text-sm font-medium">
-        Mở
+        Open
         <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
       </span>
     </a>

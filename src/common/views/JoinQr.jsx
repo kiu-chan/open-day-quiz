@@ -3,28 +3,31 @@ import { Maximize2, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 
 /**
- * Mã QR trỏ tới trang người chơi.
+ * The QR code that points at the player page.
  *
- * Dùng SVG (không phải canvas) để nét khi phóng lên máy chiếu, và để màu mặc
- * định đen trên trắng — đúng luật layout, cũng là tương phản dễ quét nhất.
- * `level="M"` chịu được khoảng 15% vết che, đủ cho ảnh chiếu hơi bạc màu.
+ * Rendered as SVG (not canvas) so it stays crisp blown up on a projector, and
+ * left at the default black on white — which follows the layout rules and also
+ * happens to be the easiest contrast to scan.
+ * `level="M"` tolerates roughly 15% occlusion, enough for a slightly washed-out
+ * projected image.
  *
- * `size` là cỡ mong muốn chứ không phải cỡ cứng: nhận số (px) hoặc một độ dài
- * CSS bất kỳ (`'min(42vh, 80vw)'`), và luôn co lại khi khung hẹp hơn. SVG bên
- * trong có `viewBox` nên kéo giãn theo khung mà không vỡ nét.
+ * `size` is a wish, not a hard size: it takes a number (px) or any CSS length
+ * (`'min(42vh, 80vw)'`), and always shrinks when the container is narrower. The
+ * inner SVG has a `viewBox`, so it stretches to the frame without going fuzzy.
  *
- * `zoomable` cho phép bấm vào mã để phóng ra kín màn hình — khách đứng xa hoặc
- * điện thoại camera yếu vẫn quét được. Đây là trạng thái UI cục bộ của riêng
- * máy đang xem, không phải trạng thái phiên chơi, nên không gửi lên máy chủ.
+ * `zoomable` lets you tap the code to blow it up full screen — visitors standing
+ * far away or holding a phone with a weak camera can still scan it. This is
+ * local UI state of the viewing device only, not session state, so it is never
+ * sent to the server.
  *
- * URL phải là địa chỉ LAN của máy chạy server, không phải `localhost` — điện
- * thoại không quét được `localhost`. Xem docs/usage.md.
+ * The URL must be the LAN address of the machine running the server, not
+ * `localhost` — phones cannot scan their way to `localhost`. See docs/usage.md.
  */
 function JoinQr({ url, size = 200, className = '', zoomable = false }) {
   const [isZoomed, setIsZoomed] = useState(false)
 
-  // Esc để thoát: nghe ở window vì lớp phủ không giữ focus sau khi người dùng
-  // bấm ra vùng trống. Chỉ gắn khi đang phóng to.
+  // Esc to exit: listened for on window because the overlay does not keep focus
+  // after the user clicks an empty area. Only attached while zoomed.
   useEffect(() => {
     if (!isZoomed) return
 
@@ -45,7 +48,7 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
         size={512}
         level="M"
         marginSize={0}
-        title="Mã QR để vào chơi"
+        title="QR code to join the game"
         className="h-auto w-full"
       />
     </div>
@@ -58,8 +61,8 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
       <button
         type="button"
         onClick={() => setIsZoomed(true)}
-        aria-label="Phóng to mã QR"
-        title="Phóng to mã QR"
+        aria-label="Enlarge the QR code"
+        title="Enlarge the QR code"
         className="group relative max-w-full cursor-pointer rounded-2xl border-0 bg-transparent p-0 transition hover:opacity-85 active:scale-95"
       >
         {frame}
@@ -72,7 +75,7 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Mã QR phóng to"
+          aria-label="Enlarged QR code"
           onClick={() => setIsZoomed(false)}
           className="bg-bg fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 p-6"
         >
@@ -81,7 +84,7 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
             size={1000}
             level="M"
             marginSize={0}
-            title="Mã QR để vào chơi"
+            title="QR code to join the game"
             className="h-auto w-[min(78vh,92vw)]"
           />
 
@@ -91,7 +94,7 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
 
           <p className="flex items-center gap-2 text-sm opacity-70">
             <X className="size-4 shrink-0" aria-hidden="true" />
-            Bấm bất kỳ đâu hoặc nhấn Esc để đóng
+            Click anywhere or press Esc to close
           </p>
         </div>
       )}

@@ -32,9 +32,10 @@ function IconButton({ label, onClick, disabled, children }) {
 }
 
 /**
- * Soạn một câu hỏi. Đáp án đúng chọn bằng radio thật (`accent-black`) để bàn
- * phím và trình đọc màn hình vẫn dùng được, không phải nút tự vẽ; dòng đang
- * được chọn thêm viền đậm để nhìn lướt cũng thấy.
+ * Editor for one question. The correct answer is chosen with a real radio input
+ * (`accent-black`) so the keyboard and screen readers still work, rather than a
+ * hand-drawn button; the selected row also gets a heavier border so it is
+ * obvious at a glance.
  */
 function QuestionEditor({
   question,
@@ -63,23 +64,23 @@ function QuestionEditor({
 
         <div className="flex items-center gap-1.5">
           <IconButton
-            label="Đưa lên trên"
+            label="Move up"
             disabled={!canMoveUp}
             onClick={() => onMove(-1)}
           >
             <ChevronUp className="size-4" aria-hidden="true" />
           </IconButton>
           <IconButton
-            label="Đưa xuống dưới"
+            label="Move down"
             disabled={!canMoveDown}
             onClick={() => onMove(1)}
           >
             <ChevronDown className="size-4" aria-hidden="true" />
           </IconButton>
-          <IconButton label="Nhân bản câu hỏi" onClick={onDuplicate}>
+          <IconButton label="Duplicate question" onClick={onDuplicate}>
             <Copy className="size-4" aria-hidden="true" />
           </IconButton>
-          <IconButton label="Xoá câu hỏi" onClick={onRemove}>
+          <IconButton label="Delete question" onClick={onRemove}>
             <Trash2 className="size-4" aria-hidden="true" />
           </IconButton>
         </div>
@@ -89,7 +90,7 @@ function QuestionEditor({
         value={question.prompt}
         onChange={(event) => onPrompt(event.target.value)}
         rows={2}
-        placeholder="Nội dung câu hỏi"
+        placeholder="Question text"
         className={`${INPUT} resize-y text-base`}
       />
 
@@ -97,12 +98,12 @@ function QuestionEditor({
         value={question.image}
         onChange={onImage}
         onUpload={onUploadImage}
-        label="Thêm ảnh cho câu hỏi"
+        label="Add an image to the question"
       />
 
       <fieldset className="flex flex-col gap-2 border-0 p-0">
         <legend className="mb-2 text-xs tracking-wide uppercase">
-          Đáp án — chọn ô tròn ở đáp án đúng
+          Options — select the radio next to the correct one
         </legend>
 
         {question.options.map((option, i) => {
@@ -121,7 +122,7 @@ function QuestionEditor({
                   name={`correct-${question.id}`}
                   checked={isCorrect}
                   onChange={() => onCorrect(i)}
-                  aria-label={`Đáp án ${question.labelOf(i)} là đáp án đúng`}
+                  aria-label={`Option ${question.labelOf(i)} is the correct answer`}
                   className="size-4 shrink-0 cursor-pointer accent-black"
                 />
                 <span
@@ -134,11 +135,11 @@ function QuestionEditor({
                 <input
                   value={option}
                   onChange={(event) => onOption(i, event.target.value)}
-                  placeholder={`Đáp án ${question.labelOf(i)}`}
+                  placeholder={`Option ${question.labelOf(i)}`}
                   className={INPUT}
                 />
                 <IconButton
-                  label={`Bỏ đáp án ${question.labelOf(i)}`}
+                  label={`Remove option ${question.labelOf(i)}`}
                   disabled={!question.canRemoveOption}
                   onClick={() => onRemoveOption(i)}
                 >
@@ -146,14 +147,14 @@ function QuestionEditor({
                 </IconButton>
               </div>
 
-              {/* Thụt vào cho thẳng hàng với ô chữ của chính đáp án này. */}
+              {/* Indented to line up with the text field of this very option. */}
               <div className="pl-11">
                 <ImagePicker
                   compact
                   value={question.imageOf(i)}
                   onChange={(image) => onOptionImage(i, image)}
                   onUpload={onUploadImage}
-                  label={`Ảnh cho đáp án ${question.labelOf(i)}`}
+                  label={`Image for option ${question.labelOf(i)}`}
                 />
               </div>
             </div>
@@ -163,7 +164,7 @@ function QuestionEditor({
 
       <div className="border-border flex flex-wrap items-center justify-between gap-3 border-t pt-4">
         <label className="flex items-center gap-2 text-sm">
-          Thời gian
+          Time
           <input
             type="number"
             value={question.durationSeconds}
@@ -172,7 +173,7 @@ function QuestionEditor({
             onChange={(event) => onDuration(Number(event.target.value))}
             className="border-border focus:border-accent-border text-text-h w-20 rounded-lg border-2 px-3 py-1.5 font-mono text-sm outline-none"
           />
-          giây
+          seconds
         </label>
 
         <button
@@ -182,7 +183,7 @@ function QuestionEditor({
           className="border-border text-text-h hover:border-accent-border inline-flex items-center gap-1.5 rounded-lg border-2 bg-transparent px-3 py-1.5 text-sm transition enabled:cursor-pointer disabled:opacity-25"
         >
           <Plus className="size-4" aria-hidden="true" />
-          Thêm đáp án
+          Add option
         </button>
       </div>
 
@@ -190,9 +191,9 @@ function QuestionEditor({
         <p className="flex items-center gap-2 text-xs">
           <TriangleAlert
             className="size-4 shrink-0"
-            aria-label="Câu hỏi chưa dùng được"
+            aria-label="Question not usable yet"
           />
-          Câu này còn thiếu nội dung hoặc đáp án.
+          This question is missing content or an answer.
         </p>
       )}
     </li>

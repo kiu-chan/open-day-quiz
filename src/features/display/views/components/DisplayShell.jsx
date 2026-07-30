@@ -1,6 +1,6 @@
 /**
- * Khung màn hình lớn: chiếm hết màn hình, chữ to, không có gì để bấm.
- * `header` là thanh trên (số câu, đồng hồ), phần còn lại căn giữa.
+ * The big-screen frame: fills the whole screen, large text, nothing to click.
+ * `header` is the top bar (question number, clock); the rest is centred.
  */
 function DisplayShell({ header, children }) {
   return (

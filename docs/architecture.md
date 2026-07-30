@@ -1,243 +1,261 @@
-# Kiến trúc
+# Architecture
 
-Stack: Vite 8 + React 19 + JavaScript thuần + Tailwind CSS v4 + lucide-react +
-qrcode.react. Không TypeScript, không thư viện state.
+Stack: Vite 8 + React 19 + plain JavaScript + Tailwind CSS v4 + lucide-react +
+qrcode.react. No TypeScript, no state library.
 
-Backend là một máy chủ Node ~200 dòng trong [server/](../server/), viết bằng
-`node:http` — **không thêm dependency nào** (không express, không socket.io). Nó
-giữ trạng thái trận đấu cho mọi thiết bị trong cùng mạng LAN.
+The backend is a ~200-line Node server in [server/](../server/) written with
+`node:http` — **not a single added dependency** (no express, no socket.io). It
+holds the game state for every device on the same LAN.
 
-## Nguyên tắc
+## Principles
 
-**Feature-based + MVC trong từng feature.** Mỗi mảng nghiệp vụ là một hộp riêng,
-bên trong chia ba lớp. Không có `src/models/` toàn cục — logic của admin, player
-và display không nằm lẫn vào nhau.
+**Feature-based, with MVC inside each feature.** Each area of the product is its
+own box, and inside the box there are three layers. There is no global
+`src/models/` — the logic of admin, player and display never gets mixed together.
 
-Phụ thuộc chỉ đi một chiều:
+Dependencies point one way only:
 
 ```
 View  →  Controller  →  Model
 ```
 
-- **Model** — JavaScript thuần: dữ liệu và luật chơi. Không import React, không
-  JSX, không chạm DOM. Bất biến: mọi hành động trả về instance mới; hành động
-  không hợp lệ trả về chính nó.
-- **Controller** — React hook. Chỗ **duy nhất** được có side effect: `useState`,
-  `useEffect`, timer, đọc/ghi repository. Không chứa JSX, không chứa luật chơi.
-- **View** — chỉ JSX + class Tailwind. Chỉ view cấp trang (`*Page.jsx`) được gọi
-  hook controller; component trong `views/components/` là hàm thuần nhận props.
+- **Model** — plain JavaScript: data and game rules. No React import, no JSX, no
+  DOM access. Immutable: every action returns a new instance; an invalid action
+  returns the instance itself.
+- **Controller** — a React hook. The **only** place allowed to have side effects:
+  `useState`, `useEffect`, timers, repository reads and writes. No JSX, no game
+  rules.
+- **View** — JSX and Tailwind classes only. Only page-level views (`*Page.jsx`)
+  may call a controller hook; components under `views/components/` are pure
+  functions of their props.
 
-**Ngoại lệ duy nhất:** repository nằm trong `models/` nhưng được chạm vào I/O
-(mạng, `localStorage`) — đó chính là lý do nó tồn tại. Nó là ranh giới, mọi thứ
-còn lại trong `models/` vẫn thuần.
+**The single exception:** repositories live in `models/` but are allowed to touch
+I/O (network, `localStorage`) — that is precisely why they exist. They are the
+boundary; everything else in `models/` stays pure.
 
-## Cây thư mục
+## Directory tree
 
 ```
-server/                            # máy chủ trận đấu, chỉ node:http
-├── index.js                       #   phục vụ dist/ + in URL LAN
+server/                            # game server, node:http only
+├── index.js                       #   serves dist/ + prints the LAN URLs
 ├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
-├── sessionStore.js                #   giữ SessionModel, áp intent, phát cho mọi máy
-└── imageStore.js                  #   ảnh câu hỏi, đặt tên theo hash, ghi ra uploads/
+├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
+└── imageStore.js                  #   question images, hash-named, written to uploads/
 
 src/
 ├── main.jsx
-├── App.jsx                        # bảng phân tuyến 6 route
-├── index.css                      # @import tailwindcss + token trong @theme
-├── common/                        # dùng chung ≥2 feature
+├── App.jsx                        # the routing table, 6 routes
+├── index.css                      # @import tailwindcss + tokens in @theme
+├── common/                        # shared by ≥2 features
 │   ├── ids.js
-│   ├── routing/useHashRoute.js    # router ~60 dòng chạy trên location.hash
-│   ├── session/                   # ← trái tim của app
+│   ├── routing/useHashRoute.js    # ~60-line router on location.hash
+│   ├── session/                   # ← the heart of the app
 │   │   ├── models/
-│   │   │   ├── SessionModel.js    #   máy trạng thái phiên chơi
-│   │   │   ├── SessionRepository.js #  I/O: SSE nhận về, POST gửi intent lên
-│   │   │   ├── Quiz.js            #   bộ quiz (+ các phương thức sửa)
-│   │   │   ├── Question.js        #   câu hỏi, chấm đúng/sai, thời lượng
-│   │   │   ├── Leaderboard.js     #   chấm điểm, sắp hạng, đồng điểm
-│   │   │   └── PrizeBoxes.js      #   xáo 3 hộp quà (Fisher–Yates)
+│   │   │   ├── SessionModel.js    #   the session state machine
+│   │   │   ├── SessionRepository.js #  I/O: SSE in, POST intents out
+│   │   │   ├── Quiz.js            #   the quiz (+ its editing methods)
+│   │   │   ├── Question.js        #   a question, right/wrong marking, duration
+│   │   │   ├── Leaderboard.js     #   scoring, ranking, ties
+│   │   │   └── PrizeBoxes.js      #   shuffles the 3 prize boxes (Fisher–Yates)
 │   │   └── controllers/
-│   │       ├── useSession.js      #   nghe phiên từ máy chủ + gửi intent
-│   │       └── useNow.js          #   nhịp đồng hồ cho đếm ngược
+│   │       ├── useSession.js      #   listens to the server + sends intents
+│   │       └── useNow.js          #   the clock tick for countdowns
 │   └── views/                     # Button, Countdown, ProgressBar,
 │                                  # LeaderboardTable, JoinQr, ConnectionBanner
 └── features/
-    ├── home/                      # H1 trang chủ `/` — giới thiệu + lối vào 3 màn
+    ├── home/                      # H1 home page `/` — intro + entry to all 3 screens
     │   ├── controllers/useHomeController.js
     │   └── views/
-    ├── admin/                     # A1 danh sách, A2 soạn quiz, A3 bàn điều khiển
-    │   ├── models/                #   QuizRepository + dữ liệu mẫu
+    ├── admin/                     # A1 list, A2 quiz editor, A3 control desk
+    │   ├── models/                #   QuizRepository + sample data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
     │   │                          #   useLiveController
     │   └── views/
-    ├── player/                    # P1–P6 trên điện thoại
+    ├── player/                    # P1–P6 on phones
     │   ├── controllers/usePlayerController.js
     │   └── views/
-    └── display/                   # D1–D5 trên máy chiếu
+    └── display/                   # D1–D5 on the projector
         ├── controllers/useDisplayController.js
         └── views/
 ```
 
-## Vì sao session nằm ở `common/`
+## Why the session lives in `common/`
 
-Ba màn hình **không phải ba ứng dụng**. Cả ba đọc cùng một `SessionModel`, chỉ
-khác cách vẽ ra:
+The three screens **are not three applications**. All three read the same
+`SessionModel` and only differ in how they draw it:
 
-| Trạng thái | Admin | Player | Display |
+| State | Admin | Player | Display |
 | --- | --- | --- | --- |
-| `lobby` | danh sách người vào, nút Bắt đầu | "Đang chờ..." | QR to + số người |
-| `question` | số người đã trả lời | 4 ô bấm được | câu hỏi chữ rất to + đồng hồ |
-| `reveal` | phân bố lựa chọn, nút Câu tiếp | đúng/sai + điểm | đáp án đúng |
-| `podium` | bảng hạng, nút Công bố | hạng của mình | top 3 |
-| `prize` | chờ | 3 hộp (chỉ người thắng) | 3 hộp, mở quà |
+| `lobby` | the join list, Start button | "Waiting..." | large QR + join count |
+| `question` | how many have answered | 4 tappable tiles | the question in huge type + clock |
+| `reveal` | the pick distribution, Next button | right/wrong + points | the correct answer |
+| `podium` | the leaderboard, Announce button | their own rank | the top 3 |
+| `prize` | waiting | 3 boxes (winner only) | 3 boxes, prize opening |
 
-Nếu mỗi surface tự giữ một bản trạng thái thì ba màn hình sẽ lệch nhau. Nên máy
-trạng thái là **một** model dùng chung, và nó không thuộc feature nào.
+If every surface kept its own copy of the state, the three screens would drift
+apart. So the state machine is **one** shared model, and it belongs to no
+feature.
 
-## Máy trạng thái phiên chơi
+## The session state machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> lobby: admin mở phiên
-    lobby --> question: admin bắt đầu
-    question --> reveal: hết giờ / admin bấm
-    reveal --> question: còn câu
-    reveal --> podium: hết câu
-    podium --> prize: admin công bố người thắng
-    prize --> prizeRevealed: người thắng chọn hộp
-    prizeRevealed --> idle: kết thúc phiên
-    lobby --> idle: admin huỷ
+    idle --> lobby: admin opens a session
+    lobby --> question: admin starts
+    question --> reveal: time up / admin clicks
+    reveal --> question: questions remain
+    reveal --> podium: no questions left
+    podium --> prize: admin announces the winner
+    prize --> prizeRevealed: the winner picks a box
+    prizeRevealed --> idle: session ended
+    lobby --> idle: admin cancels
 ```
 
-Bảng chuyển trạng thái hợp lệ nằm gọn trong một hằng `ALLOWED_NEXT` ở
-[SessionModel.js](../src/common/session/models/SessionModel.js) — không rải `if`
-về trạng thái ra khắp controller và view. Hành động sai thứ tự trả về đúng
-instance cũ, nên bấm "Câu tiếp" hai lần không nhảy mất câu, và repository biết là
-không có gì đổi nên không phát tín hiệu.
+The table of valid transitions fits in one `ALLOWED_NEXT` constant in
+[SessionModel.js](../src/common/session/models/SessionModel.js) — no state `if`s
+scattered across controllers and views. An out-of-order action returns the very
+same instance, so double-clicking "Next question" skips nothing, and the
+repository knows nothing changed and broadcasts nothing.
 
-**Chỉ máy chủ được áp máy trạng thái này.** Client gửi *ý định* lên, máy chủ áp
-rồi phát kết quả về. Việc tự chốt câu khi hết giờ cũng thuộc máy chủ: chỉ được có
-một đồng hồ, và trận đấu không được treo khi admin khoá màn hình.
+**Only the server applies this state machine.** Clients send *intents* and the
+server broadcasts the outcome. Auto-closing a question when time is up belongs to
+the server too: there must be exactly one clock, and the game must not hang when
+the admin locks their screen.
 
-## Ba quyết định kỹ thuật đáng nhớ
+## Three technical decisions worth remembering
 
-**Đếm ngược lưu mốc kết thúc, không lưu "còn N giây".** Session giữ
-`questionEndsAt`, mỗi máy tự tính phần còn lại. Nếu mỗi máy đếm độc lập từ N giây
-thì sau vài câu điện thoại và máy chiếu lệch nhau vài giây.
+**The countdown stores an end timestamp, not "N seconds left".** The session
+keeps `questionEndsAt` and every device computes the remainder itself. If each
+device counted down independently from N seconds, after a few questions the
+phones and the projector would drift seconds apart.
 
-Nhưng mốc đó theo **đồng hồ máy chủ**, nên máy nào đặt sai giờ mà trừ theo đồng hồ
-của nó sẽ thấy đếm ngược sai hẳn (thường là đứng ở 0 suốt câu). Vì vậy mỗi frame
-SSE mang theo `serverNow`, repository tính độ lệch, và `useNow` trả về giờ đã bù —
-xem `serverNow()` trong
-[SessionRepository.js](../src/common/session/models/SessionRepository.js). Điểm số
-không phụ thuộc vào chỗ này: `msTaken` do máy chủ tính, đồng hồ điện thoại chỉ ảnh
-hưởng con số hiển thị.
+But that timestamp is on the **server clock**, so a device with the wrong time
+subtracting against its own clock would see a badly wrong countdown (usually
+stuck at 0 for the whole question). That is why every SSE frame carries
+`serverNow`, the repository computes the offset, and `useNow` returns the
+corrected time — see `serverNow()` in
+[SessionRepository.js](../src/common/session/models/SessionRepository.js). Scoring
+does not depend on any of this: `msTaken` is computed by the server, and a
+phone's clock only affects the number shown on screen.
 
-**`playerId` lưu `localStorage`.** Điện thoại rất dễ bị tắt màn hình hoặc
-refresh giữa trận; vào lại phải nhận đúng người cũ, không tạo người mới, không
-làm mất điểm và không sinh tên trùng trên bảng hạng. Nếu phiên không còn thấy tên
-mình (máy chủ khởi động lại, admin mở lượt mới) thì controller tự gửi lại `join`
-bằng danh tính đã lưu — không lẽ bắt cả phòng gõ lại tên.
+**`playerId` is kept in `localStorage`.** Phones get their screen locked or
+refreshed mid-round constantly; coming back has to recognise the same person, not
+create a new one, not lose their points, and not produce duplicate names on the
+leaderboard. If the session no longer knows their name (server restart, admin
+opening a new round), the controller resends `join` with the stored identity —
+we are not making the whole room retype their names.
 
-**Điểm tính lại từ đáp án, không lưu sẵn vào người chơi.** Chỉ vài chục người và
-vài câu nên tính lại rất nhẹ, mà tránh được cảnh điểm đã lưu lệch với đáp án.
+**Scores are recomputed from the answers, not stored on the player.** With only a
+few dozen people and a handful of questions, recomputing is cheap, and it rules
+out stored scores drifting out of sync with the answers.
 
-## Realtime: máy chủ LAN, SSE + intent
+## Realtime: a LAN server, SSE + intents
 
-Trạng thái trận đấu sống trong RAM của một tiến trình Node chạy trên đúng cái máy
-nối máy chiếu. Điện thoại vào cùng wifi rồi mở `http://<ip-máy>:3000`.
+The game state lives in the RAM of one Node process running on the very machine
+plugged into the projector. Phones join the same wifi and open
+`http://<machine-ip>:3000`.
 
 ```
-điện thoại ─┐
-điện thoại ─┼─ POST /api/intent ──→ ┌──────────────┐
-máy chiếu ──┤                       │ sessionStore │  SessionModel + Date.now()
+phone ──────┐
+phone ──────┼─ POST /api/intent ──→ ┌──────────────┐
+projector ──┤                       │ sessionStore │  SessionModel + Date.now()
 admin ──────┘                       └──────┬───────┘
-            └── GET /api/events ←───────────┘  SSE, ảnh chụp đầy đủ mỗi lần đổi
+            └── GET /api/events ←───────────┘  SSE, full snapshot on every change
 ```
 
-**Máy chủ là nguồn sự thật, không phải cái loa chuyển tiếp.** Client gửi ý định
-(`{ type: 'answer', optionIndex: 2 }`), không gửi trạng thái. Hai lý do:
+**The server is the source of truth, not a relay.** Clients send intents
+(`{ type: 'answer', optionIndex: 2 }`), never state. Two reasons:
 
-- Nếu client được ghi thẳng trạng thái thì một điện thoại có thể POST lên một
-  phiên bịa đặt — tự cho mình 10 000 điểm.
-- `msTaken` (trả lời nhanh cỡ nào) phải đo bằng **một** đồng hồ. Mốc bắt đầu câu
-  do máy chủ đặt, mốc nhận đáp án cũng do máy chủ đặt; đồng hồ điện thoại lệch vài
-  giây không ảnh hưởng gì. Nếu để client tự tính thì người có đồng hồ chạy chậm
-  được thưởng.
+- If clients could write state directly, one phone could POST a fabricated
+  session and award itself 10,000 points.
+- `msTaken` (how fast someone answered) has to be measured by **one** clock. The
+  question start is set by the server and so is the moment the answer lands; a
+  phone clock off by seconds changes nothing. Letting the client compute it would
+  reward whoever has the slowest clock.
 
-**SSE chứ không WebSocket / Socket.IO.** `EventSource` tự kết nối lại khi mạng
-chập — điện thoại khoá màn hình rồi mở lại là tự vào tiếp, không phải viết vòng
-thử lại nào. Không cần thư viện phía client, cũng không thêm dependency phía
-server. Luồng dữ liệu ở đây đúng hình dạng SSE: một máy phát, nhiều máy đọc; chiều
-ngược lại chỉ vài cú bấm nên POST là đủ. Socket.IO cho hai chiều thật sự và nhiều
-transport dự phòng — thêm ~40 kB gzip cho những thứ ở đây không dùng.
+**SSE rather than WebSocket / Socket.IO.** `EventSource` reconnects on its own
+when the network hiccups — a phone that locks and unlocks its screen rejoins with
+no retry loop to write. No client library needed, and no server-side dependency
+either. The data flow here is exactly SSE-shaped: one broadcaster, many readers;
+the reverse direction is only a handful of taps, so POST is plenty. Socket.IO
+offers true bidirectional traffic and transport fallbacks — about 40 kB gzipped
+for things this app does not use.
 
-**Phát ảnh chụp đầy đủ, không phát diff.** Điện thoại vào giữa trận là đúng ngay ở
-frame đầu, không cần phát lại lịch sử. Vài chục người thì payload vẫn nhỏ.
+**Full snapshots, not diffs.** A phone joining mid-round is correct from its very
+first frame, with no history to replay. With a few dozen people the payload stays
+small anyway.
 
-**Ảnh đi đường riêng, không đi trong ảnh chụp.** Câu hỏi và đáp án có thể có ảnh,
-nhưng bộ quiz chỉ giữ **đường dẫn** (`/api/images/<hash>.jpg`) chứ không giữ data
-URI. Lý do nằm ngay ở đoạn trên: mỗi thay đổi của phiên đều phát lại toàn bộ ảnh
-chụp, nên nhét base64 vào đó thì mỗi lần một người bấm đáp án là cả phòng tải lại
-hết số ảnh của cả bộ quiz. Byte ảnh đi đúng một lần, lúc admin soạn câu hỏi:
+**Images travel their own path, not inside the snapshot.** Questions and options
+can have images, but the quiz only keeps a **path** (`/api/images/<hash>.jpg`),
+never a data URI. The reason is right above: every session change rebroadcasts the
+whole snapshot, so putting base64 in there would make the entire room re-download
+every image in the quiz each time one person taps an answer. The image bytes
+travel exactly once, while the admin is writing the question:
 
 ```
-admin ── POST /api/images (ảnh đã thu nhỏ) ──→ server/uploads/<hash>.jpg
-                                    ↓ trả về đường dẫn
-                          quiz trong localStorage chỉ lưu đường dẫn
-điện thoại, máy chiếu ── GET /api/images/<hash>.jpg ──→ cache vĩnh viễn
+admin ── POST /api/images (already shrunk) ──→ server/uploads/<hash>.jpg
+                                    ↓ returns the path
+                          the quiz in localStorage only stores the path
+phones, projector ── GET /api/images/<hash>.jpg ──→ cached forever
 ```
 
-Tên file là 32 ký tự đầu của sha256 nội dung: cùng một ảnh dùng cho mười câu thì
-trên đĩa vẫn một file, và vì tên đã cố định theo nội dung nên trả kèm
-`Cache-Control: immutable` — điện thoại tải một lần cho cả trận. `ImageRepository`
-phía admin thu ảnh về cạnh dài 1200px trước khi gửi; ảnh chụp điện thoại 4MB mà
-gửi nguyên bản thì vừa vượt hạn mức vừa làm khách tải lâu.
+The filename is the first 32 characters of the sha256 of the content: the same
+image used in ten questions is still one file on disk, and since the name is
+fixed by the content it is served with `Cache-Control: immutable` — a phone
+downloads it once for the whole round. `ImageRepository` on the admin side shrinks
+images to a 1200px long edge before sending; a 4MB phone photo sent as-is would
+both blow past the limit and make visitors wait.
 
-Khác trạng thái phiên, ảnh **ghi ra đĩa** (`server/uploads/`, đã gitignore) chứ
-không giữ trong RAM: bộ quiz nằm trong localStorage của máy admin nên sống qua
-những lần khởi động lại máy chủ, ảnh mà không sống theo thì soạn câu hỏi tối hôm
-trước, sáng hôm sau bật máy lên là vỡ hết.
+Unlike the session state, images are **written to disk** (`server/uploads/`,
+gitignored) rather than kept in RAM: quizzes live in the admin machine's
+localStorage and survive server restarts, and if the images did not survive too,
+writing questions one evening would leave everything broken when the machine
+boots the next morning.
 
-**Luật chơi chỉ có một bản.** `server/sessionStore.js` import đúng
-`SessionModel.js` mà client dùng — không có "luật phía server" song song để lệch
-nhau. Đây là phần thưởng của việc model không bao giờ import React và không tự gọi
-`Date.now()`: nó chạy được trong node y như trong trình duyệt.
+**One copy of the game rules.** `server/sessionStore.js` imports the exact
+`SessionModel.js` the client uses — there is no parallel "server-side rulebook" to
+drift out of sync. This is the payoff of the model never importing React and never
+calling `Date.now()` itself: it runs in node exactly as it runs in the browser.
 
-**Cùng một handler cho dev và lúc chạy trận.** `server/sessionApi.js` cắm vào
-middleware của Vite (xem plugin `sessionApi` trong
-[vite.config.js](../vite.config.js)) nên `npm run dev:lan` vẫn có HMR mà trạng
-thái đã là trạng thái máy chủ thật; `npm run start` thì `server/index.js` phục vụ
-`dist/` với đúng handler đó.
+**One handler for development and for live rounds.** `server/sessionApi.js` plugs
+into Vite's middleware (see the `sessionApi` plugin in
+[vite.config.js](../vite.config.js)), so `npm run dev:lan` keeps HMR while the
+state is already real server state; with `npm run start`, `server/index.js` serves
+`dist/` using that same handler.
 
-`SessionRepository` vẫn là ranh giới duy nhất: `read()` vẫn đồng bộ và vẫn trả về
-`SessionModel` (nó đọc ảnh chụp gần nhất nhận được), nên **`SessionModel` và toàn
-bộ view không phải sửa một dòng** khi app chuyển từ localStorage sang máy chủ.
-Thay đổi là `update(fn)` → `send(intent)`: client không còn được tự áp luật.
+`SessionRepository` is still the only boundary: `read()` is still synchronous and
+still returns a `SessionModel` (it reads the most recent snapshot received), so
+**`SessionModel` and every view needed zero changes** when the app moved from
+localStorage to a server. What changed is `update(fn)` → `send(intent)`: clients
+no longer apply the rules themselves.
 
-**Giới hạn còn lại:** trạng thái chỉ ở RAM, tắt máy chủ giữa trận là mất trận đang
-chạy (mở lại thì mở phiên mới — điện thoại tự vào lại). Và ai biết địa chỉ cũng mở
-được `#/admin/live`; ở hội trường thì chấp nhận được, muốn chắc thì thêm mã PIN
-cho intent của admin.
+**Remaining limitations:** the state is RAM-only, so stopping the server mid-round
+loses the round in progress (start it again and open a new session — phones rejoin
+by themselves). And anyone who knows the address can open `#/admin/live`; that is
+acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
 
-## Luật giao diện
+## Interface rules
 
-- Chỉ **đen, trắng và các mức xám**. Không màu nhấn, không gradient, không dark mode.
-- **Không dùng màu để truyền tải thông tin.** Đúng/sai, được chọn, hết giờ đều
-  phân biệt bằng icon, độ đậm viền, viền nét đứt, fill xám, độ mờ, gạch ngang.
-  Nhờ vậy người mù màu và máy chiếu bạc màu vẫn đọc được.
-- Icon lấy từ `lucide-react`, **không dùng emoji** (emoji tự mang màu, render
-  khác nhau theo hệ điều hành, và nhoè trên máy chiếu). Icon mang thông tin thì
-  có `aria-label`, icon trang trí thì `aria-hidden`.
-- Cỡ chữ theo surface: `display/` chữ rất lớn đọc từ xa, `player/` vùng bấm to
-  cho ngón tay, `admin/` cỡ bình thường vì xem gần.
+- **Black, white and shades of grey only.** No accent colour, no gradients, no
+  dark mode.
+- **Never use colour to carry information.** Right/wrong, selected, out of time
+  are all distinguished by icon, border weight, dashed borders, grey fills,
+  opacity and strikethrough. That is what keeps it readable for colour-blind
+  viewers and on washed-out projectors.
+- Icons come from `lucide-react`, **never emoji** (emoji carry their own colour,
+  render differently per operating system, and blur on a projector). Icons that
+  carry meaning get an `aria-label`; decorative ones get `aria-hidden`.
+- Type size follows the surface: `display/` uses very large text readable from a
+  distance, `player/` uses finger-sized tap targets, `admin/` uses ordinary sizes
+  because it is viewed up close.
 
-## Thêm tính năng mới
+## Adding a feature
 
-1. Xác định feature — thuộc feature đã có thì sửa trong đó, là mảng mới thì tạo
-   `features/<tên>/`.
-2. Dữ liệu và luật mới → `models/`.
-3. State, side effect, timer → `controllers/`.
-4. Giao diện → `views/`.
+1. Identify the feature — modify an existing one if it belongs there, create
+   `features/<name>/` if it is a new area.
+2. New data and rules → `models/`.
+3. State, side effects, timers → `controllers/`.
+4. Interface → `views/`.
 
-Code chỉ chuyển sang `src/common/` khi có feature **thứ hai** thật sự cần dùng.
+Code only moves into `src/common/` once a **second** feature genuinely needs it.

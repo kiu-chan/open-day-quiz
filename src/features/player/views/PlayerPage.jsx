@@ -12,24 +12,24 @@ import PlayerShell from './components/PlayerShell.jsx'
 import PrizeBoxPicker from './components/PrizeBoxPicker.jsx'
 import StatusScreen from './components/StatusScreen.jsx'
 
-/** Nhãn đúng/sai/không kịp — icon đi kèm chữ, không chỉ dựa vào chữ. */
+/** The right/wrong/too-late label — an icon alongside the text, never text alone. */
 function Verdict({ isCorrect }) {
   if (isCorrect === null) {
     return (
       <p className="text-text-h flex items-center gap-2 text-lg font-medium">
         <Hourglass className="size-5" aria-hidden="true" />
-        Bạn không trả lời kịp
+        You ran out of time
       </p>
     )
   }
   return (
     <p className="text-text-h flex items-center gap-2 text-lg font-medium">
       {isCorrect ? (
-        <Check className="size-5" strokeWidth={2.5} aria-label="Đúng" />
+        <Check className="size-5" strokeWidth={2.5} aria-label="Correct" />
       ) : (
-        <X className="size-5" strokeWidth={2.5} aria-label="Sai" />
+        <X className="size-5" strokeWidth={2.5} aria-label="Wrong" />
       )}
-      {isCorrect ? 'Đúng rồi' : 'Chưa đúng'}
+      {isCorrect ? 'Correct!' : 'Not quite'}
     </p>
   )
 }
@@ -40,8 +40,8 @@ function PlayerBody({ player }) {
       <PlayerShell name="">
         <StatusScreen
           icon={MonitorOff}
-          title="Chưa có trận nào"
-          note="Chờ ban tổ chức mở phiên rồi tải lại trang."
+          title="No round yet"
+          note="Wait for the organisers to open a session, then reload this page."
         />
       </PlayerShell>
     )
@@ -50,7 +50,7 @@ function PlayerBody({ player }) {
   if (!player.hasJoined) {
     return (
       <PlayerShell name="">
-        <h1 className="text-text-h text-2xl tracking-tight">Tham gia</h1>
+        <h1 className="text-text-h text-2xl tracking-tight">Join</h1>
         <JoinForm defaultName={player.name} onJoin={player.join} />
       </PlayerShell>
     )
@@ -61,8 +61,8 @@ function PlayerBody({ player }) {
       <PlayerShell name={player.name}>
         <StatusScreen
           icon={Users}
-          title="Đã vào, chờ bắt đầu"
-          note={`${player.playerCount} người đang chờ`}
+          title="You're in, waiting to start"
+          note={`${player.playerCount} waiting`}
         />
       </PlayerShell>
     )
@@ -73,7 +73,7 @@ function PlayerBody({ player }) {
       <PlayerShell name={player.name}>
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-xs">
-            Câu {player.questionNumber} / {player.total}
+            Question {player.questionNumber} / {player.total}
           </p>
           <Countdown seconds={player.secondsLeft} className="text-sm" />
         </div>
@@ -87,7 +87,7 @@ function PlayerBody({ player }) {
 
         <QuizImage
           src={player.question.image}
-          alt="Ảnh của câu hỏi"
+          alt="Question image"
           className="max-h-52 w-full"
         />
 
@@ -110,7 +110,7 @@ function PlayerBody({ player }) {
 
         {player.myAnswer && (
           <p className="text-center text-sm opacity-70">
-            Đã gửi. Chờ mọi người trả lời xong.
+            Answer sent. Waiting for everyone else.
           </p>
         )}
       </PlayerShell>
@@ -121,13 +121,13 @@ function PlayerBody({ player }) {
     return (
       <PlayerShell name={player.name}>
         <p className="font-mono text-xs">
-          Câu {player.questionNumber} / {player.total}
+          Question {player.questionNumber} / {player.total}
         </p>
         <Verdict isCorrect={player.isCorrect} />
 
         {player.myRow && (
           <p className="font-mono text-sm tabular-nums">
-            +{player.pointsThisQuestion} điểm · tổng {player.myRow.score}
+            +{player.pointsThisQuestion} points · total {player.myRow.score}
           </p>
         )}
 
@@ -161,13 +161,13 @@ function PlayerBody({ player }) {
       <PlayerShell name={player.name}>
         <section className="flex flex-col items-center gap-2 py-4 text-center">
           <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
-          <p className="text-sm opacity-70">Hạng của bạn</p>
+          <p className="text-sm opacity-70">Your rank</p>
           <p className="text-text-h font-mono text-5xl tabular-nums">
             {player.myRow?.rank ?? '—'}
           </p>
           <p className="text-sm">
-            {player.myRow?.score ?? 0} điểm · đúng {player.myRow?.correctCount ?? 0}/
-            {player.total} câu
+            {player.myRow?.score ?? 0} points · {player.myRow?.correctCount ?? 0}/
+            {player.total} correct
           </p>
         </section>
 
@@ -180,17 +180,18 @@ function PlayerBody({ player }) {
     )
   }
 
-  // Còn lại: prize và prizeRevealed — người thắng chọn hộp, người khác ngồi xem.
+  // What is left: prize and prizeRevealed — the winner picks a box, everyone
+  // else watches.
   if (player.isWinner && player.prizeBoxes) {
     return (
       <PlayerShell name={player.name}>
         <section className="flex flex-col items-center gap-2 text-center">
           <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
-          <h2 className="text-text-h text-2xl">Bạn thắng!</h2>
+          <h2 className="text-text-h text-2xl">You won!</h2>
           <p className="text-sm opacity-70">
             {player.prizeBoxes.isPicked
-              ? 'Phần quà của bạn'
-              : 'Chọn một trong ba hộp quà'}
+              ? 'Your prize'
+              : 'Pick one of the three boxes'}
           </p>
         </section>
 
@@ -205,10 +206,10 @@ function PlayerBody({ player }) {
         icon={Gift}
         title={
           player.prizeBoxes?.isPicked
-            ? `${player.winnerName} nhận ${player.prizeBoxes.pickedPrize}`
-            : `${player.winnerName} đang chọn quà`
+            ? `${player.winnerName} got ${player.prizeBoxes.pickedPrize}`
+            : `${player.winnerName} is picking a prize`
         }
-        note="Xem trên màn hình lớn."
+        note="Watch the big screen."
       />
     </PlayerShell>
   )

@@ -4,7 +4,7 @@ import Button from '@common/views/Button.jsx'
 
 const MAX_NAME_LENGTH = 24
 
-/** P1 — nhập tên để vào phiên. Tên cũ được điền sẵn nếu đã từng chơi. */
+/** P1 — enter a name to join the session. A previous name is prefilled. */
 function JoinForm({ defaultName, onJoin }) {
   const [name, setName] = useState(defaultName)
 
@@ -17,14 +17,14 @@ function JoinForm({ defaultName, onJoin }) {
       }}
     >
       <label className="flex flex-col gap-2 text-sm" htmlFor="player-name">
-        Tên của bạn
+        Your name
         <input
           id="player-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={MAX_NAME_LENGTH}
           autoComplete="off"
-          placeholder="Ví dụ: Khánh"
+          placeholder="For example: Alex"
           className="border-border focus:border-accent-border text-text-h rounded-xl border-2 px-4 py-3 text-lg outline-none"
         />
       </label>
@@ -36,7 +36,7 @@ function JoinForm({ defaultName, onJoin }) {
         className="py-3 text-base"
       >
         <LogIn className="size-5" aria-hidden="true" />
-        Vào chơi
+        Join the game
       </Button>
     </form>
   )

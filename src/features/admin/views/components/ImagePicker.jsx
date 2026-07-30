@@ -3,13 +3,14 @@ import { ImagePlus, LoaderCircle, Trash2, TriangleAlert } from 'lucide-react'
 import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
- * Ô chọn ảnh cho câu hỏi hoặc cho một đáp án.
+ * The image slot for a question or for one option.
  *
- * Nhận `onUpload` từ page chứ không tự gọi repository — view không được chạm
- * I/O. Còn "đang tải" và "tải lỗi" là trạng thái UI của riêng ô này (hai ô cạnh
- * nhau tải hai ảnh cùng lúc vẫn phải độc lập), nên giữ tại chỗ bằng useState.
+ * It receives `onUpload` from the page instead of calling the repository itself
+ * — views must not touch I/O. "Uploading" and "upload failed", on the other
+ * hand, are UI state belonging to this one slot (two adjacent slots uploading at
+ * the same time must stay independent), so they are kept locally with useState.
  *
- * `compact` là bản thu nhỏ dùng cho từng dòng đáp án.
+ * `compact` is the shrunk-down variant used on each option row.
  */
 function ImagePicker({ value, onChange, onUpload, label, compact = false }) {
   const inputRef = useRef(null)
@@ -27,7 +28,8 @@ function ImagePicker({ value, onChange, onUpload, label, compact = false }) {
       setError(failure.message)
     } finally {
       setIsUploading(false)
-      // Xoá giá trị input để chọn lại đúng file vừa rồi vẫn kích hoạt onChange.
+      // Clear the input value so picking the very same file again still fires
+      // onChange.
       if (inputRef.current) inputRef.current.value = ''
     }
   }
@@ -69,11 +71,11 @@ function ImagePicker({ value, onChange, onUpload, label, compact = false }) {
             <ImagePlus className="size-3.5 shrink-0" aria-hidden="true" />
           )}
           {isUploading
-            ? 'Đang tải…'
+            ? 'Uploading…'
             : value
-              ? 'Đổi ảnh'
+              ? 'Replace image'
               : compact
-                ? 'Thêm ảnh'
+                ? 'Add image'
                 : label}
         </button>
 
@@ -82,8 +84,8 @@ function ImagePicker({ value, onChange, onUpload, label, compact = false }) {
             type="button"
             className={button}
             onClick={() => onChange(null)}
-            aria-label="Bỏ ảnh"
-            title="Bỏ ảnh"
+            aria-label="Remove image"
+            title="Remove image"
           >
             <Trash2 className="size-3.5 shrink-0" aria-hidden="true" />
           </button>
@@ -93,7 +95,7 @@ function ImagePicker({ value, onChange, onUpload, label, compact = false }) {
       {error && (
         <p className="flex items-center gap-1.5 text-xs">
           <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
-          Không tải được ảnh: {error}
+          Could not upload the image: {error}
         </p>
       )}
     </div>

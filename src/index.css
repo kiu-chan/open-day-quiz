@@ -18,9 +18,9 @@
 
   --shadow-card: var(--shadow);
 
-  /* Trang chủ không được dùng màu để tạo không khí lễ hội, nên phần "sinh động"
-     dồn hết vào chuyển động: băng chữ chạy, khối trồi lên khi vào trang, lưới
-     chấm trôi chậm, hộp quà lắc nhẹ. */
+  /* The home page cannot use colour to feel festive, so all the "liveliness"
+     goes into motion: the scrolling band, blocks rising in on load, a slowly
+     drifting dot grid, gently wobbling prize boxes. */
   --animate-marquee: marquee 26s linear infinite;
   --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-drift: drift 60s linear infinite;
@@ -31,8 +31,8 @@
   from {
     transform: translateX(0);
   }
-  /* Nội dung băng được lặp đúng hai lần, nên chạy hết một nửa là quay về vị trí
-     nhìn y hệt lúc đầu — vòng lặp không thấy mối nối. */
+  /* The band's content is repeated exactly twice, so travelling half the width
+     lands on a view identical to the start — the loop has no visible seam. */
   to {
     transform: translateX(-50%);
   }
@@ -68,8 +68,8 @@
   }
 }
 
-/* Người bật giảm chuyển động vẫn phải đọc được trang: tắt animation thay vì để
-   họ chịu trận băng chữ chạy suốt. */
+/* People who ask for reduced motion still have to be able to read the page: turn
+   the animations off rather than subjecting them to an endlessly scrolling band. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -80,8 +80,8 @@
   }
 }
 
-/* Layout đen trắng: chỉ đen, trắng và các mức xám. Không màu nhấn,
-   không dark mode — máy chiếu và điện thoại xem cùng một bảng màu sáng. */
+/* Black-and-white layout: black, white and shades of grey only. No accent
+   colour, no dark mode — the projector and the phones share one light palette. */
 :root {
   --text: #52525b;
   --text-h: #000;
@@ -123,8 +123,8 @@ body {
   flex-direction: column;
 }
 
-/* Chỉ giữ font và màu; cỡ chữ do từng view tự quyết bằng class Tailwind
-   (màn hình lớn cần chữ to hơn điện thoại). */
+/* Font and colour only; each view sets its own type size with Tailwind classes
+   (the big screen needs much larger text than a phone). */
 h1,
 h2 {
   margin: 0;

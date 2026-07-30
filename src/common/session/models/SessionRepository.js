@@ -1,15 +1,16 @@
 /**
- * Lớp truy cập trạng thái phiên chơi — **ranh giới I/O duy nhất** của session.
- * Đây là lý do repository tồn tại, nên nó là file duy nhất trong `models/` được
- * phép chạm vào mạng.
+ * The session state access layer — the **only I/O boundary** of the session.
+ * That is the whole reason a repository exists, so this is the only file in
+ * `models/` allowed to touch the network.
  *
- * Client **không** tự đổi trạng thái: nó gửi ý định lên máy chủ
- * (`POST /api/intent`) và nhận lại ảnh chụp phiên qua SSE (`GET /api/events`).
- * Máy chủ là nguồn sự thật — xem `server/sessionStore.js` để biết vì sao.
+ * The client **never** changes the state itself: it posts an intent to the
+ * server (`POST /api/intent`) and receives session snapshots over SSE
+ * (`GET /api/events`). The server is the source of truth — see
+ * `server/sessionStore.js` for why.
  *
- * `read()` vẫn đồng bộ và vẫn trả về SessionModel: nó đọc ảnh chụp gần nhất đã
- * nhận được. Nhờ vậy toàn bộ view và SessionModel không phải sửa gì khi app
- * chuyển từ localStorage sang máy chủ.
+ * `read()` is still synchronous and still returns a SessionModel: it reads the
+ * most recent snapshot received. Thanks to that, no view and no SessionModel had
+ * to change when the app moved from localStorage to a server.
  *
  * Public API: read(), send(intent), subscribe(fn), connection, serverNow(), CONNECTION.
  */
@@ -36,12 +37,13 @@ function emit() {
 }
 
 /**
- * "Bây giờ" theo đồng hồ **máy chủ**, không phải đồng hồ máy này.
+ * "Now" according to the **server** clock, not this device's clock.
  *
- * `questionEndsAt` là mốc do máy chủ đặt, nên máy nào đặt lệch giờ mà tự trừ theo
- * đồng hồ của nó sẽ thấy đếm ngược sai hẳn — thường là 0 suốt cả câu. Mỗi frame
- * SSE mang theo đồng hồ máy chủ nên độ lệch được chỉnh lại liên tục. Trong LAN,
- * độ trễ đường truyền chỉ vài ms nên bỏ qua được.
+ * `questionEndsAt` is a timestamp set by the server, so a device with a skewed
+ * clock that subtracts against its own time sees a completely wrong countdown —
+ * usually stuck at 0 for the whole question. Every SSE frame carries the server
+ * clock, so the offset is corrected continuously. On a LAN the transport delay
+ * is a few ms, which is negligible.
  */
 export function serverNow() {
   return Date.now() + clockOffset
@@ -58,9 +60,9 @@ function connect() {
     emit()
   })
 
-  // EventSource tự thử kết nối lại sau vài giây, nên ở đây chỉ cần đổi cờ để
-  // view nói cho người dùng biết. Không tự viết vòng thử lại — đó là lý do
-  // chọn SSE thay vì WebSocket trần.
+  // EventSource retries by itself after a few seconds, so all we do here is flip
+  // a flag for the view to tell the user. No hand-written retry loop — that is
+  // exactly why SSE was chosen over a raw WebSocket.
   stream.addEventListener('error', () => {
     if (connection === CONNECTION.OFFLINE) return
     connection = CONNECTION.OFFLINE
@@ -76,12 +78,13 @@ export const sessionRepository = {
   },
 
   /**
-   * Gửi một ý định. Không chờ trạng thái mới ở phần hồi đáp: nó về qua SSE cùng
-   * lúc với mọi máy khác.
+   * Send one intent. It does not wait for the new state in the response: that
+   * arrives over SSE at the same moment as for every other device.
    *
-   * Gửi thất bại thì chỉ bật cờ mất kết nối chứ không xếp hàng gửi lại — trận
-   * đấu là thời gian thực, một đáp án gửi lại sau 30 giây thì đã hết câu rồi.
-   * Người chơi thấy báo mất kết nối và bấm lại là đúng hành vi mong đợi.
+   * A failed send only raises the offline flag instead of queueing a retry — the
+   * game is live, and an answer resent 30 seconds later belongs to a question
+   * that is long gone. Showing the disconnect banner so the player taps again is
+   * the behaviour people expect.
    */
   async send(intent) {
     try {
@@ -90,7 +93,7 @@ export const sessionRepository = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(intent),
       })
-      if (!response.ok) throw new Error(`máy chủ trả ${response.status}`)
+      if (!response.ok) throw new Error(`server replied ${response.status}`)
     } catch {
       if (connection === CONNECTION.OFFLINE) return
       connection = CONNECTION.OFFLINE
@@ -98,7 +101,7 @@ export const sessionRepository = {
     }
   },
 
-  /** Người nghe đầu tiên mới mở kết nối: SSR và test render không cần mạng. */
+  /** Only the first listener opens the connection: SSR and test renders need no network. */
   subscribe(listener) {
     listeners.add(listener)
     if (!stream) connect()

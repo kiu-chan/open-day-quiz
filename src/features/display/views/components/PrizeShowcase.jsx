@@ -1,6 +1,6 @@
 import { Gift, PackageOpen } from 'lucide-react'
 
-/** Ba hộp quà trên máy chiếu. Khán giả chỉ xem, không bấm. */
+/** The three prize boxes on the projector. The audience only watches, never clicks. */
 function PrizeShowcase({ boxes }) {
   return (
     <ul className="grid w-full grid-cols-3 gap-6">
@@ -20,7 +20,7 @@ function PrizeShowcase({ boxes }) {
             className={`text-text-h flex flex-col items-center gap-4 rounded-3xl border-4 px-4 py-10 transition duration-500 ${tone}`}
           >
             <Icon className="size-20" strokeWidth={1.5} aria-hidden="true" />
-            <span className="font-mono text-2xl">Hộp {i + 1}</span>
+            <span className="font-mono text-2xl">Box {i + 1}</span>
             {isPicked && (
               <span className="text-center text-3xl font-semibold">{prize}</span>
             )}

@@ -1,4 +1,4 @@
-/** Một bước trong phần "Chơi thế nào": số thứ tự cỡ lớn, icon, mô tả ngắn. */
+/** One step in the "How do you play?" section: big number, icon, short blurb. */
 function StepCard({ number, Icon, title, children, delay = '0ms' }) {
   return (
     <li

@@ -29,8 +29,9 @@ import StateBadge from './components/StateBadge.jsx'
 import StatTile from './components/StatTile.jsx'
 
 /**
- * Hàng nút của bước đang chạy. Nút đi tiếp luôn nằm bên trái và to hơn hẳn —
- * MC bấm nó hàng chục lần trong một trận, không nên phải tìm.
+ * The button row for the current step. The move-on button is always on the left
+ * and noticeably bigger — the host presses it dozens of times per round and
+ * should never have to hunt for it.
  */
 function ActionBar({ children }) {
   return (
@@ -42,19 +43,19 @@ function ActionBar({ children }) {
 
 function IdlePage() {
   return (
-    <AdminShell current="live" title="Bàn điều khiển">
+    <AdminShell current="live" title="Control desk">
       <Panel dashed className="items-center py-14 text-center">
         <MessageCircleQuestion
           className="text-text-h size-10"
           strokeWidth={1.5}
           aria-hidden="true"
         />
-        <p className="text-base">Chưa có phiên nào đang mở.</p>
+        <p className="text-base">No session is open.</p>
         <a
           href={`#${ROUTES.ADMIN}`}
           className="inline-flex items-center gap-2 no-underline"
         >
-          Chọn một bộ quiz rồi bấm “Mở phiên”
+          Pick a quiz and press “Open session”
           <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
         </a>
       </Panel>
@@ -69,11 +70,11 @@ function LiveBody({ live }) {
   return (
     <AdminShell
       current="live"
-      title={live.quiz.title || 'Bộ quiz chưa có tên'}
+      title={live.quiz.title || 'Untitled quiz'}
       subtitle={
         isPlaying
-          ? `Câu ${live.questionNumber} trên tổng ${live.total}`
-          : 'Trận đang chạy trên màn hình lớn'
+          ? `Question ${live.questionNumber} of ${live.total}`
+          : 'The round is running on the big screen'
       }
       actions={<StateBadge state={live.state} />}
     >
@@ -93,16 +94,16 @@ function LiveBody({ live }) {
               onClick={live.start}
             >
               <Play className="size-5" aria-hidden="true" />
-              Bắt đầu
+              Start
             </Button>
             <span className="text-sm opacity-70">
               {live.playerCount === 0
-                ? 'Chờ ít nhất một người vào phòng.'
-                : `${live.playerCount} người đã sẵn sàng.`}
+                ? 'Waiting for at least one player to join.'
+                : `${live.playerCount} player(s) ready.`}
             </span>
             <Button variant="quiet" className="ml-auto" onClick={live.cancel}>
               <X className="size-4" aria-hidden="true" />
-              Huỷ phiên
+              Cancel session
             </Button>
           </ActionBar>
         </>
@@ -112,30 +113,30 @@ function LiveBody({ live }) {
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             <StatTile
-              label="Câu hỏi"
+              label="Question"
               Icon={ListChecks}
               value={`${live.questionNumber}/${live.total}`}
             />
             <StatTile
-              label="Đã trả lời"
+              label="Answered"
               Icon={Users}
               value={`${live.answeredCount}/${live.playerCount}`}
               hint={
                 live.answeredCount === live.playerCount
-                  ? 'Cả phòng đã trả lời — chốt được rồi'
-                  : 'Đang chờ thêm người'
+                  ? 'Everyone has answered — safe to close'
+                  : 'Waiting for more players'
               }
             />
             <div className="border-border flex flex-col gap-2 rounded-2xl border-2 p-4">
               <span className="flex items-center gap-1.5 text-xs tracking-wide uppercase">
                 <Timer className="size-3.5 shrink-0" aria-hidden="true" />
-                Còn lại
+                Time left
               </span>
               <Countdown seconds={live.secondsLeft} className="self-start text-2xl" />
             </div>
           </div>
 
-          <Panel title="Câu đang hỏi" Icon={MessageCircleQuestion}>
+          <Panel title="Current question" Icon={MessageCircleQuestion}>
             <QuestionPreview question={live.question} />
           </Panel>
 
@@ -146,10 +147,11 @@ function LiveBody({ live }) {
               onClick={live.reveal}
             >
               <Eye className="size-5" aria-hidden="true" />
-              Hiện đáp án
+              Reveal answer
             </Button>
             <span className="text-sm opacity-70">
-              Hết giờ thì máy chủ tự chốt, không cần chờ bấm.
+              When time runs out the server closes it automatically — no need to
+              wait for a click.
             </span>
           </ActionBar>
         </>
@@ -158,11 +160,11 @@ function LiveBody({ live }) {
       {live.state === SESSION_STATES.REVEAL && (
         <>
           <Panel
-            title={`Câu ${live.questionNumber} / ${live.total}`}
+            title={`Question ${live.questionNumber} / ${live.total}`}
             Icon={MessageCircleQuestion}
             aside={
               <span className="font-mono text-xs">
-                {live.answeredCount}/{live.playerCount} đã trả lời
+                {live.answeredCount}/{live.playerCount} answered
               </span>
             }
           >
@@ -184,7 +186,7 @@ function LiveBody({ live }) {
               onClick={live.goNext}
             >
               <ArrowRight className="size-5" aria-hidden="true" />
-              {live.isLastQuestion ? 'Xem kết quả' : 'Câu tiếp'}
+              {live.isLastQuestion ? 'See results' : 'Next question'}
             </Button>
           </ActionBar>
         </>
@@ -193,11 +195,11 @@ function LiveBody({ live }) {
       {live.state === SESSION_STATES.PODIUM && (
         <>
           <Panel
-            title="Bảng xếp hạng"
+            title="Leaderboard"
             Icon={Trophy}
             aside={
               <span className="text-xs opacity-70">
-                Đang chiếu trên màn hình lớn
+                Showing on the big screen
               </span>
             }
           >
@@ -205,10 +207,10 @@ function LiveBody({ live }) {
           </Panel>
 
           {live.hasTieAtTop ? (
-            <Panel title="Chọn người nhận quà" Icon={Gift} dashed>
+            <Panel title="Choose who gets the prize" Icon={Gift} dashed>
               <p className="text-sm">
-                Có {live.topRows.length} người bằng nhau cả điểm và thời gian —
-                bạn chọn giúp:
+                {live.topRows.length} people are tied on both score and time —
+                please pick one:
               </p>
               <div className="flex flex-wrap gap-2">
                 {live.topRows.map((row) => (
@@ -234,7 +236,7 @@ function LiveBody({ live }) {
                 }
               >
                 <Trophy className="size-5" aria-hidden="true" />
-                Công bố người thắng
+                Announce the winner
                 {live.leaderboardRows.length > 0 &&
                   `: ${live.leaderboardRows[0].name}`}
               </Button>
@@ -244,30 +246,30 @@ function LiveBody({ live }) {
       )}
 
       {live.state === SESSION_STATES.PRIZE && (
-        <Panel title="Trao quà" Icon={Gift}>
+        <Panel title="Prize giving" Icon={Gift}>
           <p className="text-base">
-            Đang chờ{' '}
+            Waiting for{' '}
             <span className="text-text-h font-semibold">{live.winnerName}</span>{' '}
-            chọn một trong ba hộp trên điện thoại.
+            to pick one of the three boxes on their phone.
           </p>
         </Panel>
       )}
 
       {live.state === SESSION_STATES.PRIZE_REVEALED && (
-        <Panel title="Đã trao quà" Icon={Gift}>
+        <Panel title="Prize awarded" Icon={Gift}>
           <p className="text-base">
             <span className="text-text-h font-semibold">{live.winnerName}</span>{' '}
-            nhận{' '}
+            got{' '}
             <span className="text-text-h font-semibold">{live.pickedPrize}</span>.
           </p>
-          <p className="text-sm opacity-70">Kết thúc phiên để chơi lượt mới.</p>
+          <p className="text-sm opacity-70">End the session to play another round.</p>
         </Panel>
       )}
 
       <footer className="border-border mt-auto border-t pt-4">
         <Button variant="quiet" onClick={live.reset}>
           <RotateCcw className="size-4" aria-hidden="true" />
-          Kết thúc phiên
+          End session
         </Button>
       </footer>
     </AdminShell>

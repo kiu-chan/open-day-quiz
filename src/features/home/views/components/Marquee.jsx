@@ -1,11 +1,11 @@
 import { Gift, QrCode, Trophy, Users, Zap } from 'lucide-react'
 
 const ITEMS = [
-  { key: 'qr', Icon: QrCode, label: 'Quét QR là chơi' },
-  { key: 'fast', Icon: Zap, label: 'Nhanh hơn được nhiều điểm hơn' },
-  { key: 'crowd', Icon: Users, label: 'Cả hội trường cùng trả lời' },
-  { key: 'rank', Icon: Trophy, label: 'Bảng xếp hạng trực tiếp' },
-  { key: 'prize', Icon: Gift, label: 'Ba hộp quà bí mật' },
+  { key: 'qr', Icon: QrCode, label: 'Scan to play' },
+  { key: 'fast', Icon: Zap, label: 'Faster answers score more' },
+  { key: 'crowd', Icon: Users, label: 'The whole hall answers together' },
+  { key: 'rank', Icon: Trophy, label: 'Live leaderboard' },
+  { key: 'prize', Icon: Gift, label: 'Three mystery prize boxes' },
 ]
 
 function Strip({ hidden }) {
@@ -27,10 +27,11 @@ function Strip({ hidden }) {
 }
 
 /**
- * Băng chữ chạy ngang, nền đen. Nội dung được lặp đúng hai lần và animation
- * dịch trọn một nửa chiều rộng, nên khi quay vòng khung nhìn thấy y hệt lúc
- * đầu — không có khoảng trống chớp qua. Bản lặp thứ hai là trang trí nên bị
- * `aria-hidden` để trình đọc màn hình không đọc hai lần.
+ * The scrolling text band on a black background. The content is repeated exactly
+ * twice and the animation shifts by exactly half the width, so when the loop
+ * restarts the viewport looks identical to where it began — no gap flashing past.
+ * The second copy is decorative, so it is `aria-hidden` to stop screen readers
+ * reading it twice.
  */
 function Marquee() {
   return (

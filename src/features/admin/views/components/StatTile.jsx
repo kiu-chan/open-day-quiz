@@ -1,7 +1,7 @@
 /**
- * Một con số của bàn điều khiển (số người, đã trả lời, giây còn lại). MC liếc
- * mắt là phải đọc được nên số to và dùng `tabular-nums` để không nhảy chữ khi
- * đếm ngược.
+ * One number on the control desk (players, answers in, seconds left). The host
+ * has to read it at a glance, so the figure is large and uses `tabular-nums` to
+ * stop it jittering as it counts down.
  */
 function StatTile({ label, value, hint, Icon }) {
   return (

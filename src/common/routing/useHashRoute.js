@@ -1,9 +1,9 @@
 /**
- * Router tối giản chạy trên `location.hash`.
+ * Minimal router built on `location.hash`.
  *
- * Dùng hash chứ không phải đường dẫn thật vì QR trỏ thẳng vào trang người chơi:
- * với hash thì mọi URL đều là `index.html`, không cần cấu hình SPA fallback ở
- * server, và quét QR không bao giờ ra 404.
+ * Hash instead of real paths because the QR code points straight at the player
+ * page: with a hash every URL is `index.html`, no SPA fallback to configure on
+ * the server, and scanning the QR never lands on a 404.
  *
  * Public API: ROUTES, useHashRoute() → { pattern, params }, navigate(path).
  */
@@ -20,7 +20,7 @@ export const ROUTES = {
 
 const PATTERNS = Object.values(ROUTES)
 
-/** Trả về params nếu path khớp pattern, null nếu không khớp. */
+/** Returns params when path matches the pattern, null when it does not. */
 function matchPattern(pattern, path) {
   const patternParts = pattern.split('/').filter(Boolean)
   const pathParts = path.split('/').filter(Boolean)

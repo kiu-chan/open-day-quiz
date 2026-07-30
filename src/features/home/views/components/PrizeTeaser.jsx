@@ -1,14 +1,15 @@
 import { Gift } from 'lucide-react'
 
 const BOXES = [
-  { key: 'a', label: 'Hộp 1', delay: '0s' },
-  { key: 'b', label: 'Hộp 2', delay: '0.45s' },
-  { key: 'c', label: 'Hộp 3', delay: '0.9s' },
+  { key: 'a', label: 'Box 1', delay: '0s' },
+  { key: 'b', label: 'Box 2', delay: '0.45s' },
+  { key: 'c', label: 'Box 3', delay: '0.9s' },
 ]
 
 /**
- * Ba hộp quà lắc nhẹ, mỗi hộp lệch pha một chút cho đỡ đều như máy. Đây chỉ là
- * hình minh hoạ ở trang chủ — hộp thật do `PrizeBoxes` xáo lúc trao quà.
+ * Three gently wobbling prize boxes, each slightly out of phase so it does not
+ * look mechanical. This is purely an illustration on the home page — the real
+ * boxes are shuffled by `PrizeBoxes` at prize time.
  */
 function PrizeTeaser() {
   return (

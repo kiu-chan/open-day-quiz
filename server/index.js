@@ -1,12 +1,13 @@
 /**
- * Máy chủ trận đấu: phục vụ bản build trong `dist/` và giữ trạng thái phiên cho
- * mọi thiết bị trong cùng mạng LAN. Chạy trên đúng cái máy đang nối máy chiếu.
+ * The game server: serves the build in `dist/` and holds the session state for
+ * every device on the same LAN. Runs on the very machine plugged into the
+ * projector.
  *
- * Không dùng express hay socket.io — chỉ `node:http`, nên không thêm một
- * dependency nào vào dự án.
+ * No express, no socket.io — just `node:http`, so it adds not a single
+ * dependency to the project.
  *
- * Chạy:  npm run start        (build rồi chạy)
- *        PORT=8080 npm run serve
+ * Run:  npm run start        (build, then run)
+ *       PORT=8080 npm run serve
  */
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -38,8 +39,8 @@ async function sendFile(res, file) {
   res.writeHead(200, {
     'Content-Type': MIME[ext] ?? 'application/octet-stream',
     'Content-Length': body.length,
-    // index.html không được cache: build lại rồi mà điện thoại vẫn giữ bản cũ
-    // thì nó nạp file JS đã bị xoá và trắng màn hình.
+    // index.html must not be cached: after a rebuild, a phone holding the old
+    // copy would load a JS file that no longer exists and show a blank screen.
     ...(ext === '.html' ? { 'Cache-Control': 'no-cache' } : {}),
   })
   res.end(body)
@@ -49,23 +50,24 @@ async function serveStatic(req, res) {
   const path = decodeURIComponent((req.url ?? '/').split('?')[0])
   const file = join(DIST, normalize(path === '/' ? '/index.html' : path))
 
-  // normalize() đã gộp `..`, nhưng vẫn chặn lần nữa: đây là máy chủ mở ra LAN.
+  // normalize() already collapsed any `..`, but check once more: this server is
+  // open to the whole LAN.
   if (!file.startsWith(DIST)) {
-    res.writeHead(403).end('Không được phép')
+    res.writeHead(403).end('Forbidden')
     return
   }
 
   try {
     await sendFile(res, file)
   } catch {
-    // App định tuyến bằng hash nên mọi link thật đều là `/`. Đường dẫn không có
-    // đuôi file thì trả index.html để mã QR không bao giờ ra 404.
+    // The app routes on the hash, so every real link is `/`. A path with no file
+    // extension gets index.html back, so scanning the QR never lands on a 404.
     if (extname(file) === '') return sendFile(res, join(DIST, 'index.html'))
-    res.writeHead(404).end('Không có file này')
+    res.writeHead(404).end('Not found')
   }
 }
 
-/** IPv4 nội bộ đầu tiên — chính là địa chỉ để in vào mã QR cho điện thoại. */
+/** The first non-internal IPv4 — the address to print into the QR code for phones. */
 function lanAddress() {
   for (const nets of Object.values(networkInterfaces())) {
     for (const net of nets ?? []) {
@@ -87,12 +89,12 @@ server.listen(PORT, '0.0.0.0', () => {
   const base = `http://${lanAddress()}:${PORT}`
 
   if (!existsSync(join(DIST, 'index.html'))) {
-    console.log('Chưa có dist/ — chạy `npm run build` trước.\n')
+    console.log('No dist/ yet — run `npm run build` first.\n')
   }
 
-  console.log('Máy chủ trận đấu đang chạy.\n')
-  console.log(`  Bàn điều khiển   ${base}/#/admin`)
-  console.log(`  Màn hình lớn     ${base}/#/display`)
-  console.log(`  Người chơi       ${base}/#/play\n`)
-  console.log('Điện thoại phải vào cùng wifi với máy này. Ctrl+C để dừng.')
+  console.log('Game server running.\n')
+  console.log(`  Control desk   ${base}/#/admin`)
+  console.log(`  Big screen     ${base}/#/display`)
+  console.log(`  Player         ${base}/#/play\n`)
+  console.log('Phones must be on the same wifi as this machine. Ctrl+C to stop.')
 })

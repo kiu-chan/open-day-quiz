@@ -1,7 +1,7 @@
 /**
- * Entity: một câu hỏi và quy tắc chấm đúng/sai của nó.
- * Dùng chung: admin soạn nó, player trả lời nó, display chiếu nó.
- * Không biết gì về React.
+ * Entity: one question and the rule for marking it right or wrong.
+ * Shared: the admin writes it, the player answers it, the display shows it.
+ * Knows nothing about React.
  */
 export const DEFAULT_DURATION_SECONDS = 20
 export const MIN_OPTIONS = 2
@@ -22,19 +22,19 @@ export class Question {
     this.id = id
     this.prompt = prompt
     /**
-     * Ảnh minh hoạ, lưu dưới dạng đường dẫn `/api/images/...` chứ không phải
-     * data URI — xem `server/imageStore.js` để biết vì sao.
+     * Illustration image, stored as an `/api/images/...` path rather than a data
+     * URI — see `server/imageStore.js` for why.
      */
     this.image = image
     this.options = options
     /**
-     * Ảnh của từng đáp án, luôn dài đúng bằng `options` và luôn cùng thứ tự.
-     * Chuẩn hoá ngay ở constructor để không có đường nào tạo ra được một câu
-     * hỏi mà ảnh lệch khỏi đáp án của nó.
+     * One image per option, always exactly as long as `options` and always in
+     * the same order. Normalised right in the constructor so there is no path
+     * that can produce a question whose images are out of step with its options.
      */
     this.optionImages = options.map((_, i) => optionImages[i] ?? null)
     this.correctIndex = correctIndex
-    /** Thời lượng đếm ngược là luật chơi, nên nó thuộc model chứ không thuộc view. */
+    /** The countdown length is a game rule, so it belongs to the model, not the view. */
     this.durationSeconds = durationSeconds
   }
 
@@ -46,7 +46,7 @@ export class Question {
     return optionIndex === this.correctIndex
   }
 
-  /** Nhãn A, B, C... cho ô đáp án. */
+  /** The A, B, C... label for an option slot. */
   labelOf(optionIndex) {
     return String.fromCharCode(65 + optionIndex)
   }
@@ -56,9 +56,9 @@ export class Question {
   }
 
   /**
-   * Đủ điều kiện đem ra chơi: có nội dung, ≥2 đáp án, đáp án đúng hợp lệ.
-   * Ảnh tính là nội dung — câu hỏi kiểu "đây là công trình nào?" hoàn toàn có
-   * thể chỉ có ảnh, và đáp án cũng vậy (bốn tấm ảnh, chọn một).
+   * Fit to play: has content, ≥2 options, and a valid correct answer.
+   * An image counts as content — a "which building is this?" question can very
+   * well be image-only, and so can its options (four photos, pick one).
    */
   get isValid() {
     const isFilled = (text, image) => text.trim().length > 0 || Boolean(image)
@@ -72,9 +72,9 @@ export class Question {
     )
   }
 
-  // ---- sửa câu hỏi (admin), bất biến như mọi model khác ----
+  // ---- editing a question (admin), immutable like every other model ----
 
-  /** Bản mới với vài trường được thay. */
+  /** A new copy with a few fields replaced. */
   with(patch) {
     return new Question({ ...this, ...patch })
   }
@@ -83,7 +83,7 @@ export class Question {
     return this.with({ prompt })
   }
 
-  /** `null` để gỡ ảnh ra khỏi câu hỏi. */
+  /** Pass `null` to remove the image from the question. */
   withImage(image) {
     return this.with({ image })
   }
@@ -114,16 +114,17 @@ export class Question {
   }
 
   /**
-   * Bỏ một đáp án. Phải luôn còn ≥2 ô, và `correctIndex` không được trỏ ra
-   * ngoài mảng: bỏ đúng ô đang là đáp án đúng thì dồn đáp án đúng về ô đầu,
-   * bỏ ô nằm trước nó thì kéo chỉ số lùi một bước.
+   * Remove an option. There must always be ≥2 slots left, and `correctIndex`
+   * must not point past the end of the array: removing the correct option moves
+   * the correct answer back to the first slot, and removing an option before it
+   * shifts the index down by one.
    */
   withOptionRemoved(index) {
     if (!this.canRemoveOption) return this
 
     const options = this.options.filter((_, i) => i !== index)
-    // Ảnh phải rơi cùng một nhịp với đáp án, không thì bỏ ô B xong ảnh của C
-    // nhảy sang nằm cạnh chữ của B.
+    // The images have to fall in the same step as the options, otherwise
+    // removing option B leaves C's image sitting next to B's text.
     const optionImages = this.optionImages.filter((_, i) => i !== index)
 
     let correctIndex = this.correctIndex
@@ -138,7 +139,7 @@ export class Question {
     return this.with({ correctIndex: index })
   }
 
-  /** Kẹp thời lượng trong khoảng chơi được: quá ngắn thì không ai kịp bấm. */
+  /** Clamp the duration to a playable range: too short and nobody can tap in time. */
   withDuration(seconds) {
     const clamped = Math.min(
       MAX_DURATION_SECONDS,

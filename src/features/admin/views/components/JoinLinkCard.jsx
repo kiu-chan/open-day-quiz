@@ -2,10 +2,10 @@ import { QrCode } from 'lucide-react'
 import JoinQr from '@common/views/JoinQr.jsx'
 import Panel from './Panel.jsx'
 
-/** Link và mã QR để khách vào chơi. */
+/** The link and QR code visitors use to join. */
 function JoinLinkCard({ url }) {
   return (
-    <Panel title="Link tham gia" Icon={QrCode} dashed>
+    <Panel title="Join link" Icon={QrCode} dashed>
       <div className="flex flex-wrap items-center gap-5">
         <JoinQr url={url} size={140} zoomable />
 
@@ -14,10 +14,10 @@ function JoinLinkCard({ url }) {
             {url}
           </p>
           <p className="text-xs opacity-60">
-            Mã QR lớn đang ở màn hình lớn. Nếu link là{' '}
-            <span className="font-mono">localhost</span> thì điện thoại không vào
-            được — chạy <span className="font-mono">npm run dev:lan</span> rồi mở
-            lại bằng địa chỉ IP của máy.
+            The large QR code is on the big screen. If the link says{' '}
+            <span className="font-mono">localhost</span>, phones cannot reach it —
+            run <span className="font-mono">npm run dev:lan</span> and reopen the
+            page using the machine's IP address.
           </p>
         </div>
       </div>

@@ -1,110 +1,115 @@
-# Hướng dẫn cài đặt
+# Installation guide
 
-## Cần có sẵn
+## Prerequisites
 
-| Thứ | Phiên bản | Ghi chú |
+| Requirement | Version | Notes |
 | --- | --- | --- |
-| Node.js | 20.19+ hoặc 22.12+ | Vite 8 không chạy trên bản cũ hơn |
-| npm | đi kèm Node | |
-| Trình duyệt | Chrome / Edge / Safari bản mới | Cần `localStorage` và `EventSource` |
-| Wifi | máy tính và điện thoại **cùng một mạng** | xem mục cuối |
+| Node.js | 20.19+ or 22.12+ | Vite 8 does not run on anything older |
+| npm | ships with Node | |
+| Browser | recent Chrome / Edge / Safari | Needs `localStorage` and `EventSource` |
+| Wifi | computer and phones on **the same network** | see the last section |
 
-Không cần database, không cần biến môi trường, không cần internet. Máy chủ trận
-đấu là một tiến trình Node đi kèm repo, không thêm dependency nào.
+No database, no environment variables, no internet connection. The game server is
+a single Node process that ships with the repo and adds no dependencies.
 
-## Cài
+## Install
 
 ```bash
-git clone <địa-chỉ-repo>
+git clone <repo-url>
 cd open-day-quiz
 npm install
 ```
 
-## Chạy khi làm việc
+## Running while developing
 
 ```bash
-npm run dev       # http://localhost:5173, chỉ máy này vào được
+npm run dev       # http://localhost:5173, reachable from this machine only
 ```
 
-API phiên chơi cắm sẵn vào dev server, nên không phải mở thêm tiến trình nào.
+The session API is already plugged into the dev server, so there is no second
+process to start.
 
-## Chạy thật (điện thoại quét QR vào chơi)
+## Running for real (phones joining by QR code)
 
 ```bash
-npm run start     # build rồi chạy máy chủ ở cổng 3000
+npm run start     # build, then run the server on port 3000
 ```
 
-Nó in ra sẵn ba đường dẫn:
+It prints the three URLs for you:
 
 ```
-Máy chủ trận đấu đang chạy.
+Game server running.
 
-  Bàn điều khiển   http://192.168.1.20:3000/#/admin
-  Màn hình lớn     http://192.168.1.20:3000/#/display
-  Người chơi       http://192.168.1.20:3000/#/play
+  Control desk   http://192.168.1.20:3000/#/admin
+  Big screen     http://192.168.1.20:3000/#/display
+  Player         http://192.168.1.20:3000/#/play
 ```
 
-Dùng đúng địa chỉ IP đó cho **mọi** màn hình, kể cả máy chiếu: mã QR sinh ra từ
-địa chỉ đang mở, nên nếu mở bằng `localhost` thì QR cũng trỏ tới `localhost` và
-điện thoại không vào được.
+Use that IP address on **every** screen, the projector included: the QR code is
+generated from whatever address the page was opened with, so opening it via
+`localhost` produces a QR code pointing at `localhost`, which no phone can reach.
 
-Đổi cổng: `PORT=8080 npm run serve` (dùng `serve` khi đã build sẵn, khỏi build lại).
+To change the port: `PORT=8080 npm run serve` (use `serve` when you have already
+built, to skip rebuilding).
 
-Muốn vừa sửa code vừa cho điện thoại vào thì `npm run dev:lan` cũng chạy được —
-vẫn có HMR, vẫn là máy chủ thật, chỉ ở cổng 5173.
+If you want to edit code and let phones in at the same time, `npm run dev:lan`
+works too — HMR still on, still a real server, just on port 5173.
 
-## Lệnh khác
+## Other commands
 
 ```bash
-npm run build     # build production vào dist/
-npm run serve     # chạy máy chủ với dist/ đã build
-npm run preview   # xem thử bản build bằng Vite
+npm run build     # production build into dist/
+npm run serve     # run the server against an existing dist/
+npm run preview   # preview the build with Vite
 npm run lint      # oxlint
 ```
 
-## Mạng: điều kiện bắt buộc
+## Networking: the hard requirement
 
-Điện thoại và máy chạy máy chủ phải **nói chuyện được với nhau trong mạng nội bộ**.
-Không cần internet — dữ liệu không ra khỏi phòng.
+The phones and the machine running the server must be **able to talk to each
+other on the local network**. No internet needed — no data leaves the room.
 
-"Cùng wifi" là điều kiện cần nhưng chưa đủ:
+"Same wifi" is necessary but not sufficient:
 
-| Tình huống | Chạy được? |
+| Situation | Works? |
 | --- | --- |
-| Laptop cắm dây LAN, điện thoại wifi, cùng một router | ✅ |
-| Hotspot phát từ một điện thoại, laptop và khách vào chung | ✅ — phương án dự phòng gọn nhất |
-| Cùng tên wifi nhưng khách vào mạng "Guest" | ❌ khác subnet |
-| Router bật client isolation (hay gặp ở wifi khách hội trường) | ❌ cùng mạng vẫn không thấy nhau |
-| Khách dùng 4G, không vào wifi | ❌ |
+| Laptop on ethernet, phones on wifi, same router | ✅ |
+| Hotspot from one phone, laptop and visitors both on it | ✅ — the tidiest fallback |
+| Same wifi name but visitors land on the "Guest" network | ❌ different subnet |
+| Router has client isolation on (common on venue guest wifi) | ❌ same network, still cannot see each other |
+| Visitors on 4G, not on wifi at all | ❌ |
 
-Thử trước, mất 30 giây: chạy `npm run start`, lấy điện thoại (đã vào wifi đó) mở
-đường dẫn `#/play` mà máy chủ in ra. Trang hiện ra là xong.
+Test it in 30 seconds: run `npm run start`, take a phone (already on that wifi)
+and open the `#/play` URL the server printed. If the page loads, you are done.
 
-Không vào được thì lần lượt:
+If it does not, work through these in order:
 
-1. **Firewall macOS** — lần đầu chạy, macOS hỏi "Do you want the application node
-   to accept incoming connections?", phải bấm **Allow**. Đây là chỗ hay quên nhất.
-2. **Client isolation** trên router. Không sửa được thì phát hotspot từ điện thoại
-   khác, hoặc mang theo một router du lịch riêng.
-3. Dùng **địa chỉ IP**, đừng dùng `tên-máy.local` — mDNS trên Android khá bập bõm.
+1. **macOS firewall** — the first time you run it, macOS asks "Do you want the
+   application node to accept incoming connections?" You must click **Allow**.
+   This is the most commonly forgotten step.
+2. **Client isolation** on the router. If you cannot change it, run a hotspot
+   from another phone, or bring your own travel router.
+3. Use the **IP address**, not `machine-name.local` — mDNS on Android is flaky.
 
-HTTP (không HTTPS) là bình thường ở đây: khách quét QR bằng app camera của điện
-thoại, không phải gõ địa chỉ, nên cảnh báo "không bảo mật" không xuất hiện.
+Plain HTTP (no HTTPS) is fine here: visitors scan a QR code with their camera app
+rather than typing an address, so no "not secure" warning appears.
 
-## Đem lên internet thì sao
+## What about putting it on the internet
 
-Được, nhưng phải đổi transport: máy chủ này giữ trạng thái trong RAM của một tiến
-trình, hợp với một cái máy trong một cái phòng. Muốn chạy trên hosting thì thay
-`server/` bằng Firebase/Supabase và sửa `SessionRepository` — xem
-[architecture.md](architecture.md) mục realtime.
+Possible, but the transport has to change: this server holds state in the RAM of
+one process, which suits one machine in one room. To run it on hosting, replace
+`server/` with Firebase/Supabase and adapt `SessionRepository` — see the realtime
+section of [architecture.md](architecture.md).
 
-`dist/` là web tĩnh nên vẫn bỏ lên static host được, nhưng khi đó không có máy chủ
-phiên và ba màn hình sẽ không đồng bộ với nhau.
+`dist/` is a static site, so you can still deploy it to a static host, but then
+there is no session server and the three screens will not stay in sync.
 
-## Giới hạn cần biết trước
+## Limitations to know up front
 
-Trạng thái trận đấu chỉ ở RAM: **tắt máy chủ giữa trận là mất trận đang chạy**. Mở
-lại rồi mở phiên mới — điện thoại của khách tự vào lại vì tên đã lưu trong máy họ.
+The game state is RAM-only: **stopping the server mid-round loses the round in
+progress**. Start it again and open a new session — visitors' phones rejoin by
+themselves because their name is stored on their own device.
 
-Ai biết địa chỉ cũng mở được `#/admin/live` và điều khiển trận đấu. Ở hội trường
-thì chấp nhận được (mã QR chỉ trỏ tới `#/play`), nhưng đừng công bố đường dẫn admin.
+Anyone who knows the address can open `#/admin/live` and control the game. That
+is acceptable in a hall (the QR code only points at `#/play`), but do not
+advertise the admin URL.

@@ -1,6 +1,6 @@
 /**
- * Controller của trang danh sách quiz (A1): đọc danh sách từ repository và mở
- * phiên chơi từ một bộ quiz.
+ * Controller of the quiz list page (A1): reads the list from the repository and
+ * opens a game session from one quiz.
  *
  * Public API: useQuizListController()
  */
@@ -16,8 +16,9 @@ export function useQuizListController() {
   const reload = useCallback(() => setQuizzes(quizRepository.findAll()), [])
 
   /**
-   * Mở phiên. Bộ quiz nằm trong localStorage của máy admin nên phải gửi cả nội
-   * dung nó lên máy chủ — máy chủ không có cách nào tự đọc được.
+   * Open a session. The quiz lives in the admin machine's localStorage, so its
+   * whole content has to be sent to the server — the server has no way to read
+   * it on its own.
    */
   const openSession = useCallback(
     (quiz) => {

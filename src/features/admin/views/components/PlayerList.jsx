@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react'
 import Panel from './Panel.jsx'
 
-/** Chữ cái đầu của tên, dùng làm dấu nhận diện thay cho ảnh đại diện. */
+/** The first letter of a name, used as an identity marker in place of an avatar. */
 function initialOf(name) {
   return name.trim().charAt(0).toUpperCase() || '?'
 }
@@ -9,7 +9,7 @@ function initialOf(name) {
 function PlayerList({ players }) {
   return (
     <Panel
-      title="Người chơi"
+      title="Players"
       Icon={Users}
       aside={
         <span className="text-text-h font-mono text-sm font-bold tabular-nums">
@@ -19,7 +19,8 @@ function PlayerList({ players }) {
     >
       {players.length === 0 ? (
         <p className="text-sm opacity-60">
-          Chưa có ai vào. Tên sẽ hiện ở đây ngay khi có người quét QR.
+          Nobody has joined yet. Names appear here the moment someone scans the QR
+          code.
         </p>
       ) : (
         <ul className="flex list-none flex-wrap gap-2 p-0">

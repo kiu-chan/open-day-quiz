@@ -1,4 +1,4 @@
-/** Khung màn hình điện thoại: hẹp, một cột, tên người chơi ở trên. */
+/** The phone screen frame: narrow, single column, player name at the top. */
 function PlayerShell({ name, children }) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-6">

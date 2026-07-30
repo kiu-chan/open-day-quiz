@@ -1,8 +1,10 @@
 /**
- * Controller của bàn điều khiển (A3) — nơi phát ra mọi ý định điều khiển trận đấu.
+ * Controller of the control desk (A3) — where every game-control intent comes
+ * from.
  *
- * Chốt câu khi hết giờ **không** nằm ở đây nữa: máy chủ làm, vì chỉ được có một
- * đồng hồ và trận đấu không được treo khi admin khoá màn hình.
+ * Closing a question when time is up is **not** here any more: the server does
+ * it, because there must be exactly one clock and the game must not hang when
+ * the admin locks their screen.
  *
  * Public API: useLiveController()
  */
@@ -11,7 +13,7 @@ import { ROUTES } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 
-/** Link người chơi quét QR để vào — cũng là URL đem in ra mã QR ở Phase 6. */
+/** The link players scan to join — also the URL printed into the QR code in Phase 6. */
 function joinUrl() {
   const { origin, pathname } = window.location
   return `${origin}${pathname}#${ROUTES.PLAY}`
@@ -50,7 +52,7 @@ export function useLiveController() {
       distribution: session.currentDistribution,
       joinUrl: joinUrl(),
       leaderboardRows: leaderboard.rows,
-      /** Nhiều người cùng hạng nhất thì admin phải tự chọn ai nhận quà. */
+      /** Several people sharing first place means the admin picks who gets the prize. */
       topRows: leaderboard.topRows,
       hasTieAtTop: leaderboard.hasTieAtTop,
       winnerName: session.winner?.name ?? null,

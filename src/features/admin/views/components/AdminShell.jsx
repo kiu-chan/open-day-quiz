@@ -2,32 +2,32 @@ import { MonitorPlay, Smartphone } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 
 const NAV = [
-  { key: 'list', label: 'Bộ quiz', href: `#${ROUTES.ADMIN}` },
-  { key: 'live', label: 'Bàn điều khiển', href: `#${ROUTES.ADMIN_LIVE}` },
+  { key: 'list', label: 'Quizzes', href: `#${ROUTES.ADMIN}` },
+  { key: 'live', label: 'Control desk', href: `#${ROUTES.ADMIN_LIVE}` },
 ]
 
 const EXTERNAL = [
   {
     key: 'display',
-    label: 'Màn hình lớn',
+    label: 'Big screen',
     href: `#${ROUTES.DISPLAY}`,
     Icon: MonitorPlay,
   },
   {
     key: 'play',
-    label: 'Trang người chơi',
+    label: 'Player page',
     href: `#${ROUTES.PLAY}`,
     Icon: Smartphone,
   },
 ]
 
 /**
- * Khung chung của ba trang admin: thanh điều hướng dính trên đầu, tiêu đề trang,
- * rồi nội dung.
+ * The shared frame of the three admin pages: a sticky nav bar, the page title,
+ * then the content.
  *
- * Tiêu đề nằm ở khung chứ không ở từng trang để ba trang admin luôn cùng một
- * nhịp: cùng cỡ chữ, cùng khoảng cách, cùng chỗ đặt nút hành động (`actions`).
- * Tab đang mở phân biệt bằng nền đen chứ không bằng màu.
+ * The title lives in the shell rather than in each page so all three admin pages
+ * keep the same rhythm: same font size, same spacing, same place for the action
+ * buttons (`actions`). The open tab is marked with a black fill, not a colour.
  */
 function AdminShell({ current, title, subtitle, actions, children }) {
   return (

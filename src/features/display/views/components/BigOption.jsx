@@ -2,8 +2,9 @@ import { Check } from 'lucide-react'
 import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
- * Một ô đáp án trên máy chiếu. Viền `border-4` và chữ rất to để đọc được từ
- * hàng ghế cuối; lúc lộ đáp án thì ô đúng đổ nền và có dấu ✓, các ô còn lại mờ đi.
+ * One option tile on the projector. `border-4` and very large text so it reads
+ * from the back row; at reveal the correct tile gets a fill and a check mark
+ * while the rest fade back.
  */
 function BigOption({ label, text, image, isRevealed, isAnswer, count }) {
   const tone = !isRevealed
@@ -21,7 +22,7 @@ function BigOption({ label, text, image, isRevealed, isAnswer, count }) {
       {image && (
         <QuizImage
           src={image}
-          alt={text || `Đáp án ${label}`}
+          alt={text || `Option ${label}`}
           className={text ? 'h-24 w-28 shrink-0' : 'h-40 flex-1'}
         />
       )}
@@ -31,7 +32,7 @@ function BigOption({ label, text, image, isRevealed, isAnswer, count }) {
         <span className="font-mono tabular-nums">{count}</span>
       )}
       {isRevealed && isAnswer && (
-        <Check className="size-9 shrink-0" strokeWidth={2.5} aria-label="Đáp án đúng" />
+        <Check className="size-9 shrink-0" strokeWidth={2.5} aria-label="Correct answer" />
       )}
     </li>
   )

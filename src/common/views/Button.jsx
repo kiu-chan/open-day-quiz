@@ -5,8 +5,9 @@ const VARIANTS = {
 }
 
 /**
- * Nút bấm dùng khắp app. Ba mức ưu tiên phân biệt bằng fill và viền, không
- * bằng màu: nút chính đổ đen, nút phụ chỉ có viền, nút nhẹ không viền.
+ * The button used across the app. Three priority levels told apart by fill and
+ * border rather than colour: primary is filled black, secondary is outline only,
+ * quiet has no border.
  */
 function Button({ variant = 'secondary', className = '', children, ...rest }) {
   return (

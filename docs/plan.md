@@ -1,214 +1,260 @@
-# Kế hoạch thiết kế — Open Day Quiz
+# Design plan — Open Day Quiz
 
-Tài liệu này liệt kê **các trang và tính năng cần làm**, thứ tự làm, và những gì còn phải quyết.
+This document lists **the pages and features to build**, the order to build them
+in, and what still has to be decided.
 
-Nguồn: [README.md](../README.md) (spec sản phẩm). Luật viết code: `CLAUDE.md`.
+Source: [README.md](../README.md) (the product spec). Coding rules: `CLAUDE.md`.
 
-**Tình trạng:** cả 7 phase đã xong (0 → 6). Phase 3 chốt phương án **máy chủ Node
-tự dựng trong mạng LAN**, SSE + intent, không thêm dependency. Kiến trúc ghi ở
-[architecture.md](architecture.md); cách chạy ở [installation.md](installation.md)
-và [usage.md](usage.md).
+**Status:** all 7 phases are done (0 → 6). Phase 3 settled on a **self-hosted Node
+server on the LAN**, SSE + intents, no added dependencies. The architecture is
+written up in [architecture.md](architecture.md); how to run it is in
+[installation.md](installation.md) and [usage.md](usage.md).
 
 ---
 
-## 1. Ý tưởng trung tâm: một máy trạng thái, ba cách vẽ
+## 1. The central idea: one state machine, three ways to draw it
 
-Đây là quyết định thiết kế quan trọng nhất, và nó chi phối mọi thứ còn lại.
+This is the most important design decision, and it governs everything else.
 
-Ba màn hình (admin / player / display) **không phải ba ứng dụng**. Chúng cùng nhìn vào **một trạng thái phiên chơi duy nhất**, chỉ khác nhau ở chỗ vẽ trạng thái đó ra thế nào:
+The three screens (admin / player / display) **are not three applications**. They
+all look at **one single session state**, differing only in how they draw it:
 
-| Trạng thái | Admin thấy | Player thấy | Display thấy |
+| State | Admin sees | Player sees | Display sees |
 | --- | --- | --- | --- |
-| `lobby` | Danh sách người vào, nút Bắt đầu | "Đang chờ..." + tên mình | QR to + số người chơi |
-| `question` | Câu hỏi + số người đã trả lời | 4 ô đáp án bấm được | Câu hỏi chữ rất to + đồng hồ |
-| `reveal` | Nút Câu tiếp | Đúng/sai + điểm mình | Đáp án đúng + phân bố lựa chọn |
-| `podium` | Nút Công bố người thắng | Hạng của mình | Top 3 |
-| `prize` | Chờ | 3 hộp để chọn (chỉ người thắng) | 3 hộp + animation mở |
+| `lobby` | The join list, Start button | "Waiting..." + their name | Large QR + player count |
+| `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
+| `reveal` | Next question button | Right/wrong + their points | The correct answer + pick distribution |
+| `podium` | Announce winner button | Their own rank | Top 3 |
+| `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
 
-Hệ quả: **máy trạng thái này là một model dùng chung**, không thuộc riêng surface nào. Nó sẽ nằm ở `src/common/session/`. Ba surface chỉ là ba bộ view + controller đọc nó.
+The consequence: **this state machine is a shared model**, belonging to no single
+surface. It lives in `src/common/session/`. The three surfaces are just three sets
+of views and controllers reading it.
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> lobby: admin mở phiên
-    lobby --> question: admin bắt đầu
-    question --> reveal: hết giờ / admin bấm
-    reveal --> question: còn câu
-    reveal --> podium: hết câu
-    podium --> prize: admin công bố
-    prize --> prizeRevealed: người thắng chọn hộp
+    idle --> lobby: admin opens a session
+    lobby --> question: admin starts
+    question --> reveal: time up / admin clicks
+    reveal --> question: questions remain
+    reveal --> podium: no questions left
+    podium --> prize: admin announces
+    prize --> prizeRevealed: the winner picks a box
     prizeRevealed --> [*]
-    lobby --> idle: admin huỷ
+    lobby --> idle: admin cancels
 ```
 
 ---
 
-## 2. Trang cần thiết
+## 2. Pages needed
 
-Tổng cộng **6 route**, 12 màn hình.
+**6 routes** in total, 12 screens.
 
-### 2.0 Trang chủ — `features/home/`
+### 2.0 Home page — `features/home/`
 
-| # | Trang | Route | Nội dung |
+| # | Page | Route | Content |
 | --- | --- | --- | --- |
-| H1 | Trang chủ | `/` | Giới thiệu trò chơi, ba bước chơi, teaser hộp quà, lối vào ba màn. Đọc phiên để hiện trạng thái trực tiếp ("Phòng chờ đang mở", số người đã vào) — chỉ đọc, không gửi intent |
+| H1 | Home | `/` | Introduces the game, the three steps, a prize-box teaser, and links to all three screens. Reads the session to show live status ("The lobby is open", the join count) — read-only, sends no intents |
 
 ### 2.1 Admin — `features/admin/`
 
-| # | Trang | Route | Nội dung |
+| # | Page | Route | Content |
 | --- | --- | --- | --- |
-| A1 | Danh sách quiz | `/admin` | Bảng các bộ quiz, nút Tạo / Sửa / Xoá / Nhân bản |
-| A2 | Soạn quiz | `/admin/quiz/:id` | Tên bộ quiz; thêm/sửa/xoá câu hỏi; mỗi câu: nội dung, ảnh minh hoạ, 2–4 đáp án (chữ và/hoặc ảnh), đánh dấu đáp án đúng, thời gian đếm ngược |
-| A3 | Bàn điều khiển | `/admin/live` | QR + link tham gia; danh sách người đang kết nối; nút Bắt đầu / Câu tiếp / Hiện đáp án / Kết thúc; leaderboard; nút Công bố người thắng |
+| A1 | Quiz list | `/admin` | The table of quizzes, with New / Edit / Delete / Duplicate |
+| A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration |
+| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; the leaderboard; the Announce winner button |
 
-A3 là trang quan trọng nhất và cũng dễ sai nhất — nó là cái duy nhất được phép **đổi trạng thái phiên**. Player và display chỉ đọc.
+A3 is the most important page and the easiest to get wrong — it is the only one
+allowed to **change the session state**. Player and display only read.
 
 ### 2.2 Player — `features/player/`
 
-Một route `/play`, nội dung đổi theo trạng thái phiên. Điện thoại, ngón tay, cầm dọc.
+One route `/play`, whose content changes with the session state. Phone, thumbs,
+held portrait.
 
-| # | Màn hình | Khi nào |
+| # | Screen | When |
 | --- | --- | --- |
-| P1 | Nhập tên tham gia | vào từ QR, chưa có tên |
-| P2 | Chờ ở lobby | đã có tên, phiên chưa bắt đầu |
-| P3 | Trả lời câu hỏi | `question` — 4 ô to, đồng hồ, bấm xong thì khoá và chờ |
-| P4 | Đúng/sai + điểm | `reveal` |
-| P5 | Hạng của mình | `podium` |
-| P6 | Chọn hộp quà | `prize`, **chỉ người thắng**; người khác thấy màn hình chờ |
+| P1 | Enter a name to join | arrived from the QR, no name yet |
+| P2 | Waiting in the lobby | has a name, session not started |
+| P3 | Answering a question | `question` — 4 large tiles, a clock, locks after tapping |
+| P4 | Right/wrong + points | `reveal` |
+| P5 | Their own rank | `podium` |
+| P6 | Pick a prize box | `prize`, **winner only**; everyone else gets a waiting screen |
 
 ### 2.3 Display — `features/display/`
 
-Một route `/display`, nội dung đổi theo trạng thái phiên. Máy chiếu, xem từ xa 10m, không ai bấm gì.
+One route `/display`, whose content changes with the session state. Projector,
+viewed from 10 metres, nobody clicks anything.
 
-| # | Màn hình | Khi nào |
+| # | Screen | When |
 | --- | --- | --- |
-| D1 | QR khổng lồ + số người đã vào | `lobby` |
-| D2 | Câu hỏi + đáp án + đồng hồ đếm ngược | `question` |
-| D3 | Đáp án đúng + leaderboard trực tiếp | `reveal` |
-| D4 | Người thắng / top 3 | `podium` |
-| D5 | 3 hộp quà + animation mở quà | `prize`, `prizeRevealed` |
+| D1 | Giant QR + the join count | `lobby` |
+| D2 | The question, options and countdown | `question` |
+| D3 | The correct answer + live leaderboard | `reveal` |
+| D4 | The winner / top 3 | `podium` |
+| D5 | 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
 
 ---
 
-## 3. Dữ liệu
+## 3. Data
 
-Đặt ở `common/session/models/` vì cả ba surface đều đọc.
+Placed in `common/session/models/` because all three surfaces read it.
 
-| Thực thể | Trường | Ghi chú |
+| Entity | Fields | Notes |
 | --- | --- | --- |
-| `Quiz` | `id`, `title`, `questions[]` | Admin tạo, tồn tại giữa các phiên |
+| `Quiz` | `id`, `title`, `questions[]` | Created by the admin, outlives individual sessions |
 | `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
-| `Session` | `id`, `quizId`, `state`, `currentIndex`, `questionEndsAt` | Một phiên chơi; `state` là máy trạng thái ở mục 1 |
-| `Player` | `id`, `name`, `joinedAt`, `score` | `id` sinh ở client, lưu `localStorage` để refresh không mất chỗ |
-| `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` cần cho điểm theo tốc độ |
-| `PrizeBoxes` | `boxes[]` (hoán vị của prize), `pickedIndex` | Xáo lại mỗi phiên |
+| `Session` | `id`, `quizId`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1 |
+| `Player` | `id`, `name`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` so a refresh does not lose your place |
+| `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
+| `PrizeBoxes` | `boxes[]` (a permutation of the prizes), `pickedIndex` | Reshuffled every session |
 
-### Hai chi tiết kỹ thuật dễ sai
+### Two technical details that are easy to get wrong
 
-**Đồng hồ đếm ngược:** đừng cho mỗi máy tự đếm từ N giây. Lưu **mốc thời điểm kết thúc** (`questionEndsAt`) trong session, mỗi máy tự tính `còn lại = questionEndsAt - now`. Nếu để mỗi máy đếm độc lập, sau vài câu điện thoại và máy chiếu sẽ lệch nhau vài giây, và người chơi sẽ khiếu nại.
+**The countdown:** do not let each device count down from N seconds on its own.
+Store the **end timestamp** (`questionEndsAt`) in the session and let each device
+compute `remaining = questionEndsAt - now`. Counting independently makes the
+phones and the projector drift seconds apart after a few questions, and players
+will complain.
 
-**Vào lại giữa game:** điện thoại rất dễ bị lock màn hình hoặc refresh. `playerId` phải lưu `localStorage` để vào lại là nhận lại đúng tên và điểm, không tạo người chơi mới.
+**Rejoining mid-game:** phones get their screen locked or refreshed all the time.
+`playerId` has to live in `localStorage` so rejoining restores the same name and
+score instead of creating a new player.
 
 ---
 
-## 4. Tính năng theo lớp MVC
+## 4. Features by MVC layer
 
-Mỗi feature theo khung `models/ controllers/ views/` như CLAUDE.md quy định.
+Each feature follows the `models/ controllers/ views/` frame that CLAUDE.md
+prescribes.
 
-Bảng dưới là **tình trạng thật sau khi làm**, có hai chỗ lệch với dự kiến ban đầu — ghi rõ ở dưới bảng.
+The table below is the **actual outcome after building**, with two deviations from
+the original plan — noted underneath.
 
-| Feature | Model (luật) | Controller | View |
+| Feature | Model (rules) | Controller | View |
 | --- | --- | --- | --- |
-| `common/session` | `SessionModel` (máy trạng thái, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
+| `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
 | `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner` |
-| `admin` | `QuizRepository` + dữ liệu mẫu | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
-| `player` | — (đọc session) | `usePlayerController` — join, gửi đáp án, chọn hộp quà | P1–P6 |
-| `display` | — (đọc session) | `useDisplayController` | D1–D5 |
+| `admin` | `QuizRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
+| `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
+| `display` | — (reads the session) | `useDisplayController` | D1–D5 |
 
-**Lệch 1 — không có feature `leaderboard` và `prizes` riêng.** Luật chấm điểm và xáo quà là thứ cả ba surface đều đọc, nên theo đúng luật của CLAUDE.md nó thuộc `common/session/models/` (`Leaderboard.js`, `PrizeBoxes.js`). Còn view thì mỗi surface một kiểu hẳn (hộp quà trên điện thoại là nút bấm, trên máy chiếu là hình tĩnh chữ to), nên không gom được thành một feature. Tách riêng chỉ tạo thêm tầng mà không giảm được dòng code nào.
+**Deviation 1 — no separate `leaderboard` and `prizes` features.** Scoring rules
+and prize shuffling are read by all three surfaces, so by CLAUDE.md's own rule
+they belong in `common/session/models/` (`Leaderboard.js`, `PrizeBoxes.js`). The
+views, meanwhile, are completely different per surface (a prize box is a button on
+a phone and a static, large-type shape on the projector), so they cannot be pooled
+into one feature. Splitting them out would only add a layer without removing a
+line of code.
 
-**Lệch 3 — có thêm `server/`, ngoài `src/`.** Máy chủ trận đấu không thuộc feature nào và không phải MVC: nó là ba file (`index.js`, `sessionApi.js`, `sessionStore.js`) import thẳng `SessionModel.js` của client. Nhờ model không bao giờ import React và không tự gọi `Date.now()` mà luật chơi chỉ cần một bản, chạy được cả trong node.
+**Deviation 3 — there is a `server/`, outside `src/`.** The game server belongs to
+no feature and is not MVC: it is a set of files (`index.js`, `sessionApi.js`,
+`sessionStore.js`) importing the client's `SessionModel.js` directly. Because the
+model never imports React and never calls `Date.now()` itself, the game rules need
+only one copy, and it runs in node too.
 
-**Lệch 2 — `features/quiz/` bị bỏ, không phải đổi tên.** Bản demo một người chơi cũ có model và controller riêng, không dùng lại được khi trạng thái chuyển sang session dùng chung. Các component trình bày thì viết lại cho vừa điện thoại (vùng bấm to hơn, thêm trạng thái "đã chọn nhưng chưa lộ đáp án").
-
----
-
-## 5. Thứ tự làm
-
-Nguyên tắc: mỗi phase kết thúc phải **demo được**, và **hoãn quyết định realtime càng lâu càng tốt**.
-
-| Phase | Nội dung | Tình trạng |
-| --- | --- | --- |
-| **0. Nền** | Routing 5 route; máy trạng thái `common/session`; repository phiên chạy bằng `localStorage` | ✅ xong |
-| **1. Soạn quiz** | A1 + A2, lưu `localStorage`, tự lưu sau mỗi thay đổi | ✅ xong |
-| **2. Vòng chơi một máy** | A3 + P1–P4 + D1–D3 | ✅ xong — chạy được nhiều tab trên cùng máy, không chỉ một tab |
-| **3. Realtime** | Máy chủ Node trong LAN giữ trạng thái; `SessionRepository` đổi sang SSE + POST intent | ✅ xong |
-| **4. Điểm & leaderboard** | Chấm điểm theo tốc độ, hạng, đồng điểm, P5 + D4 | ✅ xong |
-| **5. Hộp quà** | Xáo quà, P6 + D5, animation mở | ✅ xong |
-| **6. Hoàn thiện** | Mã QR thật (`qrcode.react`), cỡ chữ máy chiếu, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ xong |
-
-Điểm mấu chốt của thứ tự này đã được kiểm chứng: **mọi phase khác làm xong mà không cần biết sẽ chọn transport nào**, vì `SessionRepository` là lớp cách ly.
-
-Phase 3 làm xong rồi, và đây là chỗ dự đoán ban đầu chưa đúng: **`SessionModel` và
-toàn bộ view thật sự không phải sửa một dòng**, nhưng không chỉ có
-`SessionRepository` đổi. Phải đổi thêm:
-
-- `useSession` trả `send(intent)` thay cho `update(fn)` — client không còn được tự
-  áp luật, nên 11 chỗ gọi trong ba controller đổi theo (mỗi chỗ một dòng).
-- Việc tự chốt câu khi hết giờ chuyển từ `useLiveController` sang máy chủ: chỉ được
-  có một đồng hồ, và trận không được treo khi admin khoá màn hình.
-- Thêm cờ `isOffline` + băng báo mất kết nối. Không cần cờ loading: `read()` vẫn
-  đồng bộ, chỉ là nó đọc ảnh chụp gần nhất.
-- Player tự gửi lại `join` khi phiên không còn thấy tên mình (máy chủ khởi động lại).
+**Deviation 2 — `features/quiz/` was dropped, not renamed.** The old single-player
+demo had its own model and controller which could not be reused once the state
+became a shared session. Its presentational components were rewritten to suit
+phones (larger tap targets, plus a "picked but not yet revealed" state).
 
 ---
 
-## 6. Còn phải quyết
+## 5. Build order
 
-### Còn treo
+The principle: every phase has to end in something **demoable**, and **the
+realtime decision is deferred as long as possible**.
 
-| # | Việc | Ghi chú |
+| Phase | Content | Status |
 | --- | --- | --- |
-| 6 | **Nội dung câu hỏi thật** | Không phải việc code — cần người của trường soạn, gõ thẳng vào trang admin. Hiện có một bộ mẫu 5 câu |
-| 7 | **Quà thật** | Đang dùng đúng ví dụ trong README. Sửa hằng `PRIZES` trong `PrizeBoxes.js` |
+| **0. Foundations** | 5-route routing; the `common/session` state machine; a session repository backed by `localStorage` | ✅ done |
+| **1. Quiz editing** | A1 + A2, saved to `localStorage`, autosaved after every change | ✅ done |
+| **2. Single-machine round** | A3 + P1–P4 + D1–D3 | ✅ done — works across several tabs on one machine, not just one tab |
+| **3. Realtime** | A Node server on the LAN holding the state; `SessionRepository` switched to SSE + POST intents | ✅ done |
+| **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done |
+| **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
+| **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
 
-### Đã chốt khi làm
+The crux of this ordering held up in practice: **every other phase was completed
+without knowing which transport would be chosen**, because `SessionRepository` is
+the isolating layer.
 
-| # | Việc | Chốt thế nào | Vì sao |
+Phase 3 is done, and this is where the original prediction was not quite right:
+**`SessionModel` and every view really did need zero changes**, but
+`SessionRepository` was not the only thing that changed. These also had to change:
+
+- `useSession` returns `send(intent)` instead of `update(fn)` — clients no longer
+  apply the rules themselves, so the 11 call sites across three controllers each
+  changed by one line.
+- Auto-closing a question when time is up moved from `useLiveController` to the
+  server: there must be exactly one clock, and the game must not hang when the
+  admin locks their screen.
+- Added an `isOffline` flag plus the disconnect banner. No loading flag was
+  needed: `read()` is still synchronous, it just reads the latest snapshot.
+- The player resends `join` when the session no longer knows their name (after a
+  server restart).
+
+---
+
+## 6. Still to decide
+
+### Open
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 6 | **The real question content** | Not a coding task — the university needs to write it and type it into the admin page. There is a 5-question sample set for now |
+| 7 | **The real prizes** | Currently exactly the examples from the README. Edit the `PRIZES` constant in `PrizeBoxes.js` |
+
+### Settled during the build
+
+| # | Item | Decision | Why |
 | --- | --- | --- | --- |
-| 2 | **Routing** | Tự viết trên `location.hash`, ~60 dòng ở `common/routing/useHashRoute.js` | Khỏi thêm react-router, khỏi cấu hình SPA fallback, và QR không bao giờ ra 404 |
-| 3 | **Thư viện QR** | `qrcode.react`, render SVG | Nét khi phóng lên máy chiếu, mặc định đen trên trắng nên đúng luật layout |
-| 4 | **Cách chấm điểm** | Đúng = 1000 điểm + thưởng tốc độ tối đa 500, giảm dần đều theo thời gian đã dùng | Với ~5 câu, chấm 1 điểm/câu thì đồng điểm hàng loạt, không chọn ra được **một** người thắng để trao quà |
-| 5 | **Đồng điểm ở ngôi nhất** | Hơn nhau ở tổng thời gian trả lời. Bằng cả hai thì cùng hạng nhất, và bàn điều khiển hiện danh sách để admin bấm chọn người nhận quà | Tự động xử lý được gần hết trường hợp, chỉ trường hợp bằng nhau tuyệt đối mới cần người quyết |
-| 8 | **Ai là người thắng** | Lưu `winnerId` vào session lúc công bố, không suy ra từ bảng hạng | Bước chọn quà cần biết chắc của ai; và cho phép admin chọn tay khi đồng hạng |
-| 1 | **Realtime** | Máy chủ Node tự dựng trong LAN (`node:http`, không dependency), SSE `/api/events` + `POST /api/intent`, máy chủ là nguồn sự thật | Chủ dự án chốt: khách dùng chung wifi với máy tính. Không cần internet, dữ liệu không ra khỏi phòng. SSE vì `EventSource` tự kết nối lại — điện thoại khoá màn hình rồi mở là tự vào tiếp; Socket.IO thêm ~40 kB cho hai chiều mà ở đây không dùng |
-| 9 | **Nguồn sự thật** | Máy chủ áp luật, client chỉ gửi ý định | Client được ghi thẳng thì một điện thoại POST lên được phiên bịa đặt; và `msTaken` phải đo bằng một đồng hồ, không thì ai có đồng hồ chạy chậm được thưởng điểm |
+| 2 | **Routing** | Hand-written on `location.hash`, ~60 lines in `common/routing/useHashRoute.js` | Avoids react-router, avoids SPA fallback configuration, and the QR code never lands on a 404 |
+| 3 | **QR library** | `qrcode.react`, rendering SVG | Stays crisp blown up on a projector, and defaults to black on white, which fits the layout rules |
+| 4 | **Scoring** | Correct = 1000 points + a speed bonus of up to 500, decreasing linearly with time used | With ~5 questions, 1 point per question produces mass ties and no way to pick **one** winner to award a prize to |
+| 5 | **Ties for first place** | Broken by total answering time. Equal on both means both share first place, and the control desk lists them so the admin can click who gets the prize | Handles nearly every case automatically; only an exact tie needs a human |
+| 8 | **Who the winner is** | `winnerId` is stored in the session at announcement time, not derived from the leaderboard | The prize step needs to know exactly whose it is, and it lets the admin pick manually on a tie |
+| 1 | **Realtime** | A self-hosted Node server on the LAN (`node:http`, no dependencies), SSE `/api/events` + `POST /api/intent`, the server as source of truth | The project owner decided visitors share the wifi with the computer. No internet needed, no data leaves the room. SSE because `EventSource` reconnects itself — a phone that locks and unlocks its screen rejoins on its own; Socket.IO adds ~40 kB for bidirectional traffic this app does not use |
+| 9 | **Source of truth** | The server applies the rules, clients only send intents | With direct client writes, one phone could POST a fabricated session; and `msTaken` has to be measured by one clock, otherwise whoever has the slowest clock gets bonus points |
 
 ---
 
-## 7. Không làm (giữ đúng phạm vi prototype)
+## 7. Out of scope (staying a prototype)
 
-README nói rõ *"do not over-engineer"*, nên chốt trước những thứ **sẽ không làm**, để khỏi bị kéo phạm vi:
+The README says plainly *"do not over-engineer"*, so here is what **will not be
+built**, decided up front to prevent scope creep:
 
-- Không đăng nhập, không tài khoản, không phân quyền — trang admin chỉ cần biết URL. (Rủi ro chấp nhận được: ai biết `/admin/live` thì điều khiển được game. Nếu cần, thêm một mã PIN gõ tay là đủ.)
-- Không lưu lịch sử các phiên đã chơi, không thống kê, không xuất báo cáo.
-- Không nhiều phiên chạy song song — một lúc một phiên.
-- Không video trong câu hỏi. **Ảnh thì có** (câu hỏi và từng đáp án đều thêm được
-  một ảnh) — quyết định này đã đổi so với bản kế hoạch đầu; ảnh nằm trên máy chủ,
-  bộ quiz chỉ giữ đường dẫn, xem [architecture.md](architecture.md) mục realtime.
-- Không đa ngôn ngữ, không chế độ khán giả, không app mobile.
-- Không viết test tự động cho prototype; nghiệm thu bằng cách chạy thử trọn kịch bản.
+- No login, no accounts, no roles — the admin page just needs its URL. (An
+  accepted risk: anyone who knows `/admin/live` can control the game. A typed PIN
+  would be enough if it ever mattered.)
+- No history of past sessions, no statistics, no report export.
+- No parallel sessions — one at a time.
+- No video in questions. **Images yes** (both the question and each option can
+  carry one) — this decision changed from the original plan; images live on the
+  server and the quiz only stores the path, see the realtime section of
+  [architecture.md](architecture.md).
+- No internationalisation, no spectator mode, no mobile app.
+- No automated tests for a prototype; acceptance is running the whole scenario by
+  hand.
 
 ---
 
-## 8. Việc cần thử trước sự kiện
+## 8. To test before the event
 
-Không phải code, nhưng thiếu là vỡ trận:
+Not code, but skipping it breaks the event:
 
-- Chạy thử với **số điện thoại thật** ở gần mức dự kiến, trên **wifi thật của hội trường**. Việc đầu tiên phải thử: wifi đó có cho điện thoại nói chuyện với laptop không (client isolation là rủi ro số một), và firewall macOS đã Allow node chưa.
-- Nhìn máy chiếu từ hàng ghế cuối — chữ ở D2 và mã QR ở D1 có đọc/quét được không.
-- Thử tình huống một điện thoại tắt màn hình giữa câu rồi mở lại.
-- ✅ Admin bấm "câu tiếp" hai lần liên tiếp: máy trạng thái đã chặn, đã thử.
-- Chuẩn bị phương án dự phòng nếu mạng chết giữa game.
-- Nhớ mở mọi màn hình bằng **địa chỉ IP** mà `npm run start` in ra, không phải `localhost`, nếu không mã QR sẽ vô dụng.
-- Mang theo một router du lịch hoặc chuẩn bị hotspot từ điện thoại, để dùng nếu wifi hội trường chặn thiết bị thấy nhau.
+- Run a rehearsal with **real phones** at roughly the expected count, on **the
+  actual venue wifi**. The first thing to test: does that wifi let phones talk to
+  the laptop (client isolation is risk number one), and has the macOS firewall
+  been told to Allow node.
+- Look at the projector from the back row — is the text on D2 readable and the QR
+  code on D1 scannable.
+- Test a phone locking its screen mid-question and coming back.
+- ✅ Admin pressing "next question" twice in a row: the state machine blocks it,
+  already tested.
+- Prepare a fallback in case the network dies mid-game.
+- Remember to open every screen with the **IP address** `npm run start` prints,
+  not `localhost`, or the QR code is useless.
+- Bring a travel router or have a phone hotspot ready, in case the venue wifi
+  blocks devices from seeing each other.

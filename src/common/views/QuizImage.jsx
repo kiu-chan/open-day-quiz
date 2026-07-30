@@ -2,14 +2,15 @@ import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
 
 /**
- * Ảnh của câu hỏi hoặc của một đáp án, dùng chung cho cả ba màn.
+ * The image of a question or of one option, shared by all three screens.
  *
- * Có nhánh lỗi riêng vì ảnh nằm trên máy chủ chứ không nằm trong bộ quiz: xoá
- * `server/uploads/` hoặc bê bộ quiz sang máy khác là ảnh 404. Khi đó phải nói
- * rõ "ảnh không tải được" thay vì để lại một ô vỡ không ai hiểu.
+ * It has its own error branch because images live on the server rather than
+ * inside the quiz: deleting `server/uploads/` or carrying the quiz to another
+ * machine makes them 404. When that happens it has to say "image failed to load"
+ * instead of leaving a broken box nobody can interpret.
  *
- * `object-contain` chứ không `cover`: ảnh câu hỏi hay có chữ và sơ đồ, cắt mất
- * mép là mất luôn thông tin.
+ * `object-contain` rather than `cover`: question images often contain text and
+ * diagrams, and cropping the edges crops away the information.
  */
 function QuizImage({ src, alt = '', className = '' }) {
   const [hasFailed, setHasFailed] = useState(false)
@@ -22,7 +23,7 @@ function QuizImage({ src, alt = '', className = '' }) {
         className={`border-border text-text flex items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 text-sm ${className}`}
       >
         <ImageOff className="size-4 shrink-0" aria-hidden="true" />
-        Ảnh không tải được
+        Image failed to load
       </span>
     )
   }

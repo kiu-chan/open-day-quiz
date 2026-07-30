@@ -24,7 +24,8 @@ function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      {/* Lưới chấm trôi rất chậm: nền có nhịp thở mà không giành sự chú ý với chữ. */}
+      {/* A very slowly drifting dot grid: the background breathes without
+          competing with the text for attention. */}
       <section className="relative isolate overflow-hidden px-5 pt-14 pb-16 sm:pt-20">
         <div
           className="animate-drift absolute inset-0 -z-10 bg-[radial-gradient(circle,_var(--color-border)_1.5px,_transparent_1.5px)] bg-[length:28px_28px] opacity-70"
@@ -34,7 +35,7 @@ function HomePage() {
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <p className="animate-rise border-accent-border text-text-h inline-flex w-fit items-center gap-2 rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide uppercase">
             <Sparkles className="size-4 shrink-0" aria-hidden="true" />
-            Open Day · Sân chơi của trường
+            Open Day · The campus game
           </p>
 
           <h1
@@ -45,7 +46,8 @@ function HomePage() {
             <br />
             DAY
             <br />
-            {/* Khối đen lệch trục: điểm nhấn "lễ hội" làm bằng hình, không bằng màu. */}
+            {/* The tilted black block: the "festive" accent made out of shape
+                rather than colour. */}
             <span className="bg-accent mt-2 inline-block -rotate-2 px-4 pt-1 pb-2 text-white">
               QUIZ
             </span>
@@ -55,10 +57,10 @@ function HomePage() {
             className="animate-rise max-w-2xl text-xl sm:text-2xl"
             style={{ animationDelay: '160ms' }}
           >
-            Quét mã QR, trả lời trên điện thoại, xem tên mình leo bảng xếp hạng
-            trên màn hình lớn. Người đứng nhất được chọn{' '}
+            Scan the QR code, answer on your phone, and watch your name climb the
+            leaderboard on the big screen. Whoever finishes first gets to pick{' '}
             <strong className="text-text-h font-semibold">
-              một trong ba hộp quà bí mật
+              one of three mystery prize boxes
             </strong>
             .
           </p>
@@ -72,14 +74,14 @@ function HomePage() {
               className={`${CTA_BASE} bg-accent border-accent-border text-white`}
             >
               <Smartphone className="size-5 shrink-0" aria-hidden="true" />
-              Vào chơi ngay
+              Play now
             </a>
             <a
               href={`#${ROUTES.DISPLAY}`}
               className={`${CTA_BASE} border-border text-text-h hover:border-accent-border`}
             >
               <MonitorPlay className="size-5 shrink-0" aria-hidden="true" />
-              Mở màn hình lớn
+              Open the big screen
             </a>
           </div>
 
@@ -94,27 +96,28 @@ function HomePage() {
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
         <header className="flex flex-col gap-2">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Chơi thế nào?
+            How do you play?
           </h2>
-          <p className="text-lg">Ba bước, không cần cài gì cả.</p>
+          <p className="text-lg">Three steps, nothing to install.</p>
         </header>
 
         <ul className="grid list-none gap-5 p-0 sm:grid-cols-3">
-          <StepCard number="01" Icon={QrCode} title="Quét mã QR">
-            Mã hiện ngay trên màn hình lớn của hội trường. Camera điện thoại là
-            đủ, không cần tải ứng dụng.
+          <StepCard number="01" Icon={QrCode} title="Scan the QR code">
+            The code is right there on the hall's big screen. Your phone camera is
+            enough — no app to download.
           </StepCard>
           <StepCard
             number="02"
             Icon={UserPlus}
-            title="Nhập tên"
+            title="Enter your name"
             delay="120ms"
           >
-            Gõ tên bạn muốn hiện trên bảng xếp hạng rồi chờ MC bấm bắt đầu.
+            Type the name you want on the leaderboard, then wait for the host to
+            press start.
           </StepCard>
-          <StepCard number="03" Icon={Zap} title="Trả lời thật nhanh" delay="240ms">
-            Mỗi câu có đồng hồ đếm ngược. Đúng thì được điểm, trả lời càng sớm
-            điểm càng cao.
+          <StepCard number="03" Icon={Zap} title="Answer fast" delay="240ms">
+            Every question has a countdown. Correct answers score points, and the
+            sooner you answer the more you get.
           </StepCard>
         </ul>
       </section>
@@ -122,11 +125,11 @@ function HomePage() {
       <section className="bg-code-bg border-border border-y">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-5 py-16 text-center">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Và phần thưởng…
+            And the prize…
           </h2>
           <p className="max-w-xl text-lg">
-            Người đứng nhất lên chọn một trong ba hộp. Ba hộp được xáo lại mỗi
-            trận, nên không ai đoán trước được hộp nào có gì.
+            The winner comes up and picks one of three boxes. The boxes are
+            reshuffled every round, so nobody can guess what is in which.
           </p>
 
           <PrizeTeaser />
@@ -136,10 +139,10 @@ function HomePage() {
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
         <header className="flex flex-col gap-2">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Ba màn hình, một trận đấu
+            Three screens, one game
           </h2>
           <p className="text-lg">
-            Mọi thiết bị trong cùng wifi đều thấy cùng một trạng thái.
+            Every device on the same wifi sees the same state.
           </p>
         </header>
 
@@ -147,22 +150,22 @@ function HomePage() {
           <SurfaceCard
             href={`#${ROUTES.PLAY}`}
             Icon={Smartphone}
-            title="Người chơi"
-            description="Trên điện thoại: nhập tên, chọn đáp án, xem điểm của mình."
+            title="Player"
+            description="On a phone: enter your name, pick answers, track your score."
             featured
           />
           <SurfaceCard
             href={`#${ROUTES.DISPLAY}`}
             Icon={MonitorPlay}
-            title="Màn hình lớn"
-            description="Chiếu lên máy chiếu: mã QR, câu hỏi, đồng hồ, bảng xếp hạng."
+            title="Big screen"
+            description="For the projector: QR code, questions, clock, leaderboard."
             delay="120ms"
           />
           <SurfaceCard
             href={`#${ROUTES.ADMIN}`}
             Icon={Settings2}
-            title="Quản trị"
-            description="Soạn bộ câu hỏi và điều khiển vòng chơi từ máy của MC."
+            title="Admin"
+            description="Write the questions and drive the round from the host's laptop."
             delay="240ms"
           />
         </div>
@@ -170,12 +173,12 @@ function HomePage() {
 
       <footer className="border-border border-t px-5 py-8">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 text-sm">
-          <span>Open Day Quiz — bản demo chạy trong mạng nội bộ.</span>
+          <span>Open Day Quiz — a demo that runs on the local network.</span>
           <a
             href={`#${ROUTES.ADMIN_LIVE}`}
             className="text-text-h inline-flex items-center gap-1.5 no-underline"
           >
-            Bàn điều khiển
+            Control desk
             <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
           </a>
         </div>

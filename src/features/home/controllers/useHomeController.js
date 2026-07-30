@@ -1,10 +1,11 @@
 /**
- * Controller của trang chủ.
+ * Controller of the home page.
  *
- * Trang chủ chỉ *đọc* phiên chơi, không gửi intent nào: nó cần biết có trận nào
- * đang mở không để hiện đúng lời mời ("Vào phòng chờ" khác hẳn "Chưa có trận
- * nào"). Vì vậy hook này bọc `useSession` rồi làm phẳng thành vài cờ mà view
- * dùng trực tiếp, không để view tự đọc `session.state`.
+ * The home page only *reads* the session, it sends no intents: it needs to know
+ * whether a round is open so it can show the right invitation ("Join the lobby"
+ * is a very different message from "No round is running"). So this hook wraps
+ * `useSession` and flattens it into a handful of flags the view uses directly,
+ * instead of letting the view read `session.state` itself.
  *
  * Public API: useHomeController() → { isOpen, isPlaying, playerCount, quizTitle,
  * statusLabel, isOffline }
@@ -14,13 +15,13 @@ import { useSession } from '@common/session/controllers/useSession.js'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 
 const STATUS_LABELS = {
-  [SESSION_STATES.IDLE]: 'Chưa có trận nào đang mở',
-  [SESSION_STATES.LOBBY]: 'Phòng chờ đang mở',
-  [SESSION_STATES.QUESTION]: 'Trận đang diễn ra',
-  [SESSION_STATES.REVEAL]: 'Trận đang diễn ra',
-  [SESSION_STATES.PODIUM]: 'Đang vinh danh',
-  [SESSION_STATES.PRIZE]: 'Đang trao quà',
-  [SESSION_STATES.PRIZE_REVEALED]: 'Đã trao quà xong',
+  [SESSION_STATES.IDLE]: 'No round is running',
+  [SESSION_STATES.LOBBY]: 'The lobby is open',
+  [SESSION_STATES.QUESTION]: 'A round is in progress',
+  [SESSION_STATES.REVEAL]: 'A round is in progress',
+  [SESSION_STATES.PODIUM]: 'Announcing the results',
+  [SESSION_STATES.PRIZE]: 'Handing out the prize',
+  [SESSION_STATES.PRIZE_REVEALED]: 'The prize has been awarded',
 }
 
 export function useHomeController() {
@@ -28,7 +29,7 @@ export function useHomeController() {
 
   return useMemo(
     () => ({
-      /** Có phiên để vào — người mới quét QR lúc này là vào được. */
+      /** There is a session to join — someone scanning the QR now gets in. */
       isOpen: !session.isIdle,
       isPlaying: session.state === SESSION_STATES.QUESTION,
       playerCount: session.playerCount,

@@ -1,9 +1,10 @@
 /**
- * Lớp truy cập bộ quiz do admin soạn — ranh giới I/O của feature admin, nên
- * cũng là file duy nhất trong `models/` của admin được chạm vào localStorage.
+ * The access layer for the quizzes the admin writes — the I/O boundary of the
+ * admin feature, and therefore the only file in the admin's `models/` allowed to
+ * touch localStorage.
  *
- * Lần đầu mở app thì nạp sẵn QUIZ_DATA. Đổi sang API thật thì chỉ sửa file này
- * (và đổi các hàm thành `async`), Quiz và view không đổi.
+ * On first launch it seeds QUIZ_DATA. Switching to a real API means changing
+ * only this file (and making the functions `async`); Quiz and the views stay put.
  *
  * Public API: findAll(), findById(), save(), remove(), duplicate(), createEmpty()
  */
@@ -19,7 +20,8 @@ function load() {
     const list = raw ? JSON.parse(raw) : QUIZ_DATA
     return list.map(Quiz.fromJSON)
   } catch {
-    // Dữ liệu cũ sai cấu trúc: quay về bộ mẫu thay vì làm treo trang admin.
+    // Old data in a broken shape: fall back to the sample set rather than
+    // freezing the admin page.
     return QUIZ_DATA.map(Quiz.fromJSON)
   }
 }
@@ -36,7 +38,7 @@ export const quizRepository = {
     return load().find((quiz) => quiz.id === id) ?? null
   },
 
-  /** Thêm mới hoặc ghi đè theo id. */
+  /** Insert, or overwrite by id. */
   save(quiz) {
     const quizzes = load()
     const index = quizzes.findIndex((item) => item.id === quiz.id)
@@ -59,14 +61,15 @@ export const quizRepository = {
     const source = quizRepository.findById(id)
     if (!source) return null
 
-    // Câu hỏi trong bản sao phải có id mới: điểm được lưu theo questionId nên
-    // hai câu trùng id trong cùng một phiên sẽ nhận nhầm đáp án của nhau.
+    // Questions in the copy need fresh ids: scores are keyed by questionId, so
+    // two questions sharing an id in one session would pick up each other's
+    // answers.
     const copy = Quiz.fromJSON({
       id: newId('quiz'),
-      title: `${source.title} (bản sao)`,
+      title: `${source.title} (copy)`,
       questions: source.questions.map((question) => ({
         ...question.toJSON(),
-        id: newId('cau'),
+        id: newId('q'),
       })),
     })
     return quizRepository.save(copy)

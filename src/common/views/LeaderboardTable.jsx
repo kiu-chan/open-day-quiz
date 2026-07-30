@@ -10,15 +10,15 @@ const SIZES = {
 }
 
 /**
- * Bảng xếp hạng. Hạng nhất viền dày và có cúp; dòng của chính mình được đánh
- * dấu bằng viền liền đậm — không dùng màu để phân biệt.
- * Hai cỡ: `compact` cho điện thoại và admin, `display` cho máy chiếu.
+ * The leaderboard. First place gets a thick border and a trophy; your own row is
+ * marked with a solid darker border — no colour used to tell them apart.
+ * Two sizes: `compact` for phones and the admin, `display` for the projector.
  */
 function LeaderboardTable({ rows, variant = 'compact', highlightId }) {
   const size = SIZES[variant]
 
   if (rows.length === 0) {
-    return <p className="text-sm opacity-60">Chưa có ai ghi điểm.</p>
+    return <p className="text-sm opacity-60">Nobody has scored yet.</p>
   }
 
   return (
@@ -44,7 +44,7 @@ function LeaderboardTable({ rows, variant = 'compact', highlightId }) {
               <Trophy
                 className={`${size.icon} shrink-0`}
                 strokeWidth={2}
-                aria-label="Hạng nhất"
+                aria-label="First place"
               />
             )}
             <span className="flex-1 truncate">{row.name}</span>

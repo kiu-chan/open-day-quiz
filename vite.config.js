@@ -8,9 +8,10 @@ const srcPath = (segment) =>
   fileURLToPath(new URL(`./src/${segment}`, import.meta.url))
 
 /**
- * Cắm API phiên chơi vào dev server và preview server. Nhờ vậy `npm run dev:lan`
- * chạy được một mình: vẫn có HMR mà trạng thái trận đấu đã là trạng thái máy chủ
- * thật, đúng cái handler mà server/index.js dùng khi chạy trận.
+ * Plugs the session API into the dev server and the preview server. That is what
+ * lets `npm run dev:lan` run on its own: HMR still works while the game state is
+ * already real server state, handled by the very same handler server/index.js
+ * uses during a live round.
  */
 const sessionApi = () => {
   const attach = (server) => {
@@ -30,7 +31,7 @@ const sessionApi = () => {
 export default defineConfig({
   plugins: [react(), tailwindcss(), sessionApi()],
   resolve: {
-    // Import xuyên feature dùng alias; trong cùng một feature thì dùng đường dẫn tương đối.
+    // Cross-feature imports use aliases; inside one feature, use relative paths.
     alias: {
       '@': srcPath(''),
       '@features': srcPath('features'),

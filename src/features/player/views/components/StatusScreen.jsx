@@ -1,4 +1,4 @@
-/** Màn hình chờ: một icon lớn, một dòng chính, một dòng phụ. */
+/** A waiting screen: one large icon, one headline, one supporting line. */
 function StatusScreen({ icon: Icon, title, note }) {
   return (
     <section className="flex flex-1 flex-col items-center justify-center gap-4 text-center">

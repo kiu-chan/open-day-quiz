@@ -2,9 +2,9 @@ import { Check } from 'lucide-react'
 import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
- * Phân bố lựa chọn của câu hiện tại.
- * Cột của đáp án đúng đổ đen, các cột khác đổ xám, và có thêm icon để không
- * phải dựa vào độ đậm mới đọc được.
+ * The distribution of picks on the current question.
+ * The bar for the correct answer is filled black and the others grey, plus an
+ * icon so nobody has to rely on the shade alone to read it.
  */
 function AnswerTally({ question, distribution, playerCount }) {
   return (
@@ -27,7 +27,7 @@ function AnswerTally({ question, distribution, playerCount }) {
               </span>
               <QuizImage
                 src={question.imageOf(i)}
-                alt={option || `Đáp án ${question.labelOf(i)}`}
+                alt={option || `Option ${question.labelOf(i)}`}
                 className="size-10 shrink-0"
               />
               <span
@@ -39,7 +39,7 @@ function AnswerTally({ question, distribution, playerCount }) {
                 <Check
                   className="size-4 shrink-0"
                   strokeWidth={2.5}
-                  aria-label="Đáp án đúng"
+                  aria-label="Correct answer"
                 />
               )}
               <span className="text-text-h shrink-0 font-mono tabular-nums">

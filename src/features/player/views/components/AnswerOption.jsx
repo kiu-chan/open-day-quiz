@@ -2,12 +2,13 @@ import { Check, CircleDot, X } from 'lucide-react'
 import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
- * Một ô đáp án trên điện thoại. Vùng bấm cao để vừa ngón tay.
+ * One answer tile on a phone. Tall tap target so it fits a finger.
  *
- * Bốn trạng thái phân biệt bằng icon, độ đậm và kiểu viền — không dùng màu:
- * chưa chọn (viền mảnh), đã chọn nhưng chưa lộ (viền đen + icon tròn),
- * đáp án đúng (viền đen + dấu ✓), chọn sai (viền nét đứt + gạch ngang).
- * Viền luôn `border-2` để lúc lộ đáp án không bị giật layout.
+ * Four states told apart by icon, weight and border style — never colour:
+ * unpicked (thin border), picked but not yet revealed (dark border + dot icon),
+ * the correct answer (dark border + check mark), a wrong pick (dashed border +
+ * strikethrough).
+ * The border is always `border-2` so revealing the answer does not shift layout.
  */
 function toneFor({ isRevealed, isAnswer, isPicked, isLocked }) {
   if (isRevealed) {
@@ -49,24 +50,25 @@ function AnswerOption({
       {image && (
         <QuizImage
           src={image}
-          alt={text || `Đáp án ${label}`}
-          // Đáp án chỉ có ảnh thì ảnh phải to hẳn ra — nó là toàn bộ nội dung.
+          alt={text || `Option ${label}`}
+          // An image-only option needs a much bigger image — it is the entire
+          // content of the answer.
           className={text ? 'size-16 shrink-0' : 'h-28 flex-1'}
         />
       )}
       {text && <span className="flex-1">{text}</span>}
 
       {isRevealed && isAnswer && (
-        <Check className="size-5 shrink-0" strokeWidth={2.5} aria-label="Đáp án đúng" />
+        <Check className="size-5 shrink-0" strokeWidth={2.5} aria-label="Correct answer" />
       )}
       {isRevealed && isPicked && !isAnswer && (
-        <X className="size-5 shrink-0" strokeWidth={2.5} aria-label="Bạn chọn sai" />
+        <X className="size-5 shrink-0" strokeWidth={2.5} aria-label="Your pick was wrong" />
       )}
       {!isRevealed && isPicked && (
         <CircleDot
           className="size-5 shrink-0"
           strokeWidth={2.5}
-          aria-label="Bạn đã chọn ô này"
+          aria-label="You picked this option"
         />
       )}
     </button>

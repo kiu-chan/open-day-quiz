@@ -18,7 +18,7 @@ import { useQuizListController } from '../controllers/useQuizListController.js'
 import AdminShell from './components/AdminShell.jsx'
 import Panel from './components/Panel.jsx'
 
-/** Một dòng thông tin nhỏ trên thẻ quiz: icon + chữ, viền mảnh. */
+/** A small info chip on a quiz card: icon + text, thin border. */
 function Meta({ Icon, children }) {
   return (
     <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
@@ -39,27 +39,27 @@ function AdminQuizListPage() {
     removeQuiz,
   } = useQuizListController()
 
-  // Xoá là việc không lấy lại được, nên bắt bấm hai lần.
+  // Deleting cannot be undone, so it takes two clicks.
   const [confirmingId, setConfirmingId] = useState(null)
 
   return (
     <AdminShell
       current="list"
-      title="Bộ quiz"
-      subtitle={`${quizzes.length} bộ câu hỏi đã lưu trên máy này`}
+      title="Quizzes"
+      subtitle={`${quizzes.length} question set(s) saved on this machine`}
       actions={
         <Button variant="primary" onClick={createQuiz}>
           <Plus className="size-4" aria-hidden="true" />
-          Tạo bộ quiz
+          New quiz
         </Button>
       }
     >
       {isLive && (
         <p className="border-accent-border text-text-h flex flex-wrap items-center gap-2 rounded-2xl border-2 px-5 py-4 text-sm">
           <Radio className="size-4 shrink-0 animate-pulse" aria-hidden="true" />
-          <span className="font-medium">Đang có một phiên chạy.</span>
-          <a href={`#${ROUTES.ADMIN_LIVE}`}>Về bàn điều khiển</a>
-          <span className="opacity-70">— mở phiên mới sẽ huỷ phiên này.</span>
+          <span className="font-medium">A session is currently running.</span>
+          <a href={`#${ROUTES.ADMIN_LIVE}`}>Back to the control desk</a>
+          <span className="opacity-70">— opening a new session cancels this one.</span>
         </p>
       )}
 
@@ -70,10 +70,10 @@ function AdminQuizListPage() {
             strokeWidth={1.5}
             aria-hidden="true"
           />
-          <p className="text-base">Chưa có bộ quiz nào.</p>
+          <p className="text-base">No quizzes yet.</p>
           <Button variant="primary" onClick={createQuiz}>
             <Plus className="size-4" aria-hidden="true" />
-            Tạo bộ quiz đầu tiên
+            Create the first quiz
           </Button>
         </Panel>
       ) : (
@@ -86,20 +86,20 @@ function AdminQuizListPage() {
             >
               <div className="flex flex-col gap-3">
                 <h2 className="text-text-h text-2xl leading-snug font-semibold">
-                  {quiz.title || 'Bộ quiz chưa có tên'}
+                  {quiz.title || 'Untitled quiz'}
                 </h2>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <Meta Icon={ListChecks}>{quiz.total} câu</Meta>
+                  <Meta Icon={ListChecks}>{quiz.total} questions</Meta>
                   <Meta Icon={Timer}>{quiz.totalSeconds}s</Meta>
                   {quiz.isPlayable && (
                     <span className="border-accent-border text-text-h inline-flex items-center gap-1.5 rounded-full border-2 px-2.5 py-0.5 text-xs font-medium">
                       <Check
                         className="size-3.5 shrink-0"
                         strokeWidth={2.5}
-                        aria-label="Sẵn sàng chơi"
+                        aria-label="Ready to play"
                       />
-                      Sẵn sàng
+                      Ready
                     </span>
                   )}
                 </div>
@@ -111,7 +111,7 @@ function AdminQuizListPage() {
                     <li key={error} className="flex items-center gap-2">
                       <TriangleAlert
                         className="size-4 shrink-0"
-                        aria-label="Chưa chơi được"
+                        aria-label="Not playable yet"
                       />
                       {error}
                     </li>
@@ -126,17 +126,17 @@ function AdminQuizListPage() {
                   onClick={() => openSession(quiz)}
                 >
                   <Play className="size-4" aria-hidden="true" />
-                  Mở phiên
+                  Open session
                 </Button>
 
                 <Button onClick={() => editQuiz(quiz.id)}>
                   <SquarePen className="size-4" aria-hidden="true" />
-                  Sửa
+                  Edit
                 </Button>
 
                 <Button variant="quiet" onClick={() => duplicateQuiz(quiz.id)}>
                   <Copy className="size-4" aria-hidden="true" />
-                  Nhân bản
+                  Duplicate
                 </Button>
 
                 {confirmingId === quiz.id ? (
@@ -148,7 +148,7 @@ function AdminQuizListPage() {
                     }}
                   >
                     <Trash2 className="size-4" aria-hidden="true" />
-                    Xoá thật?
+                    Really delete?
                   </Button>
                 ) : (
                   <Button
@@ -157,7 +157,7 @@ function AdminQuizListPage() {
                     onClick={() => setConfirmingId(quiz.id)}
                   >
                     <Trash2 className="size-4" aria-hidden="true" />
-                    Xoá
+                    Delete
                   </Button>
                 )}
               </div>

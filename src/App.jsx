@@ -6,7 +6,7 @@ import DisplayPage from '@features/display/views/DisplayPage.jsx'
 import HomePage from '@features/home/views/HomePage.jsx'
 import PlayerPage from '@features/player/views/PlayerPage.jsx'
 
-/** Vỏ ứng dụng: bảng phân tuyến, mỗi route trỏ tới đúng một *Page.jsx. */
+/** App shell: the routing table, each route pointing at exactly one *Page.jsx. */
 function App() {
   const { pattern, params } = useHashRoute()
 

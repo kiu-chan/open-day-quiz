@@ -1,6 +1,6 @@
 /**
- * Controller của màn hình lớn (D1–D5). Chỉ đọc: máy chiếu không bấm gì cả,
- * mọi thay đổi trạng thái đến từ bàn điều khiển của admin.
+ * Controller of the big screen (D1–D5). Read-only: nobody clicks anything on the
+ * projector, every state change comes from the admin's control desk.
  *
  * Public API: useDisplayController()
  */

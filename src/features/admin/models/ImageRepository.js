@@ -1,21 +1,24 @@
 /**
- * Đưa một tấm ảnh từ máy admin lên máy chủ, trả về đường dẫn để nhét vào câu
- * hỏi. Là repository nên được phép chạm I/O — đây chính là lý do nó tồn tại.
+ * Uploads an image from the admin machine to the server and returns the path to
+ * put into a question. It is a repository, so it is allowed to touch I/O — that
+ * is exactly why it exists.
  *
- * Thu nhỏ trước khi gửi: ảnh chụp bằng điện thoại thường 3–5MB và dài cạnh
- * 4000px, trong khi chỗ hiển thị rộng nhất là máy chiếu ~1200px. Gửi nguyên bản
- * chỉ tổ vượt hạn mức của máy chủ và làm điện thoại khách tải lâu.
+ * Shrinks before sending: photos taken on a phone are usually 3–5MB with a long
+ * edge of 4000px, while the widest place they are ever shown is a ~1200px
+ * projector. Sending the original only blows past the server limit and makes
+ * visitors' phones download for ages.
  *
  * Public API: imageRepository.upload(file) → url
  */
 const UPLOAD_URL = '/api/images'
 
-/** Đủ nét cho máy chiếu, mà vẫn nhẹ để điện thoại tải nhanh qua wifi hội trường. */
+/** Sharp enough for a projector, still light enough to load fast over venue wifi. */
 const MAX_EDGE = 1200
 const JPEG_QUALITY = 0.82
 
 async function shrink(file) {
-  // GIF động vẽ lại qua canvas sẽ chỉ còn khung hình đầu, nên giữ nguyên bản.
+  // Redrawing an animated GIF through a canvas would leave only the first frame,
+  // so keep the original.
   if (file.type === 'image/gif') return file
 
   const bitmap = await createImageBitmap(file)
@@ -26,8 +29,9 @@ async function shrink(file) {
   canvas.height = Math.round(bitmap.height * scale)
 
   const context = canvas.getContext('2d')
-  // Nền trắng trước khi vẽ: PNG có vùng trong suốt mà chuyển thẳng sang JPEG
-  // thì vùng đó thành đen sì. Nền app cũng trắng nên ghép vào là liền mạch.
+  // White background before drawing: a PNG with transparent areas converted
+  // straight to JPEG turns those areas pitch black. The app background is white
+  // too, so it blends in seamlessly.
   context.fillStyle = '#fff'
   context.fillRect(0, 0, canvas.width, canvas.height)
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
@@ -51,7 +55,7 @@ export const imageRepository = {
 
     if (!response.ok) {
       const { error } = await response.json().catch(() => ({}))
-      throw new Error(error ?? 'máy chủ không nhận được ảnh')
+      throw new Error(error ?? 'the server did not accept the image')
     }
 
     const { url } = await response.json()

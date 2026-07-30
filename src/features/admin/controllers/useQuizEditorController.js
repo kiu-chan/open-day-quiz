@@ -1,11 +1,13 @@
 /**
- * Controller của trang soạn quiz (A2).
+ * Controller of the quiz editor page (A2).
  *
- * Lưu ngay sau mỗi thay đổi thay vì có nút "Lưu": prototype không có hoàn tác,
- * và mất công gõ lại một bộ câu hỏi vì lỡ đóng tab thì rất phiền.
+ * Saves immediately after every change instead of having a "Save" button: the
+ * prototype has no undo, and retyping a whole question set because a tab was
+ * closed by accident is thoroughly annoying.
  *
- * Mọi luật sửa (bỏ đáp án thì correctIndex đi đâu, thời lượng tối thiểu, đổi
- * chỗ câu hỏi) nằm trong Quiz/Question — ở đây chỉ gọi lại.
+ * Every editing rule (where `correctIndex` goes when an option is removed, the
+ * minimum duration, reordering questions) lives in Quiz/Question — this file
+ * only calls into them.
  *
  * Public API: useQuizEditorController(quizId)
  */
@@ -15,9 +17,9 @@ import { Question } from '@common/session/models/Question.js'
 import { imageRepository } from '../models/ImageRepository.js'
 import { quizRepository } from '../models/QuizRepository.js'
 
-/** Câu hỏi mới: hai ô trống là mức tối thiểu cho một câu hợp lệ. */
+/** A new question: two empty slots is the minimum for a valid one. */
 function emptyQuestion() {
-  return new Question({ id: newId('cau'), prompt: '', options: ['', ''] })
+  return new Question({ id: newId('q'), prompt: '', options: ['', ''] })
 }
 
 export function useQuizEditorController(quizId) {
@@ -35,7 +37,7 @@ export function useQuizEditorController(quizId) {
     [quiz],
   )
 
-  /** Sửa một câu hỏi tại chỗ: nhận câu cũ, trả về câu mới. */
+  /** Edit one question in place: takes the old question, returns the new one. */
   const editQuestion = useCallback(
     (index, mutate) =>
       apply((current) =>
@@ -50,7 +52,8 @@ export function useQuizEditorController(quizId) {
   )
 
   const addQuestion = useCallback(() => {
-    // Sinh id ngoài hàm mutate để không tạo hai id khác nhau khi React chạy lại.
+    // Generate the id outside the mutate function so a React re-run cannot
+    // produce two different ids.
     const question = emptyQuestion()
     apply((current) => current.withQuestionAdded(question))
   }, [apply])
@@ -59,7 +62,7 @@ export function useQuizEditorController(quizId) {
     (index) =>
       apply((current) => {
         const source = current.questions[index]
-        return current.withQuestionAdded(source.with({ id: newId('cau') }))
+        return current.withQuestionAdded(source.with({ id: newId('q') }))
       }),
     [apply],
   )
@@ -99,8 +102,9 @@ export function useQuizEditorController(quizId) {
   )
 
   /**
-   * Tải ảnh lên và trả về đường dẫn. Ô chọn ảnh tự giữ trạng thái "đang tải" và
-   * thông báo lỗi của riêng nó, nên ở đây không cần state chung nào.
+   * Upload an image and return its path. The image picker keeps its own
+   * "uploading" state and its own error message, so no shared state is needed
+   * here.
    */
   const uploadImage = useCallback((file) => imageRepository.upload(file), [])
 

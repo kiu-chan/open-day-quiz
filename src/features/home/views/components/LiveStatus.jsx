@@ -1,15 +1,15 @@
 import { Users, WifiOff } from 'lucide-react'
 
 /**
- * Dải trạng thái trực tiếp ở hero. Phân biệt "đang có trận" bằng viền nét liền
- * + chấm nhấp nháy, "chưa mở" bằng viền nét đứt — không dùng màu.
+ * The live status strip in the hero. "A round is running" is shown with a solid
+ * border plus a pulsing dot, "not open" with a dashed border — no colour used.
  */
 function LiveStatus({ isOpen, statusLabel, playerCount, quizTitle, isOffline }) {
   if (isOffline) {
     return (
       <p className="border-border text-text inline-flex items-center gap-2 rounded-full border-2 border-dashed px-4 py-2 text-sm">
-        <WifiOff className="size-4 shrink-0" aria-label="Mất kết nối" />
-        Chưa nối được máy chủ trận đấu
+        <WifiOff className="size-4 shrink-0" aria-label="Disconnected" />
+        Not connected to the game server yet
       </p>
     )
   }
@@ -35,7 +35,7 @@ function LiveStatus({ isOpen, statusLabel, playerCount, quizTitle, isOffline }) 
       {isOpen && (
         <p className="text-text-h inline-flex items-center gap-2 text-sm">
           <Users className="size-4 shrink-0" aria-hidden="true" />
-          {playerCount} người đã vào
+          {playerCount} joined
           {quizTitle && <span className="opacity-60">· {quizTitle}</span>}
         </p>
       )}

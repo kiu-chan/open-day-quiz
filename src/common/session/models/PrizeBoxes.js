@@ -1,11 +1,11 @@
 /**
- * Model: ba hộp quà bí mật của cuối trận.
+ * Model: the three mystery prize boxes at the end of a round.
  *
- * README yêu cầu vị trí quà được xáo lại mỗi lượt chơi — đây là **luật chơi**
- * chứ không phải hiệu ứng giao diện, nên nó thuộc model. Xáo bằng Fisher–Yates
- * (mỗi hoán vị có xác suất bằng nhau, khác với `sort(() => Math.random() - 0.5)`
- * cho ra phân bố lệch), và nhận `random` từ ngoài để chỗ gọi có thể truyền một
- * hàm cố định khi cần dựng lại đúng một tình huống.
+ * The README asks for the prize positions to be reshuffled every game — that is
+ * a **game rule**, not a UI effect, so it belongs to the model. Shuffled with
+ * Fisher–Yates (every permutation equally likely, unlike
+ * `sort(() => Math.random() - 0.5)` which skews the distribution), and `random`
+ * is passed in so a caller can supply a fixed function to reproduce a situation.
  *
  * Public API: PRIZES, PrizeBoxes.shuffled(), fromJSON(), withPicked(index)
  */
@@ -13,7 +13,7 @@ export const PRIZES = ['Course Magnet', 'FabLab Sticker', '3D Printed Figure']
 
 export class PrizeBoxes {
   constructor({ prizes, pickedIndex = null }) {
-    /** prizes[i] = phần quà nằm trong hộp thứ i. */
+    /** prizes[i] = the prize inside box number i. */
     this.prizes = prizes
     this.pickedIndex = pickedIndex
   }
@@ -45,7 +45,7 @@ export class PrizeBoxes {
     return this.isPicked ? this.prizes[this.pickedIndex] : null
   }
 
-  /** Chọn hộp. Đã chọn rồi thì không cho đổi ý. */
+  /** Pick a box. Once picked, no changing your mind. */
   withPicked(index) {
     if (this.isPicked) return this
     if (index < 0 || index >= this.count) return this

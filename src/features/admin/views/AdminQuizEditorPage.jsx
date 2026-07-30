@@ -17,17 +17,17 @@ function AdminQuizEditorPage({ quizId }) {
 
   if (editor.notFound) {
     return (
-      <AdminShell current="list" title="Không tìm thấy bộ quiz">
+      <AdminShell current="list" title="Quiz not found">
         <Panel dashed className="items-start">
           <p className="text-base">
-            Bộ quiz <span className="font-mono">{quizId}</span> đã bị xoá.
+            Quiz <span className="font-mono">{quizId}</span> has been deleted.
           </p>
           <a
             href={`#${ROUTES.ADMIN}`}
             className="inline-flex items-center gap-2 no-underline"
           >
             <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-            Về danh sách quiz
+            Back to the quiz list
           </a>
         </Panel>
       </AdminShell>
@@ -39,23 +39,23 @@ function AdminQuizEditorPage({ quizId }) {
   return (
     <AdminShell
       current="list"
-      title="Soạn quiz"
-      subtitle="Mọi thay đổi được lưu ngay trên máy này"
+      title="Edit quiz"
+      subtitle="Every change is saved on this machine right away"
       actions={
         <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs">
           <Check className="size-4 shrink-0" aria-hidden="true" />
-          Đã lưu
+          Saved
         </span>
       }
     >
       <Panel>
         <label className="flex flex-col gap-2 text-sm" htmlFor="quiz-title">
-          Tên bộ quiz
+          Quiz title
           <input
             id="quiz-title"
             value={quiz.title}
             onChange={(event) => editor.setTitle(event.target.value)}
-            placeholder="Ví dụ: Quiz Open Day 2026"
+            placeholder="For example: Open Day Quiz 2026"
             className="border-border focus:border-accent-border text-text-h rounded-xl border-2 px-4 py-3 text-2xl font-semibold outline-none"
           />
         </label>
@@ -63,7 +63,7 @@ function AdminQuizEditorPage({ quizId }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
             <ListChecks className="size-3.5 shrink-0" aria-hidden="true" />
-            {quiz.total} câu
+            {quiz.total} questions
           </span>
           <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
             <Timer className="size-3.5 shrink-0" aria-hidden="true" />
@@ -77,7 +77,7 @@ function AdminQuizEditorPage({ quizId }) {
               <li key={error} className="flex items-center gap-2">
                 <TriangleAlert
                   className="size-4 shrink-0"
-                  aria-label="Chưa chơi được"
+                  aria-label="Not playable yet"
                 />
                 {error}
               </li>
@@ -88,9 +88,9 @@ function AdminQuizEditorPage({ quizId }) {
             <Check
               className="size-4 shrink-0"
               strokeWidth={2.5}
-              aria-label="Sẵn sàng chơi"
+              aria-label="Ready to play"
             />
-            Bộ quiz này đã chơi được.
+            This quiz is ready to play.
           </p>
         )}
       </Panel>
@@ -125,15 +125,16 @@ function AdminQuizEditorPage({ quizId }) {
         ))}
       </ul>
 
-      {/* Nút thêm câu chiếm trọn chiều ngang, nét đứt: nhìn ra ngay là chỗ nối
-          tiếp danh sách chứ không phải một câu hỏi nữa. */}
+      {/* The add-question button spans the full width and uses a dashed border:
+          it reads immediately as the continuation of the list rather than as one
+          more question. */}
       <button
         type="button"
         onClick={editor.addQuestion}
         className="border-border text-text-h hover:border-accent-border flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-transparent py-6 text-base font-medium transition hover:opacity-85"
       >
         <Plus className="size-5 shrink-0" aria-hidden="true" />
-        Thêm câu hỏi
+        Add question
       </button>
 
       <footer className="border-border mt-auto border-t pt-4 text-sm">
@@ -142,7 +143,7 @@ function AdminQuizEditorPage({ quizId }) {
           className="inline-flex items-center gap-2 no-underline"
         >
           <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-          Về danh sách quiz
+          Back to the quiz list
         </a>
       </footer>
     </AdminShell>

@@ -1,11 +1,12 @@
 /**
- * Controller dùng chung: đọc phiên chơi hiện tại, nghe mọi thay đổi từ máy chủ,
- * và gửi ý định lên. Cả ba surface đều bắt đầu từ hook này; controller riêng của
- * từng surface bọc thêm hành động và phần state mà surface đó cần.
+ * Shared controller: reads the current session, listens for every change coming
+ * from the server, and sends intents up. All three surfaces start from this
+ * hook; each surface's own controller wraps it with the extra actions and state
+ * that surface needs.
  *
- * `send` nhận một intent (`{ type: 'start' }`, `{ type: 'answer', ... }`) chứ
- * không nhận hàm biến đổi model: chỉ máy chủ được áp luật, client chỉ nói nó
- * muốn gì.
+ * `send` takes an intent (`{ type: 'start' }`, `{ type: 'answer', ... }`) rather
+ * than a model transform: only the server applies the rules, the client merely
+ * says what it wants.
  *
  * Public API: useSession() → { session, isOffline, send }
  */
@@ -25,9 +26,9 @@ export function useSession() {
   return {
     session: snapshot.session,
     /**
-     * Chỉ phân biệt "mất kết nối" hay không: lúc mới mở trang trạng thái
-     * `connecting` chỉ kéo dài vài chục ms trong mạng LAN, hiện băng báo lỗi
-     * trong khoảng đó thì chỉ nháy một cái gây hoang mang.
+     * Only "disconnected" or not matters here: right after the page opens the
+     * `connecting` state lasts a few dozen ms on a LAN, and flashing an error
+     * banner for that long just startles people.
      */
     isOffline: snapshot.connection === CONNECTION.OFFLINE,
     send,

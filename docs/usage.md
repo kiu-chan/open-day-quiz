@@ -1,129 +1,147 @@
-# Hướng dẫn sử dụng
+# Usage guide
 
-## Ba màn hình, ba đường vào
+## Three screens, several ways in
 
-| Màn hình | Đường vào | Chạy trên |
+| Screen | URL | Runs on |
 | --- | --- | --- |
-| Danh sách bộ quiz | `#/admin` | máy của người điều khiển |
-| Soạn quiz | `#/admin/quiz/<id>` | máy của người điều khiển |
-| Bàn điều khiển | `#/admin/live` | máy của người điều khiển |
-| Người chơi | `#/play` | điện thoại khách (vào bằng QR) |
-| Màn hình lớn | `#/display` | máy nối máy chiếu |
+| Quiz list | `#/admin` | the host's laptop |
+| Quiz editor | `#/admin/quiz/<id>` | the host's laptop |
+| Control desk | `#/admin/live` | the host's laptop |
+| Player | `#/play` | visitors' phones (via QR) |
+| Big screen | `#/display` | the machine driving the projector |
 
-Trang admin có sẵn hai link mở nhanh `#/display` và `#/play` ở góc phải để thử.
+The admin pages carry two quick links to `#/display` and `#/play` in the top
+right, for testing.
 
-> **Chưa có mật khẩu.** Ai biết `#/admin/live` là điều khiển được trận đấu. Đừng
-> chiếu đường dẫn admin lên máy chiếu.
+> **There is no password.** Anyone who knows `#/admin/live` can drive the game.
+> Do not put the admin URL on the projector.
 
-## Chuẩn bị trước sự kiện
+## Before the event
 
-1. `npm run start`, ghi lại địa chỉ IP mà nó in ra (ví dụ `http://192.168.1.20:3000`).
-2. Mở `#/admin` bằng địa chỉ đó, soạn bộ câu hỏi. Mọi thay đổi tự lưu, không có
-   nút Lưu.
-3. Mỗi câu đặt thời lượng riêng (5–120 giây). Câu dài, nhiều chữ thì cho nhiều
-   thời gian hơn.
-4. Bộ quiz phải "chơi được" mới mở phiên được: có tên, có ít nhất một câu, và mọi
-   câu đều đủ nội dung + đáp án. Trang admin liệt kê thẳng chỗ còn thiếu.
-5. Mở `#/display` trên máy chiếu, để nguyên đó.
-6. Lấy một điện thoại quét thử QR trước khi khách đến — để phát hiện sớm nếu wifi
-   chặn thiết bị nói chuyện với nhau (xem [installation.md](installation.md) mục mạng).
+1. Run `npm run start` and note the IP address it prints (for example
+   `http://192.168.1.20:3000`).
+2. Open `#/admin` using that address and write your questions. Everything saves
+   itself — there is no Save button.
+3. Set a duration per question (5–120 seconds). Long, wordy questions deserve
+   more time.
+4. A quiz has to be "playable" before a session can open: it needs a title, at
+   least one question, and every question needs content plus a correct answer.
+   The admin page lists exactly what is missing.
+5. Open `#/display` on the projector and leave it there.
+6. Scan the QR with one phone before visitors arrive — that catches a wifi that
+   blocks devices from talking to each other early (see the networking section of
+   [installation.md](installation.md)).
 
-Bộ quiz lưu trong trình duyệt của máy admin, nên soạn ở máy nào thì mở phiên ở
-đúng máy đó.
+Quizzes are stored in the admin machine's browser, so whichever machine you wrote
+them on is the machine you must open the session from.
 
-### Câu hỏi có ảnh
+### Questions with images
 
-Mỗi câu hỏi thêm được một ảnh, và **mỗi đáp án cũng thêm được một ảnh** — làm được
-câu kiểu "đây là toà nhà nào?" với bốn tấm ảnh để chọn. Bấm **Thêm ảnh** ở câu hỏi
-hoặc ở từng dòng đáp án, chọn file jpg/png/webp/gif.
+Every question can carry one image, and **every option can carry one too** —
+which makes "which building is this?" questions with four photos to choose from
+possible. Press **Add image** on the question or on an individual option row and
+pick a jpg/png/webp/gif file.
 
-- Đáp án có ảnh thì **không bắt buộc có chữ**, và ngược lại. Câu hỏi cũng vậy.
-- Ảnh được thu về cạnh dài 1200px ngay trên máy admin rồi mới gửi đi, nên chụp
-  bằng điện thoại rồi kéo thẳng vào cũng được, không cần tự resize.
-- Ảnh nằm trên **máy chủ** (`server/uploads/`), không nằm trong bộ quiz. Nên nếu
-  đem bộ quiz sang máy khác (hoặc xoá thư mục đó) thì chỗ ảnh hiện "Ảnh không tải
-  được" — soạn ảnh ở đúng máy sẽ chạy trận là an toàn nhất.
-- Máy chủ phải đang chạy lúc soạn thì mới tải ảnh lên được.
+- An option with an image does **not** need text, and vice versa. The same goes
+  for the question itself.
+- Images are shrunk to a 1200px long edge on the admin machine before they are
+  sent, so you can drag in a phone photo without resizing it yourself.
+- Images live on the **server** (`server/uploads/`), not inside the quiz. So if
+  you carry the quiz to another machine (or delete that folder), those spots read
+  "Image failed to load" — writing the questions on the machine that will run the
+  game is the safest approach.
+- The server has to be running while you write, or the upload cannot happen.
 
-## Chạy một trận
+## Running a round
 
-| Bước | Làm gì | Người chơi thấy | Máy chiếu thấy |
+| Step | What you do | Players see | The big screen shows |
 | --- | --- | --- | --- |
-| 1 | Ở `#/admin`, bấm **Mở phiên** trên bộ quiz | — | QR to + số người vào |
-| 2 | Khách quét QR, nhập tên | "Đã vào, chờ bắt đầu" | số người tăng dần |
-| 3 | Bấm **Bắt đầu** | 4 ô đáp án + đồng hồ | câu hỏi chữ lớn + đồng hồ |
-| 4 | Chờ hết giờ (tự chốt) hoặc bấm **Hiện đáp án** | đúng/sai + điểm vừa nhận | đáp án đúng + số người chọn từng ô |
-| 5 | Bấm **Câu tiếp** | câu mới | câu mới |
-| 6 | Sau câu cuối, bấm **Xem kết quả** | hạng của mình + top 3 | bảng xếp hạng |
-| 7 | Bấm **Công bố người thắng** | người thắng thấy 3 hộp quà | 3 hộp quà |
-| 8 | Người thắng chọn hộp | tên phần quà | hộp mở ra, tên quà chữ lớn |
-| 9 | Bấm **Kết thúc phiên** | về màn hình chờ | về màn hình chờ |
+| 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
+| 2 | Visitors scan the QR and enter a name | "You're in, waiting to start" | the count going up |
+| 3 | Press **Start** | 4 option tiles + a clock | the question in large type + a clock |
+| 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
+| 5 | Press **Next question** | the new question | the new question |
+| 6 | After the last question, press **See results** | their own rank + the top 3 | the leaderboard |
+| 7 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
+| 8 | The winner picks a box | the prize name | the box opens, prize name in large type |
+| 9 | Press **End session** | back to the waiting screen | back to the waiting screen |
 
-**Khách khó quét QR?** Bấm vào mã QR — ở bàn điều khiển hoặc trên màn hình lớn —
-để phóng nó ra kín màn hình. Bấm chỗ nào cũng được hoặc nhấn `Esc` để đóng.
+**Visitors struggling to scan?** Click the QR code — on the control desk or on
+the big screen — to blow it up full screen. Click anywhere or press `Esc` to
+close.
 
-Chỉ bàn điều khiển phát ra lệnh điều khiển. Điện thoại chỉ gửi đáp án và lượt chọn
-hộp quà; máy chiếu chỉ đọc. Mọi thay đổi đi qua máy chủ nên ba màn hình luôn khớp
-nhau — không có chuyện máy chiếu đang ở câu 3 mà điện thoại còn ở câu 2.
+Only the control desk issues control commands. Phones only send answers and the
+prize pick; the projector only reads. Every change goes through the server, so
+the three screens always agree — the projector can never be on question 3 while
+the phones are still on question 2.
 
-Hết giờ thì **máy chủ** tự chốt câu, không phải tab admin. Admin khoá màn hình hay
-đóng tab giữa trận cũng không làm trận đấu treo; mở lại là thấy đúng trạng thái
-hiện tại.
+When time runs out the **server** closes the question, not the admin tab. The
+admin locking their screen or closing the tab mid-round does not hang the game;
+reopening shows the current state.
 
-## Cách tính điểm
+## Scoring
 
-- Trả lời đúng: **1000 điểm** + thưởng tốc độ tối đa **500 điểm**, giảm dần đều
-  theo thời gian đã dùng. Bấm ngay được 1500, bấm lúc gần hết giờ được ~1000.
-- Trả lời sai hoặc không kịp: **0 điểm**.
-- Đồng điểm thì ai có **tổng thời gian trả lời** ít hơn xếp trên.
-- Bằng nhau cả hai thì cả hai cùng hạng nhất, và bàn điều khiển hiện danh sách
-  để admin bấm chọn người nhận quà.
+- Correct answer: **1000 points** plus a speed bonus of up to **500**, decreasing
+  linearly with the time used. Answering instantly scores 1500, answering just
+  before the buzzer scores about 1000.
+- Wrong or too late: **0 points**.
+- On equal scores, whoever has the lower **total answering time** ranks higher.
+- Equal on both means both share first place, and the control desk shows a list
+  so the admin can click who gets the prize.
 
-Chấm theo tốc độ là cố ý: một trận chỉ ~5 câu, nếu chấm 1 điểm/câu thì rất nhiều
-người bằng điểm và không chọn ra được **một** người để trao quà.
+Scoring by speed is deliberate: a round is only about 5 questions, and scoring
+1 point per question leaves a crowd of people tied with no way to pick **one**
+winner to hand a prize to.
 
-## Ba hộp quà
+## The three prize boxes
 
-Vị trí quà được xáo lại **mỗi lần công bố người thắng**, nên không ai đoán được
-hộp nào có gì. Chỉ người thắng bấm được, và chỉ bấm được một lần.
+The prize positions are reshuffled **every time a winner is announced**, so
+nobody can guess what is in which. Only the winner can click, and only once.
 
-Sửa danh sách quà ở [src/common/session/models/PrizeBoxes.js](../src/common/session/models/PrizeBoxes.js),
-hằng `PRIZES`.
+Edit the prize list in
+[src/common/session/models/PrizeBoxes.js](../src/common/session/models/PrizeBoxes.js),
+constant `PRIZES`.
 
-## Gặp sự cố
+## Troubleshooting
 
-**Điện thoại khách bị tắt màn hình / lỡ refresh.** Mở lại đường dẫn là vào lại
-đúng người cũ, giữ nguyên điểm — danh tính lưu ở `localStorage` của máy đó, và
-trang tự vào lại phiên không cần gõ tên. Miễn là họ không xoá dữ liệu trình duyệt
-hoặc đổi máy.
+**A visitor's phone locked or got refreshed.** Reopening the URL brings back the
+same person with their score intact — the identity is stored in that device's
+`localStorage`, and the page rejoins the session without retyping a name. As long
+as they do not clear browser data or switch devices.
 
-**Điện thoại hiện băng đen "Mất kết nối tới máy chủ".** Máy đó rớt wifi, hoặc máy
-chủ đã tắt. Không phải làm gì cả — trang tự nối lại và băng tự mất. Nếu cả phòng
-đều hiện thì kiểm wifi của máy chạy máy chủ.
+**A phone shows the black "Lost connection to the server" banner.** That device
+dropped off the wifi, or the server is down. Nothing to do — the page reconnects
+and the banner disappears by itself. If the whole room shows it, check the wifi
+on the machine running the server.
 
-**Máy chủ bị tắt giữa trận (Ctrl+C, sập nguồn).** Trạng thái chỉ ở RAM nên trận
-đang chạy mất luôn. Chạy lại `npm run serve`, mở phiên mới từ `#/admin`; điện thoại
-khách tự vào lại phòng chờ, nhưng điểm của lượt cũ không lấy lại được.
+**The server was stopped mid-round (Ctrl+C, power cut).** The state is RAM-only,
+so the round in progress is gone. Run `npm run serve` again and open a new
+session from `#/admin`; visitors' phones rejoin the lobby by themselves, but the
+scores from the old round cannot be recovered.
 
-**Bấm "Câu tiếp" hai lần.** Không sao, máy trạng thái chặn lần thứ hai, không
-nhảy mất câu nào.
+**Pressing "Next question" twice.** Harmless — the state machine blocks the
+second press, no question is skipped.
 
-**Quét QR ra trang lỗi.** Hai khả năng: một là màn hình lớn đang mở bằng
-`localhost` nên QR cũng trỏ `localhost` — mở lại bằng địa chỉ IP; hai là điện thoại
-không vào cùng mạng với máy chủ, xem [installation.md](installation.md) mục mạng.
+**Scanning the QR lands on an error page.** Two possibilities: either the big
+screen was opened via `localhost`, so the QR points at `localhost` — reopen it
+with the IP address; or the phone is not on the same network as the server, see
+the networking section of [installation.md](installation.md).
 
-**Muốn bỏ trận đang chạy.** Bấm **Kết thúc phiên** ở bàn điều khiển, hoặc **Huỷ
-phiên** khi còn ở phòng chờ. Mở phiên mới từ `#/admin` cũng tự huỷ phiên cũ.
+**Abandoning a round in progress.** Press **End session** on the control desk, or
+**Cancel session** while still in the lobby. Opening a new session from `#/admin`
+also cancels the old one.
 
-**Xoá sạch dữ liệu.** Trận đấu: bấm **Kết thúc phiên**, hoặc khởi động lại máy
-chủ. Bộ quiz: xoá khoá `open-day-quiz:quizzes` trong `localStorage` của máy admin.
-Trên điện thoại khách, danh tính nằm ở khoá `open-day-quiz:player`.
+**Wiping all data.** The game: press **End session**, or restart the server. The
+quizzes: delete the `open-day-quiz:quizzes` key from the admin machine's
+`localStorage`. On visitors' phones, the identity lives under the key
+`open-day-quiz:player`.
 
-## Giới hạn hiện tại
+## Current limitations
 
-Mọi thiết bị phải ở **cùng mạng nội bộ** với máy chạy máy chủ — khách dùng 4G
-không vào được. Trạng thái chỉ ở RAM, tắt máy chủ là mất trận đang chạy. Và chưa
-có mật khẩu cho bàn điều khiển.
+Every device must be on the **same local network** as the machine running the
+server — visitors on 4G cannot join. The state is RAM-only, so stopping the
+server loses the round in progress. And there is no password on the control desk.
 
-Muốn khách vào bằng 4G từ bất cứ đâu thì phải đổi transport sang Firebase/Supabase;
-chỗ cần sửa là `SessionRepository`, xem [architecture.md](architecture.md).
+To let visitors join over 4G from anywhere, the transport has to change to
+Firebase/Supabase; the place to change is `SessionRepository`, see
+[architecture.md](architecture.md).

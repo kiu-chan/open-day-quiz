@@ -1,7 +1,7 @@
 /**
- * Entity: một bộ quiz = tên + danh sách câu hỏi.
- * Admin soạn và lưu lại; khi mở phiên chơi, session giữ luôn bản quiz này để
- * admin sửa bộ quiz giữa lúc đang chơi cũng không làm lệch trận đang diễn ra.
+ * Entity: a quiz = a title + a list of questions.
+ * The admin writes and saves it; when a session opens, the session keeps its own
+ * copy of the quiz so editing the quiz mid-game cannot disturb the running round.
  */
 import { Question } from './Question.js'
 
@@ -27,22 +27,24 @@ export class Quiz {
     return this.questions[index] ?? null
   }
 
-  /** Tổng thời lượng, để admin biết trận sẽ dài bao lâu. */
+  /** Total duration, so the admin knows how long the round will run. */
   get totalSeconds() {
     return this.questions.reduce((sum, q) => sum + q.durationSeconds, 0)
   }
 
-  /** Lý do chưa chơi được, tiếng Việt, để admin sửa. Rỗng = chơi được. */
+  /** Why it is not playable yet, in plain words, so the admin can fix it. Empty = playable. */
   get errors() {
     const errors = []
-    if (this.title.trim().length === 0) errors.push('Bộ quiz chưa có tên')
-    if (this.total === 0) errors.push('Bộ quiz chưa có câu hỏi nào')
+    if (this.title.trim().length === 0) errors.push('The quiz has no title yet')
+    if (this.total === 0) errors.push('The quiz has no questions yet')
 
     const invalid = this.questions
       .map((question, i) => (question.isValid ? null : i + 1))
       .filter((number) => number !== null)
     if (invalid.length > 0) {
-      errors.push(`Câu ${invalid.join(', ')} còn thiếu nội dung hoặc đáp án đúng`)
+      errors.push(
+        `Question ${invalid.join(', ')} is missing content or a correct answer`,
+      )
     }
     return errors
   }
@@ -51,7 +53,7 @@ export class Quiz {
     return this.errors.length === 0
   }
 
-  // ---- sửa bộ quiz (admin), bất biến ----
+  // ---- editing the quiz (admin), immutable ----
 
   #with(patch) {
     return new Quiz({ ...this, ...patch })
@@ -77,7 +79,7 @@ export class Quiz {
     })
   }
 
-  /** Đổi chỗ hai câu liền kề — thứ tự trong danh sách là thứ tự đem ra chơi. */
+  /** Swap two neighbouring questions — list order is the order they are played in. */
   withQuestionMoved(index, delta) {
     const target = index + delta
     if (target < 0 || target >= this.total) return this

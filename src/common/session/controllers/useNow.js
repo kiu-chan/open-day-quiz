@@ -1,19 +1,19 @@
 /**
- * Controller phụ: trả về "bây giờ" và tự nhích khi `active`.
+ * Helper controller: returns "now" and ticks by itself while `active`.
  *
- * View không được tự gọi `Date.now()`, và model thì không được có timer — nên
- * mọi chỗ cần đếm ngược đều lấy `now` từ đây rồi hỏi model
+ * Views must not call `Date.now()` themselves, and models must not own timers —
+ * so everything that counts down takes `now` from here and then asks the model
  * `session.remainingSeconds(now)`.
  *
- * Lấy `serverNow()` chứ không phải `Date.now()`: mốc hết giờ do máy chủ đặt, nên
- * điện thoại đặt lệch giờ phải bù lại mới đếm đúng.
+ * Uses `serverNow()` rather than `Date.now()`: the deadline is set by the
+ * server, so a phone with a skewed clock has to compensate to count correctly.
  *
- * Public API: useNow(active) → mốc thời gian hiện tại (ms)
+ * Public API: useNow(active) → current timestamp (ms)
  */
 import { useEffect, useState } from 'react'
 import { serverNow } from '../models/SessionRepository.js'
 
-/** 200ms: đồng hồ giây nhìn vẫn mượt mà không render quá dày. */
+/** 200ms: the seconds clock still looks smooth without rendering too often. */
 const TICK_MS = 200
 
 export function useNow(active) {

@@ -1,16 +1,16 @@
 /**
- * Model: chấm điểm và sắp hạng cho một phiên chơi.
+ * Model: scoring and ranking for one game session.
  *
- * Vì sao không chấm 1 điểm mỗi câu: trận Open Day chỉ khoảng 5 câu, chấm kiểu
- * đó thì hàng loạt người đồng điểm và không chọn ra được **một** người thắng để
- * trao quà. Nên điểm một câu đúng = điểm cơ bản + thưởng theo tốc độ trả lời.
+ * Why not 1 point per question: an Open Day round is only about 5 questions, and
+ * scoring that way leaves a crowd of people tied with no way to pick **one**
+ * winner to hand a prize to. So a correct answer = base points + a speed bonus.
  *
- * Đồng điểm thì hơn nhau ở tổng thời gian trả lời (nhanh hơn xếp trên). Bằng
- * nhau cả điểm và cả thời gian thì hai người cùng hạng — lúc đó admin tự chọn
- * người thắng ở bàn điều khiển.
+ * Ties are broken by total answering time (faster ranks higher). Equal on both
+ * score and time means both share a rank — at that point the admin picks the
+ * winner by hand from the control desk.
  *
- * Không import React, không biết session được lưu ở đâu — chỉ nhận session vào
- * và trả về bảng hạng.
+ * Does not import React and does not know where the session is stored — it only
+ * takes a session in and returns a ranking.
  *
  * Public API: BASE_POINTS, MAX_SPEED_BONUS, pointsOf(question, answer),
  * Leaderboard.from(session)
@@ -18,7 +18,7 @@
 export const BASE_POINTS = 1000
 export const MAX_SPEED_BONUS = 500
 
-/** Điểm cho một đáp án. Sai hoặc không trả lời thì 0 điểm. */
+/** Points for one answer. Wrong or unanswered scores 0. */
 export function pointsOf(question, answer) {
   if (!question || !answer) return 0
   if (!question.isCorrect(answer.optionIndex)) return 0
@@ -29,8 +29,8 @@ export function pointsOf(question, answer) {
 }
 
 /**
- * Gắn hạng vào danh sách đã sắp. Hạng kiểu thi đấu: bằng nhau thì cùng hạng,
- * rồi bỏ qua các hạng đã dùng (1, 2, 2, 4) — không phải 1, 2, 2, 3.
+ * Attach ranks to an already sorted list. Competition ranking: equals share a
+ * rank, then the used-up ranks are skipped (1, 2, 2, 4) — not 1, 2, 2, 3.
  */
 function withRanks(sorted) {
   let rank = 0
@@ -80,7 +80,7 @@ export class Leaderboard {
       (a, b) =>
         b.score - a.score ||
         a.totalMs - b.totalMs ||
-        a.name.localeCompare(b.name, 'vi'),
+        a.name.localeCompare(b.name, 'en'),
     )
 
     return new Leaderboard(withRanks(rows))
@@ -98,7 +98,7 @@ export class Leaderboard {
     return this.rows[0] ?? null
   }
 
-  /** Nhiều người cùng hạng nhất → admin phải tự chọn ai nhận quà. */
+  /** Several people sharing first place → the admin has to choose who gets the prize. */
   get topRows() {
     return this.rows.filter((row) => row.rank === 1)
   }

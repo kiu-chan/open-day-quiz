@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 import QuizImage from '@common/views/QuizImage.jsx'
 
-/** Câu hỏi nhìn từ phía admin: đáp án đúng luôn được đánh dấu sẵn. */
+/** The question as the admin sees it: the correct answer is always marked. */
 function QuestionPreview({ question }) {
   return (
     <div className="flex flex-col gap-4">
@@ -13,7 +13,7 @@ function QuestionPreview({ question }) {
 
       <QuizImage
         src={question.image}
-        alt="Ảnh của câu hỏi"
+        alt="Question image"
         className="max-h-40 w-auto self-start"
       />
 
@@ -32,7 +32,7 @@ function QuestionPreview({ question }) {
             </span>
             <QuizImage
               src={question.imageOf(i)}
-              alt={option || `Đáp án ${question.labelOf(i)}`}
+              alt={option || `Option ${question.labelOf(i)}`}
               className="size-12 shrink-0"
             />
             <span className="flex-1">{option}</span>
@@ -40,7 +40,7 @@ function QuestionPreview({ question }) {
               <Check
                 className="size-4 shrink-0"
                 strokeWidth={2.5}
-                aria-label="Đáp án đúng"
+                aria-label="Correct answer"
               />
             )}
           </li>

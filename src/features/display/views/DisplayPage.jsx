@@ -17,7 +17,7 @@ function DisplayBody({ display }) {
       <DisplayShell>
         <div className="flex flex-col items-center gap-6 text-center">
           <MonitorOff className="text-text-h size-20" strokeWidth={1.5} aria-hidden="true" />
-          <h1 className="text-text-h text-5xl tracking-tight">Chưa mở phiên</h1>
+          <h1 className="text-text-h text-5xl tracking-tight">No session open</h1>
         </div>
       </DisplayShell>
     )
@@ -28,12 +28,12 @@ function DisplayBody({ display }) {
       <DisplayShell>
         <div className="flex flex-col items-center gap-6 text-center">
           <h1 className="text-text-h text-5xl tracking-tight lg:text-6xl">
-            Quét QR để vào chơi
+            Scan the QR code to join
           </h1>
 
-          {/* Trên máy chiếu cỡ QR tính theo chiều cao khung hình: màn 4:3 của
-              hội trường thấp hơn màn laptop, để cứng 320px là hoặc bé quá hoặc
-              tràn mất phần chữ bên dưới. */}
+          {/* On a projector the QR size is derived from the viewport height: a
+              4:3 hall screen is shorter than a laptop screen, so a hardcoded
+              320px is either too small or pushes the text below off-screen. */}
           <JoinQr url={display.joinUrl} size="min(42vh, 80vw)" zoomable />
 
           <p className="font-mono text-lg break-all lg:text-xl">{display.joinUrl}</p>
@@ -41,7 +41,7 @@ function DisplayBody({ display }) {
           <p className="text-text-h flex items-center gap-3 text-4xl font-medium">
             <Users className="size-9" aria-hidden="true" />
             <span className="tabular-nums">{display.playerCount}</span>
-            <span className="text-2xl font-normal">người đã vào</span>
+            <span className="text-2xl font-normal">joined</span>
           </p>
         </div>
       </DisplayShell>
@@ -59,11 +59,11 @@ function DisplayBody({ display }) {
         header={
           <>
             <p className="font-mono text-2xl">
-              Câu {display.questionNumber} / {display.total}
+              Question {display.questionNumber} / {display.total}
             </p>
             {isRevealed ? (
               <p className="font-mono text-2xl tabular-nums">
-                {display.answeredCount} / {display.playerCount} đã trả lời
+                {display.answeredCount} / {display.playerCount} answered
               </p>
             ) : (
               <Countdown seconds={display.secondsLeft} className="text-4xl" />
@@ -81,11 +81,11 @@ function DisplayBody({ display }) {
           </h1>
         )}
 
-        {/* Ảnh giới hạn theo chiều cao khung hình để bốn ô đáp án bên dưới
-            không bao giờ bị đẩy khỏi màn chiếu. */}
+        {/* The image is capped by viewport height so the four option tiles below
+            can never be pushed off the projected area. */}
         <QuizImage
           src={display.question.image}
-          alt="Ảnh của câu hỏi"
+          alt="Question image"
           className="mx-auto max-h-[36vh] w-auto"
         />
 
@@ -113,9 +113,9 @@ function DisplayBody({ display }) {
       <DisplayShell
         header={
           <>
-            <p className="font-mono text-2xl">Kết quả</p>
+            <p className="font-mono text-2xl">Results</p>
             <p className="font-mono text-2xl tabular-nums">
-              {display.playerCount} người chơi
+              {display.playerCount} players
             </p>
           </>
         }
@@ -123,7 +123,7 @@ function DisplayBody({ display }) {
         <div className="flex flex-col items-center gap-8">
           <h1 className="text-text-h flex items-center gap-4 text-5xl tracking-tight lg:text-6xl">
             <Trophy className="size-12" strokeWidth={1.5} aria-hidden="true" />
-            Bảng xếp hạng
+            Leaderboard
           </h1>
           <LeaderboardTable rows={display.topRows} variant="display" />
         </div>
@@ -131,16 +131,16 @@ function DisplayBody({ display }) {
     )
   }
 
-  // Còn lại: prize và prizeRevealed.
+  // What is left: prize and prizeRevealed.
   return (
     <DisplayShell>
       <div className="flex flex-col items-center gap-8 text-center">
         <h1 className="text-text-h flex items-center gap-4 text-5xl tracking-tight lg:text-6xl">
           <Gift className="size-12" strokeWidth={1.5} aria-hidden="true" />
-          {display.prizeBoxes?.isPicked ? 'Phần quà' : 'Chọn một hộp quà'}
+          {display.prizeBoxes?.isPicked ? 'The prize' : 'Pick a prize box'}
         </h1>
         <p className="text-3xl">
-          Người thắng:{' '}
+          Winner:{' '}
           <span className="text-text-h font-medium">{display.winnerName}</span>
         </p>
 
