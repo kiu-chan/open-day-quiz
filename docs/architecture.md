@@ -1,7 +1,11 @@
 # Kiến trúc
 
 Stack: Vite 8 + React 19 + JavaScript thuần + Tailwind CSS v4 + lucide-react +
-qrcode.react. Không TypeScript, không thư viện state, không backend.
+qrcode.react. Không TypeScript, không thư viện state.
+
+Backend là một máy chủ Node ~200 dòng trong [server/](../server/), viết bằng
+`node:http` — **không thêm dependency nào** (không express, không socket.io). Nó
+giữ trạng thái trận đấu cho mọi thiết bị trong cùng mạng LAN.
 
 ## Nguyên tắc
 
@@ -24,12 +28,17 @@ View  →  Controller  →  Model
   hook controller; component trong `views/components/` là hàm thuần nhận props.
 
 **Ngoại lệ duy nhất:** repository nằm trong `models/` nhưng được chạm vào I/O
-(`localStorage`, sau này là API/socket) — đó chính là lý do nó tồn tại. Nó là
-ranh giới, mọi thứ còn lại trong `models/` vẫn thuần.
+(mạng, `localStorage`) — đó chính là lý do nó tồn tại. Nó là ranh giới, mọi thứ
+còn lại trong `models/` vẫn thuần.
 
 ## Cây thư mục
 
 ```
+server/                            # máy chủ trận đấu, chỉ node:http
+├── index.js                       #   phục vụ dist/ + in URL LAN
+├── sessionApi.js                  #   SSE /api/events + POST /api/intent
+└── sessionStore.js                #   giữ SessionModel, áp intent, phát cho mọi máy
+
 src/
 ├── main.jsx
 ├── App.jsx                        # bảng phân tuyến 5 route
@@ -40,16 +49,16 @@ src/
 │   ├── session/                   # ← trái tim của app
 │   │   ├── models/
 │   │   │   ├── SessionModel.js    #   máy trạng thái phiên chơi
-│   │   │   ├── SessionRepository.js #  I/O: localStorage + phát tín hiệu
+│   │   │   ├── SessionRepository.js #  I/O: SSE nhận về, POST gửi intent lên
 │   │   │   ├── Quiz.js            #   bộ quiz (+ các phương thức sửa)
 │   │   │   ├── Question.js        #   câu hỏi, chấm đúng/sai, thời lượng
 │   │   │   ├── Leaderboard.js     #   chấm điểm, sắp hạng, đồng điểm
 │   │   │   └── PrizeBoxes.js      #   xáo 3 hộp quà (Fisher–Yates)
 │   │   └── controllers/
-│   │       ├── useSession.js      #   đọc phiên + đăng ký nghe thay đổi
+│   │       ├── useSession.js      #   nghe phiên từ máy chủ + gửi intent
 │   │       └── useNow.js          #   nhịp đồng hồ cho đếm ngược
 │   └── views/                     # Button, Countdown, ProgressBar,
-│                                  # LeaderboardTable, JoinQr
+│                                  # LeaderboardTable, JoinQr, ConnectionBanner
 └── features/
     ├── admin/                     # A1 danh sách, A2 soạn quiz, A3 bàn điều khiển
     │   ├── models/                #   QuizRepository + dữ liệu mẫu
@@ -102,33 +111,86 @@ về trạng thái ra khắp controller và view. Hành động sai thứ tự t
 instance cũ, nên bấm "Câu tiếp" hai lần không nhảy mất câu, và repository biết là
 không có gì đổi nên không phát tín hiệu.
 
-**Chỉ bàn điều khiển của admin được đổi trạng thái**, kể cả việc tự chốt câu khi
-hết giờ. Nếu để player và display cũng tự chốt thì mỗi máy chốt ở một thời điểm
-khác nhau.
+**Chỉ máy chủ được áp máy trạng thái này.** Client gửi *ý định* lên, máy chủ áp
+rồi phát kết quả về. Việc tự chốt câu khi hết giờ cũng thuộc máy chủ: chỉ được có
+một đồng hồ, và trận đấu không được treo khi admin khoá màn hình.
 
 ## Ba quyết định kỹ thuật đáng nhớ
 
 **Đếm ngược lưu mốc kết thúc, không lưu "còn N giây".** Session giữ
-`questionEndsAt`, mỗi máy tự tính phần còn lại theo đồng hồ của mình. Nếu mỗi máy
-đếm độc lập từ N giây thì sau vài câu điện thoại và máy chiếu lệch nhau vài giây.
+`questionEndsAt`, mỗi máy tự tính phần còn lại. Nếu mỗi máy đếm độc lập từ N giây
+thì sau vài câu điện thoại và máy chiếu lệch nhau vài giây.
+
+Nhưng mốc đó theo **đồng hồ máy chủ**, nên máy nào đặt sai giờ mà trừ theo đồng hồ
+của nó sẽ thấy đếm ngược sai hẳn (thường là đứng ở 0 suốt câu). Vì vậy mỗi frame
+SSE mang theo `serverNow`, repository tính độ lệch, và `useNow` trả về giờ đã bù —
+xem `serverNow()` trong
+[SessionRepository.js](../src/common/session/models/SessionRepository.js). Điểm số
+không phụ thuộc vào chỗ này: `msTaken` do máy chủ tính, đồng hồ điện thoại chỉ ảnh
+hưởng con số hiển thị.
 
 **`playerId` lưu `localStorage`.** Điện thoại rất dễ bị tắt màn hình hoặc
 refresh giữa trận; vào lại phải nhận đúng người cũ, không tạo người mới, không
-làm mất điểm và không sinh tên trùng trên bảng hạng.
+làm mất điểm và không sinh tên trùng trên bảng hạng. Nếu phiên không còn thấy tên
+mình (máy chủ khởi động lại, admin mở lượt mới) thì controller tự gửi lại `join`
+bằng danh tính đã lưu — không lẽ bắt cả phòng gõ lại tên.
 
 **Điểm tính lại từ đáp án, không lưu sẵn vào người chơi.** Chỉ vài chục người và
 vài câu nên tính lại rất nhẹ, mà tránh được cảnh điểm đã lưu lệch với đáp án.
 
-## Điểm cắm realtime
+## Realtime: máy chủ LAN, SSE + intent
 
-`SessionRepository` là ranh giới duy nhất giữa app và nơi lưu trạng thái. Hiện nó
-dùng `localStorage` + sự kiện `storage`, nên đồng bộ được giữa các tab trên cùng
-một máy nhưng chưa qua được nhiều thiết bị.
+Trạng thái trận đấu sống trong RAM của một tiến trình Node chạy trên đúng cái máy
+nối máy chiếu. Điện thoại vào cùng wifi rồi mở `http://<ip-máy>:3000`.
 
-Khi chốt được transport (Firebase / Supabase / Node + Socket.IO), chỉ file này
-đổi: `read()` / `update()` / `subscribe()` giữ nguyên chữ ký, `SessionModel` và
-toàn bộ view không phải sửa. Lúc đó các hàm sẽ thành `async` và controller thêm
-cờ loading/lỗi.
+```
+điện thoại ─┐
+điện thoại ─┼─ POST /api/intent ──→ ┌──────────────┐
+máy chiếu ──┤                       │ sessionStore │  SessionModel + Date.now()
+admin ──────┘                       └──────┬───────┘
+            └── GET /api/events ←───────────┘  SSE, ảnh chụp đầy đủ mỗi lần đổi
+```
+
+**Máy chủ là nguồn sự thật, không phải cái loa chuyển tiếp.** Client gửi ý định
+(`{ type: 'answer', optionIndex: 2 }`), không gửi trạng thái. Hai lý do:
+
+- Nếu client được ghi thẳng trạng thái thì một điện thoại có thể POST lên một
+  phiên bịa đặt — tự cho mình 10 000 điểm.
+- `msTaken` (trả lời nhanh cỡ nào) phải đo bằng **một** đồng hồ. Mốc bắt đầu câu
+  do máy chủ đặt, mốc nhận đáp án cũng do máy chủ đặt; đồng hồ điện thoại lệch vài
+  giây không ảnh hưởng gì. Nếu để client tự tính thì người có đồng hồ chạy chậm
+  được thưởng.
+
+**SSE chứ không WebSocket / Socket.IO.** `EventSource` tự kết nối lại khi mạng
+chập — điện thoại khoá màn hình rồi mở lại là tự vào tiếp, không phải viết vòng
+thử lại nào. Không cần thư viện phía client, cũng không thêm dependency phía
+server. Luồng dữ liệu ở đây đúng hình dạng SSE: một máy phát, nhiều máy đọc; chiều
+ngược lại chỉ vài cú bấm nên POST là đủ. Socket.IO cho hai chiều thật sự và nhiều
+transport dự phòng — thêm ~40 kB gzip cho những thứ ở đây không dùng.
+
+**Phát ảnh chụp đầy đủ, không phát diff.** Điện thoại vào giữa trận là đúng ngay ở
+frame đầu, không cần phát lại lịch sử. Vài chục người thì payload vẫn nhỏ.
+
+**Luật chơi chỉ có một bản.** `server/sessionStore.js` import đúng
+`SessionModel.js` mà client dùng — không có "luật phía server" song song để lệch
+nhau. Đây là phần thưởng của việc model không bao giờ import React và không tự gọi
+`Date.now()`: nó chạy được trong node y như trong trình duyệt.
+
+**Cùng một handler cho dev và lúc chạy trận.** `server/sessionApi.js` cắm vào
+middleware của Vite (xem plugin `sessionApi` trong
+[vite.config.js](../vite.config.js)) nên `npm run dev:lan` vẫn có HMR mà trạng
+thái đã là trạng thái máy chủ thật; `npm run start` thì `server/index.js` phục vụ
+`dist/` với đúng handler đó.
+
+`SessionRepository` vẫn là ranh giới duy nhất: `read()` vẫn đồng bộ và vẫn trả về
+`SessionModel` (nó đọc ảnh chụp gần nhất nhận được), nên **`SessionModel` và toàn
+bộ view không phải sửa một dòng** khi app chuyển từ localStorage sang máy chủ.
+Thay đổi là `update(fn)` → `send(intent)`: client không còn được tự áp luật.
+
+**Giới hạn còn lại:** trạng thái chỉ ở RAM, tắt máy chủ giữa trận là mất trận đang
+chạy (mở lại thì mở phiên mới — điện thoại tự vào lại). Và ai biết địa chỉ cũng mở
+được `#/admin/live`; ở hội trường thì chấp nhận được, muốn chắc thì thêm mã PIN
+cho intent của admin.
 
 ## Luật giao diện
 

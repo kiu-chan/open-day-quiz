@@ -7,7 +7,7 @@
  *
  * Public API: usePlayerController()
  */
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { newId } from '@common/ids.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
@@ -24,7 +24,7 @@ function loadIdentity() {
 }
 
 export function usePlayerController() {
-  const { session, update } = useSession()
+  const { session, isOffline, send } = useSession()
   const [identity, setIdentity] = useState(loadIdentity)
   const now = useNow(session.isCounting)
 
@@ -38,31 +38,36 @@ export function usePlayerController() {
       const next = { id: identity?.id ?? newId('nguoi'), name: trimmed }
       localStorage.setItem(IDENTITY_KEY, JSON.stringify(next))
       setIdentity(next)
-      update((current) => current.join({ ...next, joinedAt: Date.now() }))
+      send({ type: 'join', ...next })
     },
-    [identity, update],
+    [identity, send],
   )
+
+  /**
+   * Đã có tên lưu sẵn mà phiên không thấy mình thì tự vào lại. Cần vì trạng thái
+   * giờ nằm ở máy chủ: máy chủ khởi động lại, hoặc admin mở lượt mới, là danh
+   * sách người chơi trắng — không lẽ bắt cả phòng gõ lại tên.
+   * `join` của model bỏ qua người đã có nên gọi lặp cũng vô hại.
+   */
+  useEffect(() => {
+    if (!identity || me || session.isIdle) return
+    send({ type: 'join', ...identity })
+  }, [identity, me, session.isIdle, send])
 
   const answer = useCallback(
     (optionIndex) => {
       if (!identity) return
-      update((current) =>
-        current.submitAnswer({
-          playerId: identity.id,
-          optionIndex,
-          now: Date.now(),
-        }),
-      )
+      send({ type: 'answer', playerId: identity.id, optionIndex })
     },
-    [identity, update],
+    [identity, send],
   )
 
   const pickBox = useCallback(
     (index) => {
       if (!identity) return
-      update((current) => current.pickBox({ playerId: identity.id, index }))
+      send({ type: 'pickBox', playerId: identity.id, index })
     },
-    [identity, update],
+    [identity, send],
   )
 
   const state = useMemo(() => {
@@ -70,6 +75,7 @@ export function usePlayerController() {
 
     return {
       sessionState: session.state,
+      isOffline,
       hasJoined: me !== null,
       /** Tên đã nhập lần trước, để phiên sau khỏi phải gõ lại. */
       name: me?.name ?? identity?.name ?? '',
@@ -88,7 +94,7 @@ export function usePlayerController() {
       winnerName: session.winner?.name ?? null,
       prizeBoxes: session.prizeBoxes,
     }
-  }, [session, identity, me, now])
+  }, [session, identity, me, now, isOffline])
 
   return { ...state, join, answer, pickBox }
 }

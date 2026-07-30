@@ -1,12 +1,12 @@
 /**
- * Controller của bàn điều khiển (A3) — nơi **duy nhất** được đổi trạng thái phiên.
+ * Controller của bàn điều khiển (A3) — nơi phát ra mọi ý định điều khiển trận đấu.
  *
- * Nó cũng là nơi tự chốt câu khi hết giờ: chỉ một máy được làm việc này, nếu để
- * player và display cũng tự chốt thì mỗi máy sẽ chốt ở một thời điểm khác nhau.
+ * Chốt câu khi hết giờ **không** nằm ở đây nữa: máy chủ làm, vì chỉ được có một
+ * đồng hồ và trận đấu không được treo khi admin khoá màn hình.
  *
  * Public API: useLiveController()
  */
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
@@ -18,36 +18,25 @@ function joinUrl() {
 }
 
 export function useLiveController() {
-  const { session, update } = useSession()
+  const { session, isOffline, send } = useSession()
   const now = useNow(session.isCounting)
 
-  useEffect(() => {
-    if (session.isCounting && session.isTimeUp(now)) {
-      update((current) => current.reveal())
-    }
-  }, [session, now, update])
-
-  const start = useCallback(
-    () => update((current) => current.start(Date.now())),
-    [update],
-  )
-  const reveal = useCallback(() => update((current) => current.reveal()), [update])
-  const goNext = useCallback(
-    () => update((current) => current.next(Date.now())),
-    [update],
-  )
+  const start = useCallback(() => send({ type: 'start' }), [send])
+  const reveal = useCallback(() => send({ type: 'reveal' }), [send])
+  const goNext = useCallback(() => send({ type: 'next' }), [send])
   const announceWinner = useCallback(
-    (winnerId) => update((current) => current.announceWinner(winnerId)),
-    [update],
+    (winnerId) => send({ type: 'announceWinner', winnerId }),
+    [send],
   )
-  const cancel = useCallback(() => update((current) => current.cancel()), [update])
-  const reset = useCallback(() => update((current) => current.reset()), [update])
+  const cancel = useCallback(() => send({ type: 'cancel' }), [send])
+  const reset = useCallback(() => send({ type: 'reset' }), [send])
 
   const state = useMemo(() => {
     const leaderboard = session.leaderboard
 
     return {
       state: session.state,
+      isOffline,
       quiz: session.quiz,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,
@@ -67,7 +56,7 @@ export function useLiveController() {
       winnerName: session.winner?.name ?? null,
       pickedPrize: session.prizeBoxes?.pickedPrize ?? null,
     }
-  }, [session, now])
+  }, [session, now, isOffline])
 
   return { ...state, start, reveal, goNext, announceWinner, cancel, reset }
 }

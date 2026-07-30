@@ -1,5 +1,6 @@
 import { Check, Gift, Hourglass, MonitorOff, Trophy, Users, X } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
+import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
@@ -32,9 +33,7 @@ function Verdict({ isCorrect }) {
   )
 }
 
-function PlayerPage() {
-  const player = usePlayerController()
-
+function PlayerBody({ player }) {
   if (player.sessionState === SESSION_STATES.IDLE) {
     return (
       <PlayerShell name="">
@@ -199,6 +198,17 @@ function PlayerPage() {
         note="Xem trên màn hình lớn."
       />
     </PlayerShell>
+  )
+}
+
+function PlayerPage() {
+  const player = usePlayerController()
+
+  return (
+    <>
+      <ConnectionBanner isOffline={player.isOffline} />
+      <PlayerBody player={player} />
+    </>
   )
 }
 

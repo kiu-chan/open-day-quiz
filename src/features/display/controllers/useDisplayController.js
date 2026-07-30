@@ -10,7 +10,7 @@ import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 
 export function useDisplayController() {
-  const { session } = useSession()
+  const { session, isOffline } = useSession()
   const now = useNow(session.isCounting)
 
   return useMemo(() => {
@@ -18,6 +18,7 @@ export function useDisplayController() {
 
     return {
       state: session.state,
+      isOffline,
       quiz: session.quiz,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,
@@ -33,5 +34,5 @@ export function useDisplayController() {
       winnerName: session.winner?.name ?? null,
       prizeBoxes: session.prizeBoxes,
     }
-  }, [session, now])
+  }, [session, now, isOffline])
 }

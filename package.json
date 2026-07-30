@@ -7,8 +7,10 @@
     "dev": "vite",
     "dev:lan": "vite --host",
     "build": "vite build",
+    "serve": "node server/index.js",
+    "start": "vite build && node server/index.js",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview --host"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

@@ -2,6 +2,7 @@ import { ArrowRight, Eye, Play, RotateCcw, Trophy, X } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
+import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
@@ -13,9 +14,7 @@ import PlayerList from './components/PlayerList.jsx'
 import QuestionPreview from './components/QuestionPreview.jsx'
 import StateBadge from './components/StateBadge.jsx'
 
-function AdminLivePage() {
-  const live = useLiveController()
-
+function LiveBody({ live }) {
   if (live.state === SESSION_STATES.IDLE) {
     return (
       <AdminShell current="live">
@@ -165,6 +164,17 @@ function AdminLivePage() {
         </Button>
       </footer>
     </AdminShell>
+  )
+}
+
+function AdminLivePage() {
+  const live = useLiveController()
+
+  return (
+    <>
+      <ConnectionBanner isOffline={live.isOffline} />
+      <LiveBody live={live} />
+    </>
   )
 }
 

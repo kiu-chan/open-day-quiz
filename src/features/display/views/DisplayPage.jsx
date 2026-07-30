@@ -1,5 +1,6 @@
 import { Gift, MonitorOff, Trophy, Users } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
+import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import JoinQr from '@common/views/JoinQr.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
@@ -9,9 +10,7 @@ import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
 import PrizeShowcase from './components/PrizeShowcase.jsx'
 
-function DisplayPage() {
-  const display = useDisplayController()
-
+function DisplayBody({ display }) {
   if (display.state === SESSION_STATES.IDLE) {
     return (
       <DisplayShell>
@@ -133,6 +132,17 @@ function DisplayPage() {
         {display.prizeBoxes && <PrizeShowcase boxes={display.prizeBoxes} />}
       </div>
     </DisplayShell>
+  )
+}
+
+function DisplayPage() {
+  const display = useDisplayController()
+
+  return (
+    <>
+      <ConnectionBanner isOffline={display.isOffline} />
+      <DisplayBody display={display} />
+    </>
   )
 }
 
