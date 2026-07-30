@@ -5,6 +5,7 @@ import Countdown from '@common/views/Countdown.jsx'
 import JoinQr from '@common/views/JoinQr.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
+import QuizImage from '@common/views/QuizImage.jsx'
 import { useDisplayController } from '../controllers/useDisplayController.js'
 import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
@@ -70,13 +71,23 @@ function DisplayBody({ display }) {
           </>
         }
       >
-        <h1
-          className={`text-text-h leading-tight tracking-tight ${
-            isRevealed ? 'text-3xl lg:text-4xl' : 'text-4xl lg:text-6xl'
-          }`}
-        >
-          {display.question.prompt}
-        </h1>
+        {display.question.prompt && (
+          <h1
+            className={`text-text-h leading-tight tracking-tight ${
+              isRevealed ? 'text-3xl lg:text-4xl' : 'text-4xl lg:text-6xl'
+            }`}
+          >
+            {display.question.prompt}
+          </h1>
+        )}
+
+        {/* Ảnh giới hạn theo chiều cao khung hình để bốn ô đáp án bên dưới
+            không bao giờ bị đẩy khỏi màn chiếu. */}
+        <QuizImage
+          src={display.question.image}
+          alt="Ảnh của câu hỏi"
+          className="mx-auto max-h-[36vh] w-auto"
+        />
 
         <ul className="grid gap-4 lg:grid-cols-2">
           {display.question.options.map((option, i) => (
@@ -84,6 +95,7 @@ function DisplayBody({ display }) {
               key={i}
               label={display.question.labelOf(i)}
               text={option}
+              image={display.question.imageOf(i)}
               isRevealed={isRevealed}
               isAnswer={display.question.isCorrect(i)}
               count={display.distribution[i] ?? 0}

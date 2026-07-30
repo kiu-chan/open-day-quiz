@@ -13,13 +13,26 @@ export class Question {
   constructor({
     id,
     prompt = '',
+    image = null,
     options = ['', ''],
+    optionImages = [],
     correctIndex = 0,
     durationSeconds = DEFAULT_DURATION_SECONDS,
   }) {
     this.id = id
     this.prompt = prompt
+    /**
+     * Ảnh minh hoạ, lưu dưới dạng đường dẫn `/api/images/...` chứ không phải
+     * data URI — xem `server/imageStore.js` để biết vì sao.
+     */
+    this.image = image
     this.options = options
+    /**
+     * Ảnh của từng đáp án, luôn dài đúng bằng `options` và luôn cùng thứ tự.
+     * Chuẩn hoá ngay ở constructor để không có đường nào tạo ra được một câu
+     * hỏi mà ảnh lệch khỏi đáp án của nó.
+     */
+    this.optionImages = options.map((_, i) => optionImages[i] ?? null)
     this.correctIndex = correctIndex
     /** Thời lượng đếm ngược là luật chơi, nên nó thuộc model chứ không thuộc view. */
     this.durationSeconds = durationSeconds
@@ -38,12 +51,22 @@ export class Question {
     return String.fromCharCode(65 + optionIndex)
   }
 
-  /** Đủ điều kiện đem ra chơi: có nội dung, ≥2 đáp án, đáp án đúng hợp lệ. */
+  imageOf(optionIndex) {
+    return this.optionImages[optionIndex] ?? null
+  }
+
+  /**
+   * Đủ điều kiện đem ra chơi: có nội dung, ≥2 đáp án, đáp án đúng hợp lệ.
+   * Ảnh tính là nội dung — câu hỏi kiểu "đây là công trình nào?" hoàn toàn có
+   * thể chỉ có ảnh, và đáp án cũng vậy (bốn tấm ảnh, chọn một).
+   */
   get isValid() {
+    const isFilled = (text, image) => text.trim().length > 0 || Boolean(image)
+
     return (
-      this.prompt.trim().length > 0 &&
+      isFilled(this.prompt, this.image) &&
       this.options.length >= 2 &&
-      this.options.every((option) => option.trim().length > 0) &&
+      this.options.every((option, i) => isFilled(option, this.imageOf(i))) &&
       this.correctIndex >= 0 &&
       this.correctIndex < this.options.length
     )
@@ -60,10 +83,21 @@ export class Question {
     return this.with({ prompt })
   }
 
+  /** `null` để gỡ ảnh ra khỏi câu hỏi. */
+  withImage(image) {
+    return this.with({ image })
+  }
+
   withOptionAt(index, text) {
     const options = [...this.options]
     options[index] = text
     return this.with({ options })
+  }
+
+  withOptionImageAt(index, image) {
+    const optionImages = [...this.optionImages]
+    optionImages[index] = image
+    return this.with({ optionImages })
   }
 
   get canAddOption() {
@@ -88,11 +122,15 @@ export class Question {
     if (!this.canRemoveOption) return this
 
     const options = this.options.filter((_, i) => i !== index)
+    // Ảnh phải rơi cùng một nhịp với đáp án, không thì bỏ ô B xong ảnh của C
+    // nhảy sang nằm cạnh chữ của B.
+    const optionImages = this.optionImages.filter((_, i) => i !== index)
+
     let correctIndex = this.correctIndex
     if (index === this.correctIndex) correctIndex = 0
     else if (index < this.correctIndex) correctIndex -= 1
 
-    return this.with({ options, correctIndex })
+    return this.with({ options, optionImages, correctIndex })
   }
 
   withCorrect(index) {
@@ -113,7 +151,9 @@ export class Question {
     return {
       id: this.id,
       prompt: this.prompt,
+      image: this.image,
       options: this.options,
+      optionImages: this.optionImages,
       correctIndex: this.correctIndex,
       durationSeconds: this.durationSeconds,
     }

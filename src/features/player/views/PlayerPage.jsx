@@ -4,6 +4,7 @@ import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
+import QuizImage from '@common/views/QuizImage.jsx'
 import { usePlayerController } from '../controllers/usePlayerController.js'
 import AnswerOption from './components/AnswerOption.jsx'
 import JoinForm from './components/JoinForm.jsx'
@@ -78,9 +79,17 @@ function PlayerBody({ player }) {
         </div>
         <ProgressBar value={player.progress} />
 
-        <h2 className="text-text-h text-xl leading-snug">
-          {player.question.prompt}
-        </h2>
+        {player.question.prompt && (
+          <h2 className="text-text-h text-xl leading-snug">
+            {player.question.prompt}
+          </h2>
+        )}
+
+        <QuizImage
+          src={player.question.image}
+          alt="Ảnh của câu hỏi"
+          className="max-h-52 w-full"
+        />
 
         <ul className="flex flex-col gap-3">
           {player.question.options.map((option, i) => (
@@ -88,6 +97,7 @@ function PlayerBody({ player }) {
               <AnswerOption
                 label={player.question.labelOf(i)}
                 text={option}
+                image={player.question.imageOf(i)}
                 isPicked={player.myAnswer?.optionIndex === i}
                 isLocked={player.myAnswer !== null}
                 isRevealed={false}
@@ -121,9 +131,11 @@ function PlayerBody({ player }) {
           </p>
         )}
 
-        <h2 className="text-text-h text-lg leading-snug">
-          {player.question.prompt}
-        </h2>
+        {player.question.prompt && (
+          <h2 className="text-text-h text-lg leading-snug">
+            {player.question.prompt}
+          </h2>
+        )}
 
         <ul className="flex flex-col gap-3">
           {player.question.options.map((option, i) => (
@@ -131,6 +143,7 @@ function PlayerBody({ player }) {
               <AnswerOption
                 label={player.question.labelOf(i)}
                 text={option}
+                image={player.question.imageOf(i)}
                 isPicked={player.myAnswer?.optionIndex === i}
                 isLocked
                 isRevealed

@@ -58,7 +58,7 @@ Tổng cộng **6 route**, 12 màn hình.
 | # | Trang | Route | Nội dung |
 | --- | --- | --- | --- |
 | A1 | Danh sách quiz | `/admin` | Bảng các bộ quiz, nút Tạo / Sửa / Xoá / Nhân bản |
-| A2 | Soạn quiz | `/admin/quiz/:id` | Tên bộ quiz; thêm/sửa/xoá câu hỏi; mỗi câu: nội dung, 2–4 đáp án, đánh dấu đáp án đúng, thời gian đếm ngược |
+| A2 | Soạn quiz | `/admin/quiz/:id` | Tên bộ quiz; thêm/sửa/xoá câu hỏi; mỗi câu: nội dung, ảnh minh hoạ, 2–4 đáp án (chữ và/hoặc ảnh), đánh dấu đáp án đúng, thời gian đếm ngược |
 | A3 | Bàn điều khiển | `/admin/live` | QR + link tham gia; danh sách người đang kết nối; nút Bắt đầu / Câu tiếp / Hiện đáp án / Kết thúc; leaderboard; nút Công bố người thắng |
 
 A3 là trang quan trọng nhất và cũng dễ sai nhất — nó là cái duy nhất được phép **đổi trạng thái phiên**. Player và display chỉ đọc.
@@ -193,7 +193,9 @@ README nói rõ *"do not over-engineer"*, nên chốt trước những thứ **s
 - Không đăng nhập, không tài khoản, không phân quyền — trang admin chỉ cần biết URL. (Rủi ro chấp nhận được: ai biết `/admin/live` thì điều khiển được game. Nếu cần, thêm một mã PIN gõ tay là đủ.)
 - Không lưu lịch sử các phiên đã chơi, không thống kê, không xuất báo cáo.
 - Không nhiều phiên chạy song song — một lúc một phiên.
-- Không ảnh/video trong câu hỏi, chỉ chữ.
+- Không video trong câu hỏi. **Ảnh thì có** (câu hỏi và từng đáp án đều thêm được
+  một ảnh) — quyết định này đã đổi so với bản kế hoạch đầu; ảnh nằm trên máy chủ,
+  bộ quiz chỉ giữ đường dẫn, xem [architecture.md](architecture.md) mục realtime.
 - Không đa ngôn ngữ, không chế độ khán giả, không app mobile.
 - Không viết test tự động cho prototype; nghiệm thu bằng cách chạy thử trọn kịch bản.
 

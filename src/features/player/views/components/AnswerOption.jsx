@@ -1,4 +1,5 @@
 import { Check, CircleDot, X } from 'lucide-react'
+import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
  * Một ô đáp án trên điện thoại. Vùng bấm cao để vừa ngón tay.
@@ -22,6 +23,7 @@ function toneFor({ isRevealed, isAnswer, isPicked, isLocked }) {
 function AnswerOption({
   label,
   text,
+  image,
   isPicked,
   isLocked,
   isRevealed,
@@ -43,7 +45,16 @@ function AnswerOption({
       <span className="border-border font-mono flex size-7 shrink-0 items-center justify-center rounded-md border text-xs">
         {label}
       </span>
-      <span className="flex-1">{text}</span>
+
+      {image && (
+        <QuizImage
+          src={image}
+          alt={text || `Đáp án ${label}`}
+          // Đáp án chỉ có ảnh thì ảnh phải to hẳn ra — nó là toàn bộ nội dung.
+          className={text ? 'size-16 shrink-0' : 'h-28 flex-1'}
+        />
+      )}
+      {text && <span className="flex-1">{text}</span>}
 
       {isRevealed && isAnswer && (
         <Check className="size-5 shrink-0" strokeWidth={2.5} aria-label="Đáp án đúng" />

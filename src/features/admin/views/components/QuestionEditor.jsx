@@ -11,6 +11,7 @@ import {
   MAX_DURATION_SECONDS,
   MIN_DURATION_SECONDS,
 } from '@common/session/models/Question.js'
+import ImagePicker from './ImagePicker.jsx'
 
 const INPUT =
   'border-border focus:border-accent-border text-text-h w-full rounded-lg border-2 px-3 py-2 text-sm outline-none transition'
@@ -42,6 +43,9 @@ function QuestionEditor({
   canMoveDown,
   onPrompt,
   onOption,
+  onImage,
+  onOptionImage,
+  onUploadImage,
   onCorrect,
   onDuration,
   onAddOption,
@@ -89,6 +93,13 @@ function QuestionEditor({
         className={`${INPUT} resize-y text-base`}
       />
 
+      <ImagePicker
+        value={question.image}
+        onChange={onImage}
+        onUpload={onUploadImage}
+        label="Thêm ảnh cho câu hỏi"
+      />
+
       <fieldset className="flex flex-col gap-2 border-0 p-0">
         <legend className="mb-2 text-xs tracking-wide uppercase">
           Đáp án — chọn ô tròn ở đáp án đúng
@@ -100,38 +111,51 @@ function QuestionEditor({
           return (
             <div
               key={i}
-              className={`flex items-center gap-3 rounded-xl border-2 px-3 py-2 transition ${
+              className={`flex flex-col gap-2 rounded-xl border-2 px-3 py-2 transition ${
                 isCorrect ? 'border-accent-border' : 'border-transparent'
               }`}
             >
-              <input
-                type="radio"
-                name={`correct-${question.id}`}
-                checked={isCorrect}
-                onChange={() => onCorrect(i)}
-                aria-label={`Đáp án ${question.labelOf(i)} là đáp án đúng`}
-                className="size-4 shrink-0 cursor-pointer accent-black"
-              />
-              <span
-                className={`w-4 shrink-0 font-mono text-xs ${
-                  isCorrect ? 'text-text-h font-bold' : ''
-                }`}
-              >
-                {question.labelOf(i)}
-              </span>
-              <input
-                value={option}
-                onChange={(event) => onOption(i, event.target.value)}
-                placeholder={`Đáp án ${question.labelOf(i)}`}
-                className={INPUT}
-              />
-              <IconButton
-                label={`Bỏ đáp án ${question.labelOf(i)}`}
-                disabled={!question.canRemoveOption}
-                onClick={() => onRemoveOption(i)}
-              >
-                <Minus className="size-4" aria-hidden="true" />
-              </IconButton>
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name={`correct-${question.id}`}
+                  checked={isCorrect}
+                  onChange={() => onCorrect(i)}
+                  aria-label={`Đáp án ${question.labelOf(i)} là đáp án đúng`}
+                  className="size-4 shrink-0 cursor-pointer accent-black"
+                />
+                <span
+                  className={`w-4 shrink-0 font-mono text-xs ${
+                    isCorrect ? 'text-text-h font-bold' : ''
+                  }`}
+                >
+                  {question.labelOf(i)}
+                </span>
+                <input
+                  value={option}
+                  onChange={(event) => onOption(i, event.target.value)}
+                  placeholder={`Đáp án ${question.labelOf(i)}`}
+                  className={INPUT}
+                />
+                <IconButton
+                  label={`Bỏ đáp án ${question.labelOf(i)}`}
+                  disabled={!question.canRemoveOption}
+                  onClick={() => onRemoveOption(i)}
+                >
+                  <Minus className="size-4" aria-hidden="true" />
+                </IconButton>
+              </div>
+
+              {/* Thụt vào cho thẳng hàng với ô chữ của chính đáp án này. */}
+              <div className="pl-11">
+                <ImagePicker
+                  compact
+                  value={question.imageOf(i)}
+                  onChange={(image) => onOptionImage(i, image)}
+                  onUpload={onUploadImage}
+                  label={`Ảnh cho đáp án ${question.labelOf(i)}`}
+                />
+              </div>
             </div>
           )
         })}

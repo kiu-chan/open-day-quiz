@@ -12,6 +12,7 @@
 import { useCallback, useState } from 'react'
 import { newId } from '@common/ids.js'
 import { Question } from '@common/session/models/Question.js'
+import { imageRepository } from '../models/ImageRepository.js'
 import { quizRepository } from '../models/QuizRepository.js'
 
 /** Câu hỏi mới: hai ô trống là mức tối thiểu cho một câu hợp lệ. */
@@ -84,6 +85,25 @@ export function useQuizEditorController(quizId) {
     [editQuestion],
   )
 
+  const setImage = useCallback(
+    (index, image) => editQuestion(index, (question) => question.withImage(image)),
+    [editQuestion],
+  )
+
+  const setOptionImage = useCallback(
+    (index, optionIndex, image) =>
+      editQuestion(index, (question) =>
+        question.withOptionImageAt(optionIndex, image),
+      ),
+    [editQuestion],
+  )
+
+  /**
+   * Tải ảnh lên và trả về đường dẫn. Ô chọn ảnh tự giữ trạng thái "đang tải" và
+   * thông báo lỗi của riêng nó, nên ở đây không cần state chung nào.
+   */
+  const uploadImage = useCallback((file) => imageRepository.upload(file), [])
+
   const setCorrect = useCallback(
     (index, optionIndex) =>
       editQuestion(index, (question) => question.withCorrect(optionIndex)),
@@ -118,6 +138,9 @@ export function useQuizEditorController(quizId) {
     moveQuestion,
     setPrompt,
     setOption,
+    setImage,
+    setOptionImage,
+    uploadImage,
     setCorrect,
     setDuration,
     addOption,

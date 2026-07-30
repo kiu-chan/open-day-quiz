@@ -107,6 +107,11 @@ function AdminQuizEditorPage({ quizId }) {
             onOption={(optionIndex, text) =>
               editor.setOption(index, optionIndex, text)
             }
+            onImage={(image) => editor.setImage(index, image)}
+            onOptionImage={(optionIndex, image) =>
+              editor.setOptionImage(index, optionIndex, image)
+            }
+            onUploadImage={editor.uploadImage}
             onCorrect={(optionIndex) => editor.setCorrect(index, optionIndex)}
             onDuration={(seconds) => editor.setDuration(index, seconds)}
             onAddOption={() => editor.addOption(index)}

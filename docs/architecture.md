@@ -36,8 +36,9 @@ còn lại trong `models/` vẫn thuần.
 ```
 server/                            # máy chủ trận đấu, chỉ node:http
 ├── index.js                       #   phục vụ dist/ + in URL LAN
-├── sessionApi.js                  #   SSE /api/events + POST /api/intent
-└── sessionStore.js                #   giữ SessionModel, áp intent, phát cho mọi máy
+├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
+├── sessionStore.js                #   giữ SessionModel, áp intent, phát cho mọi máy
+└── imageStore.js                  #   ảnh câu hỏi, đặt tên theo hash, ghi ra uploads/
 
 src/
 ├── main.jsx
@@ -173,6 +174,30 @@ transport dự phòng — thêm ~40 kB gzip cho những thứ ở đây không d
 
 **Phát ảnh chụp đầy đủ, không phát diff.** Điện thoại vào giữa trận là đúng ngay ở
 frame đầu, không cần phát lại lịch sử. Vài chục người thì payload vẫn nhỏ.
+
+**Ảnh đi đường riêng, không đi trong ảnh chụp.** Câu hỏi và đáp án có thể có ảnh,
+nhưng bộ quiz chỉ giữ **đường dẫn** (`/api/images/<hash>.jpg`) chứ không giữ data
+URI. Lý do nằm ngay ở đoạn trên: mỗi thay đổi của phiên đều phát lại toàn bộ ảnh
+chụp, nên nhét base64 vào đó thì mỗi lần một người bấm đáp án là cả phòng tải lại
+hết số ảnh của cả bộ quiz. Byte ảnh đi đúng một lần, lúc admin soạn câu hỏi:
+
+```
+admin ── POST /api/images (ảnh đã thu nhỏ) ──→ server/uploads/<hash>.jpg
+                                    ↓ trả về đường dẫn
+                          quiz trong localStorage chỉ lưu đường dẫn
+điện thoại, máy chiếu ── GET /api/images/<hash>.jpg ──→ cache vĩnh viễn
+```
+
+Tên file là 32 ký tự đầu của sha256 nội dung: cùng một ảnh dùng cho mười câu thì
+trên đĩa vẫn một file, và vì tên đã cố định theo nội dung nên trả kèm
+`Cache-Control: immutable` — điện thoại tải một lần cho cả trận. `ImageRepository`
+phía admin thu ảnh về cạnh dài 1200px trước khi gửi; ảnh chụp điện thoại 4MB mà
+gửi nguyên bản thì vừa vượt hạn mức vừa làm khách tải lâu.
+
+Khác trạng thái phiên, ảnh **ghi ra đĩa** (`server/uploads/`, đã gitignore) chứ
+không giữ trong RAM: bộ quiz nằm trong localStorage của máy admin nên sống qua
+những lần khởi động lại máy chủ, ảnh mà không sống theo thì soạn câu hỏi tối hôm
+trước, sáng hôm sau bật máy lên là vỡ hết.
 
 **Luật chơi chỉ có một bản.** `server/sessionStore.js` import đúng
 `SessionModel.js` mà client dùng — không có "luật phía server" song song để lệch

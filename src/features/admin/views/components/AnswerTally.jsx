@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import QuizImage from '@common/views/QuizImage.jsx'
 
 /**
  * Phân bố lựa chọn của câu hiện tại.
@@ -24,6 +25,11 @@ function AnswerTally({ question, distribution, playerCount }) {
               <span className="w-4 shrink-0 font-mono text-xs">
                 {question.labelOf(i)}
               </span>
+              <QuizImage
+                src={question.imageOf(i)}
+                alt={option || `Đáp án ${question.labelOf(i)}`}
+                className="size-10 shrink-0"
+              />
               <span
                 className={`flex-1 ${isAnswer ? 'text-text-h font-semibold' : ''}`}
               >

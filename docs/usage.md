@@ -31,6 +31,20 @@ Trang admin có sẵn hai link mở nhanh `#/display` và `#/play` ở góc ph�
 Bộ quiz lưu trong trình duyệt của máy admin, nên soạn ở máy nào thì mở phiên ở
 đúng máy đó.
 
+### Câu hỏi có ảnh
+
+Mỗi câu hỏi thêm được một ảnh, và **mỗi đáp án cũng thêm được một ảnh** — làm được
+câu kiểu "đây là toà nhà nào?" với bốn tấm ảnh để chọn. Bấm **Thêm ảnh** ở câu hỏi
+hoặc ở từng dòng đáp án, chọn file jpg/png/webp/gif.
+
+- Đáp án có ảnh thì **không bắt buộc có chữ**, và ngược lại. Câu hỏi cũng vậy.
+- Ảnh được thu về cạnh dài 1200px ngay trên máy admin rồi mới gửi đi, nên chụp
+  bằng điện thoại rồi kéo thẳng vào cũng được, không cần tự resize.
+- Ảnh nằm trên **máy chủ** (`server/uploads/`), không nằm trong bộ quiz. Nên nếu
+  đem bộ quiz sang máy khác (hoặc xoá thư mục đó) thì chỗ ảnh hiện "Ảnh không tải
+  được" — soạn ảnh ở đúng máy sẽ chạy trận là an toàn nhất.
+- Máy chủ phải đang chạy lúc soạn thì mới tải ảnh lên được.
+
 ## Chạy một trận
 
 | Bước | Làm gì | Người chơi thấy | Máy chiếu thấy |
