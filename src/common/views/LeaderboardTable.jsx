@@ -1,11 +1,18 @@
 import { Trophy } from 'lucide-react'
+import PlayerAvatar from './PlayerAvatar.jsx'
 
 const SIZES = {
-  compact: { row: 'gap-3 px-3 py-2 text-sm', rank: 'w-6 text-xs', icon: 'size-4' },
+  compact: {
+    row: 'gap-3 px-3 py-2 text-sm',
+    rank: 'w-6 text-xs',
+    icon: 'size-4',
+    avatar: 'size-7',
+  },
   display: {
     row: 'gap-6 px-6 py-4 text-2xl lg:text-3xl',
     rank: 'w-10 text-xl',
     icon: 'size-8',
+    avatar: 'size-14',
   },
 }
 
@@ -47,6 +54,13 @@ function LeaderboardTable({ rows, variant = 'compact', highlightId }) {
                 aria-label="First place"
               />
             )}
+            {/* Only the leader's avatar animates: a full podium of moving
+                animals pulls the eye away from the scores. */}
+            <PlayerAvatar
+              avatarId={row.avatarId}
+              animate={isWinner}
+              className={size.avatar}
+            />
             <span className="flex-1 truncate">{row.name}</span>
             <span className="font-mono shrink-0 tabular-nums">{row.score}</span>
           </li>

@@ -61,7 +61,12 @@ function reduce(session, intent, now) {
     case 'reset':
       return session.reset()
     case 'join':
-      return session.join({ id: intent.id, name: intent.name, joinedAt: now })
+      return session.join({
+        id: intent.id,
+        name: intent.name,
+        avatarId: intent.avatarId,
+        joinedAt: now,
+      })
     case 'answer':
       return session.submitAnswer({
         playerId: intent.playerId,

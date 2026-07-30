@@ -21,6 +21,13 @@ import { Leaderboard, pointsOf } from './Leaderboard.js'
 import { PrizeBoxes } from './PrizeBoxes.js'
 import { Quiz } from './Quiz.js'
 
+/** An avatar id is a short slug; anything else is a client sending junk. */
+const MAX_AVATAR_ID_LENGTH = 32
+
+function cleanAvatarId(avatarId) {
+  return typeof avatarId === 'string' ? avatarId.slice(0, MAX_AVATAR_ID_LENGTH) : ''
+}
+
 export const SESSION_STATES = {
   IDLE: 'idle',
   LOBBY: 'lobby',
@@ -319,11 +326,19 @@ export class SessionModel {
    * questions already played. A returning player (refresh, screen lock) keeps
    * their name and score instead of becoming a new person.
    */
-  join({ id, name, joinedAt }) {
+  join({ id, name, avatarId, joinedAt }) {
     if (this.isIdle) return this
     if (this.findPlayer(id)) return this
     return this.#with({
-      players: [...this.players, { id, name: name.trim(), joinedAt }],
+      players: [
+        ...this.players,
+        // The avatar travels as a bare id. The model deliberately does not know
+        // the catalogue: the animations are ~600KB of JSON that only a browser
+        // ever needs, and importing them here would drag them into the node
+        // server too, which runs this very file. Whoever draws the avatar
+        // resolves the id, and falls back when it is unknown.
+        { id, name: name.trim(), avatarId: cleanAvatarId(avatarId), joinedAt },
+      ],
     })
   }
 

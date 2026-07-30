@@ -26,12 +26,14 @@ export function useDisplayController() {
       progress: session.progress,
       secondsLeft: session.remainingSeconds(now),
       playerCount: session.playerCount,
+      players: session.players,
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
       joinUrl: `${window.location.origin}${window.location.pathname}#${ROUTES.PLAY}`,
       leaderboardRows: leaderboard.rows,
       topRows: leaderboard.top,
       winnerName: session.winner?.name ?? null,
+      winnerAvatarId: session.winner?.avatarId ?? null,
       prizeBoxes: session.prizeBoxes,
     }
   }, [session, now, isOffline])

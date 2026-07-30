@@ -10,6 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { newId } from '@common/ids.js'
+import { DEFAULT_AVATAR_ID } from '@common/session/models/Avatars.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 
@@ -32,11 +33,14 @@ export function usePlayerController() {
   const me = identity ? session.findPlayer(identity.id) : null
 
   const join = useCallback(
-    (name) => {
+    (name, avatarId) => {
       const trimmed = name.trim()
       if (trimmed.length === 0) return
 
-      const next = { id: identity?.id ?? newId('player'), name: trimmed }
+      // The avatar is part of the stored identity, not just of this one join:
+      // the automatic rejoin below has to send it again, otherwise a phone that
+      // locked its screen comes back as a different animal.
+      const next = { id: identity?.id ?? newId('player'), name: trimmed, avatarId }
       localStorage.setItem(IDENTITY_KEY, JSON.stringify(next))
       setIdentity(next)
       send({ type: 'join', ...next })
@@ -82,6 +86,7 @@ export function usePlayerController() {
       hasJoined: me !== null,
       /** The name entered last time, so the next session needs no retyping. */
       name: me?.name ?? identity?.name ?? '',
+      avatarId: me?.avatarId ?? identity?.avatarId ?? DEFAULT_AVATAR_ID,
       playerCount: session.playerCount,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,

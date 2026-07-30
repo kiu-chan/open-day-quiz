@@ -32,10 +32,23 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), sessionApi()],
   resolve: {
     // Cross-feature imports use aliases; inside one feature, use relative paths.
-    alias: {
-      '@': srcPath(''),
-      '@features': srcPath('features'),
-      '@common': srcPath('common'),
-    },
+    alias: [
+      { find: '@features', replacement: srcPath('features') },
+      { find: '@common', replacement: srcPath('common') },
+      { find: '@', replacement: srcPath('') },
+      // The avatar animations use no expressions and no effects (checked: no
+      // `"x"` expression strings, no `ef` blocks), so the light player renders
+      // them identically while dropping the expression evaluator — which is both
+      // ~150KB of the bundle and the only `eval` in the whole build. Adding an
+      // animation that *does* use expressions means dropping this entry.
+      // The `$` anchor matters: a plain prefix alias would also rewrite the
+      // replacement itself and resolve to a path that does not exist.
+      {
+        find: /^lottie-web$/,
+        replacement: fileURLToPath(
+          new URL('./node_modules/lottie-web/build/player/lottie_light.js', import.meta.url),
+        ),
+      },
+    ],
   },
 })

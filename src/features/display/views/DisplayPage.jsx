@@ -4,11 +4,13 @@ import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import JoinQr from '@common/views/JoinQr.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
+import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
 import { useDisplayController } from '../controllers/useDisplayController.js'
 import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
+import PlayerWall from './components/PlayerWall.jsx'
 import PrizeShowcase from './components/PrizeShowcase.jsx'
 
 function DisplayBody({ display }) {
@@ -43,6 +45,8 @@ function DisplayBody({ display }) {
             <span className="tabular-nums">{display.playerCount}</span>
             <span className="text-2xl font-normal">joined</span>
           </p>
+
+          <PlayerWall players={display.players} />
         </div>
       </DisplayShell>
     )
@@ -139,8 +143,13 @@ function DisplayBody({ display }) {
           <Gift className="size-12" strokeWidth={1.5} aria-hidden="true" />
           {display.prizeBoxes?.isPicked ? 'The prize' : 'Pick a prize box'}
         </h1>
-        <p className="text-3xl">
-          Winner:{' '}
+        <p className="flex items-center justify-center gap-3 text-3xl">
+          Winner:
+          <PlayerAvatar
+            avatarId={display.winnerAvatarId}
+            animate
+            className="size-14"
+          />
           <span className="text-text-h font-medium">{display.winnerName}</span>
         </p>
 

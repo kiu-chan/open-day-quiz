@@ -1,7 +1,7 @@
 # Architecture
 
 Stack: Vite 8 + React 19 + plain JavaScript + Tailwind CSS v4 + lucide-react +
-qrcode.react. No TypeScript, no state library.
+qrcode.react + lottie-web (player avatars). No TypeScript, no state library.
 
 The backend is a ~200-line Node server in [server/](../server/) written with
 `node:http` — **not a single added dependency** (no express, no socket.io). It
@@ -58,12 +58,15 @@ src/
 │   │   │   ├── Quiz.js            #   the quiz (+ its editing methods)
 │   │   │   ├── Question.js        #   a question, right/wrong marking, duration
 │   │   │   ├── Leaderboard.js     #   scoring, ranking, ties
-│   │   │   └── PrizeBoxes.js      #   shuffles the 3 prize boxes (Fisher–Yates)
+│   │   │   ├── PrizeBoxes.js      #   shuffles the 3 prize boxes (Fisher–Yates)
+│   │   │   ├── Avatars.js         #   the 12 animals a player can pick
+│   │   │   └── data/avatars/      #   their Lottie files (see docs/credits.md)
 │   │   └── controllers/
 │   │       ├── useSession.js      #   listens to the server + sends intents
 │   │       └── useNow.js          #   the clock tick for countdowns
 │   └── views/                     # Button, Countdown, ProgressBar,
-│                                  # LeaderboardTable, JoinQr, ConnectionBanner
+│                                  # LeaderboardTable, JoinQr, ConnectionBanner,
+│                                  # PlayerAvatar
 └── features/
     ├── home/                      # H1 home page `/` — intro + entry to all 3 screens
     │   ├── controllers/useHomeController.js
@@ -283,6 +286,45 @@ acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
 - Type size follows the surface: `display/` uses very large text readable from a
   distance, `player/` uses finger-sized tap targets, `admin/` uses ordinary sizes
   because it is viewed up close.
+
+## Player avatars
+
+When joining, a visitor picks one of twelve animals, which then stands for them
+on the projector: in the lobby wall, in the leaderboard, next to the winner. It
+is what turns a list of names into a room full of people.
+
+The animations are Lottie files from lottiefiles.com, listed with their authors
+in [credits.md](credits.md). Four decisions are worth writing down:
+
+**They are committed, not fetched.** Hall wifi is the least reliable thing on the
+day, and they are imported statically rather than served from `public/`, which is
+what keeps every view that draws an avatar a pure function — no loading state, no
+effect. The price is ~600KB in the bundle, which over a LAN is nothing.
+
+**They are drawn in greyscale.** The animations come in full colour and the rule
+above is black, white and grey only. A `grayscale(1) contrast(1.15)` filter in
+`PlayerAvatar` is what lets a colourful third-party asset live inside that rule,
+and it is also what keeps them legible on a washed-out projector. Removing that
+one line is all it takes to get the colour back, if the rule ever changes.
+
+**They stand still unless the movement is the point.** `PlayerAvatar` takes
+`animate`, which defaults to off — a leaderboard of twenty rows would otherwise
+run twenty Lottie players at once and turn the projector into a slideshow.
+Movement is switched on in the picker, on the lobby wall and for the winner.
+
+**The model never sees the catalogue.** `SessionModel.join` stores the avatar as
+a bare id string; `Avatars.js` is imported only by views. That is not tidiness:
+`server/sessionStore.js` imports `SessionModel`, so a catalogue import would drag
+600KB of JSON into the node server — which cannot even parse JSON imports without
+import attributes. Whoever draws an avatar resolves the id, and `avatarById()`
+falls back to the first avatar when the id is unknown, so no screen ever has to
+handle a player without a picture.
+
+`PlayerAvatar` is the one view in the project that runs an effect. Driving
+`lottie-web` means mounting a player into a DOM node and destroying it again,
+which no amount of architecture turns into a pure render — and it is presentation
+machinery, not a game rule, so it stays in the view rather than being pushed into
+a controller. Nothing else touches the animation player.
 
 ## Adding a feature
 

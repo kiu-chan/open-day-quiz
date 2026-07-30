@@ -51,14 +51,18 @@ function PlayerBody({ player }) {
     return (
       <PlayerShell name="">
         <h1 className="text-text-h text-2xl tracking-tight">Join</h1>
-        <JoinForm defaultName={player.name} onJoin={player.join} />
+        <JoinForm
+          defaultName={player.name}
+          defaultAvatarId={player.avatarId}
+          onJoin={player.join}
+        />
       </PlayerShell>
     )
   }
 
   if (player.sessionState === SESSION_STATES.LOBBY) {
     return (
-      <PlayerShell name={player.name}>
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
         <StatusScreen
           icon={Users}
           title="You're in, waiting to start"
@@ -70,7 +74,7 @@ function PlayerBody({ player }) {
 
   if (player.sessionState === SESSION_STATES.QUESTION) {
     return (
-      <PlayerShell name={player.name}>
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-xs">
             Question {player.questionNumber} / {player.total}
@@ -119,7 +123,7 @@ function PlayerBody({ player }) {
 
   if (player.sessionState === SESSION_STATES.REVEAL) {
     return (
-      <PlayerShell name={player.name}>
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
         <p className="font-mono text-xs">
           Question {player.questionNumber} / {player.total}
         </p>
@@ -158,7 +162,7 @@ function PlayerBody({ player }) {
 
   if (player.sessionState === SESSION_STATES.PODIUM) {
     return (
-      <PlayerShell name={player.name}>
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
         <section className="flex flex-col items-center gap-2 py-4 text-center">
           <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
           <p className="text-sm opacity-70">Your rank</p>
@@ -184,7 +188,7 @@ function PlayerBody({ player }) {
   // else watches.
   if (player.isWinner && player.prizeBoxes) {
     return (
-      <PlayerShell name={player.name}>
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
         <section className="flex flex-col items-center gap-2 text-center">
           <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
           <h2 className="text-text-h text-2xl">You won!</h2>
@@ -201,7 +205,7 @@ function PlayerBody({ player }) {
   }
 
   return (
-    <PlayerShell name={player.name}>
+    <PlayerShell name={player.name} avatarId={player.avatarId}>
       <StatusScreen
         icon={Gift}
         title={

@@ -5,7 +5,7 @@ in, and what still has to be decided.
 
 Source: [README.md](../README.md) (the product spec). Coding rules: `CLAUDE.md`.
 
-**Status:** all 7 phases are done (0 → 6). Phase 3 settled on a **self-hosted Node
+**Status:** all 8 phases are done (0 → 7). Phase 3 settled on a **self-hosted Node
 server on the LAN**, SSE + intents, no added dependencies. The architecture is
 written up in [architecture.md](architecture.md); how to run it is in
 [installation.md](installation.md) and [usage.md](usage.md).
@@ -106,7 +106,7 @@ Placed in `common/session/models/` because all three surfaces read it.
 | `Quiz` | `id`, `title`, `questions[]` | Created by the admin, outlives individual sessions |
 | `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
 | `Session` | `id`, `quizId`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1 |
-| `Player` | `id`, `name`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` so a refresh does not lose your place |
+| `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the chosen avatar so a refresh does not lose your place |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
 | `PrizeBoxes` | `boxes[]` (a permutation of the prizes), `pickedIndex` | Reshuffled every session |
 
@@ -135,7 +135,7 @@ the original plan — noted underneath.
 | Feature | Model (rules) | Controller | View |
 | --- | --- | --- | --- |
 | `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
-| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner` |
+| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
 | `admin` | `QuizRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` | D1–D5 |
@@ -175,6 +175,7 @@ realtime decision is deferred as long as possible**.
 | **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done |
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
+| **7. Player avatars** | 12 Lottie animals to pick from when joining, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
 
 The crux of this ordering held up in practice: **every other phase was completed
 without knowing which transport would be chosen**, because `SessionRepository` is

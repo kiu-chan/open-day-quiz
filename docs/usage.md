@@ -32,8 +32,9 @@ right, for testing.
    blocks devices from talking to each other early (see the networking section of
    [installation.md](installation.md)).
 
-Quizzes are stored in the admin machine's browser, so whichever machine you wrote
-them on is the machine you must open the session from.
+Quizzes are stored on the game server (`server/quizzes.json`), so any machine
+that can reach the server sees the same list — you no longer have to open the
+session from the laptop you wrote them on.
 
 ### Questions with images
 
@@ -57,7 +58,7 @@ pick a jpg/png/webp/gif file.
 | Step | What you do | Players see | The big screen shows |
 | --- | --- | --- | --- |
 | 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
-| 2 | Visitors scan the QR and enter a name | "You're in, waiting to start" | the count going up |
+| 2 | Visitors scan the QR, enter a name and pick an animal | "You're in, waiting to start" | their animal appearing on the wall, the count going up |
 | 3 | Press **Start** | 4 option tiles + a clock | the question in large type + a clock |
 | 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
 | 5 | Press **Next question** | the new question | the new question |
@@ -106,8 +107,14 @@ constant `PRIZES`.
 
 **A visitor's phone locked or got refreshed.** Reopening the URL brings back the
 same person with their score intact — the identity is stored in that device's
-`localStorage`, and the page rejoins the session without retyping a name. As long
-as they do not clear browser data or switch devices.
+`localStorage`, and the page rejoins the session without retyping a name or
+picking the animal again. As long as they do not clear browser data or switch
+devices.
+
+**Someone wants a different animal.** The avatar is chosen when joining and
+cannot be changed during a round; rejoining keeps the stored one. Clearing the
+`open-day-quiz:player` key on that phone makes it ask again — but it also creates
+a new player, so the score starts over. Not worth it mid-round.
 
 **A phone shows the black "Lost connection to the server" banner.** That device
 dropped off the wifi, or the server is down. Nothing to do — the page reconnects

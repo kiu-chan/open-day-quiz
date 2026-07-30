@@ -73,7 +73,14 @@ export class Leaderboard {
         totalMs += answer.msTaken
       }
 
-      return { playerId: player.id, name: player.name, score, correctCount, totalMs }
+      return {
+        playerId: player.id,
+        name: player.name,
+        avatarId: player.avatarId,
+        score,
+        correctCount,
+        totalMs,
+      }
     })
 
     rows.sort(
