@@ -54,13 +54,7 @@ function LeaderboardTable({ rows, variant = 'compact', highlightId }) {
                 aria-label="First place"
               />
             )}
-            {/* Only the leader's avatar animates: a full podium of moving
-                animals pulls the eye away from the scores. */}
-            <PlayerAvatar
-              avatarId={row.avatarId}
-              animate={isWinner}
-              className={size.avatar}
-            />
+            <PlayerAvatar avatarId={row.avatarId} className={size.avatar} />
             <span className="flex-1 truncate">{row.name}</span>
             <span className="font-mono shrink-0 tabular-nums">{row.score}</span>
           </li>

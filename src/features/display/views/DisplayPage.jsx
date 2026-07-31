@@ -145,11 +145,7 @@ function DisplayBody({ display }) {
         </h1>
         <p className="flex items-center justify-center gap-3 text-3xl">
           Winner:
-          <PlayerAvatar
-            avatarId={display.winnerAvatarId}
-            animate
-            className="size-14"
-          />
+          <PlayerAvatar avatarId={display.winnerAvatarId} className="size-14" />
           <span className="text-text-h font-medium">{display.winnerName}</span>
         </p>
 

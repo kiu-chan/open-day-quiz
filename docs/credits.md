@@ -11,9 +11,9 @@ avatars, which is exactly what the licence is for.
 The files are committed to the repository at
 [src/common/session/models/data/avatars/](../src/common/session/models/data/avatars/)
 rather than fetched from a CDN: hall wifi is the least reliable thing on the day,
-and an avatar that fails to load leaves a visitor staring at an empty circle. The
-app draws them in greyscale, so what you see below in colour looks black and
-white in the game.
+and an avatar that fails to load leaves a visitor staring at an empty circle.
+They are played in full colour and always looping — the one deliberate exception
+to the app's black-and-white interface rule.
 
 | Avatar | Animation | Author |
 | --- | --- | --- |

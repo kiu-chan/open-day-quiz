@@ -25,7 +25,7 @@ function PlayerWall({ players }) {
           key={player.id}
           className="animate-rise flex w-24 flex-col items-center gap-1"
         >
-          <PlayerAvatar avatarId={player.avatarId} animate className="size-16" />
+          <PlayerAvatar avatarId={player.avatarId} className="size-16" />
           <span className="text-text-h w-full truncate text-center text-base">
             {player.name}
           </span>

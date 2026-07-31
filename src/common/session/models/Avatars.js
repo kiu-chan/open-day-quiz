@@ -13,8 +13,8 @@
  * effect, the animation data is simply there. The price is roughly 600KB in the
  * bundle, which over a LAN is nothing.
  *
- * They are drawn in greyscale (see `PlayerAvatar`), because the interface rule
- * of this project is black, white and grey only.
+ * They play in full colour and never stop looping — the one deliberate exception
+ * to this project's black-white-and-grey interface rule. See `PlayerAvatar`.
  *
  * Public API: AVATARS, DEFAULT_AVATAR_ID, avatarById(), isAvatarId()
  */

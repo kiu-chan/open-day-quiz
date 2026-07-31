@@ -3,9 +3,10 @@ import { AVATARS } from '@common/session/models/Avatars.js'
 import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 
 /**
- * Pick the animal that stands for you on the projector. The chosen one is marked
- * by a thick border plus a tick, never by colour, and it is the only one that
- * moves — so on a washed-out phone screen it is still obvious which is selected.
+ * Pick the animal that stands for you on the projector. All twelve play at once,
+ * in colour. The chosen one is marked by a thick border plus a tick — the
+ * avatars themselves are colourful, so the *selection* still has to be readable
+ * without colour, which is what the border and the tick are for.
  */
 function AvatarPicker({ value, onChange }) {
   return (
@@ -25,14 +26,10 @@ function AvatarPicker({ value, onChange }) {
                 className={`flex w-full cursor-pointer flex-col items-center gap-1 rounded-xl bg-transparent p-2 transition ${
                   isPicked
                     ? 'border-text-h text-text-h border-2 font-medium'
-                    : 'border-border border opacity-70'
+                    : 'border-border border'
                 }`}
               >
-                <PlayerAvatar
-                  avatarId={avatar.id}
-                  animate={isPicked}
-                  className="size-12"
-                />
+                <PlayerAvatar avatarId={avatar.id} className="size-12" />
                 <span className="flex items-center gap-0.5 text-xs">
                   {isPicked && (
                     <Check

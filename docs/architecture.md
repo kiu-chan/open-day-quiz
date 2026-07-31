@@ -275,7 +275,8 @@ acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
 ## Interface rules
 
 - **Black, white and shades of grey only.** No accent colour, no gradients, no
-  dark mode.
+  dark mode. **One exception:** the player avatars play in full colour — see
+  below. Nothing else does.
 - **Never use colour to carry information.** Right/wrong, selected, out of time
   are all distinguished by icon, border weight, dashed borders, grey fills,
   opacity and strikethrough. That is what keeps it readable for colour-blind
@@ -301,16 +302,19 @@ day, and they are imported statically rather than served from `public/`, which i
 what keeps every view that draws an avatar a pure function — no loading state, no
 effect. The price is ~600KB in the bundle, which over a LAN is nothing.
 
-**They are drawn in greyscale.** The animations come in full colour and the rule
-above is black, white and grey only. A `grayscale(1) contrast(1.15)` filter in
-`PlayerAvatar` is what lets a colourful third-party asset live inside that rule,
-and it is also what keeps them legible on a washed-out projector. Removing that
-one line is all it takes to get the colour back, if the rule ever changes.
+**They are in colour, and they always move.** This is the one deliberate
+exception to the black-and-white rule, and it was taken on purpose: the avatar is
+the only thing on screen a visitor owns, and greyscaled and frozen on its first
+frame it reads as a grey sticker rather than as *their* animal. The exception is
+narrow — it covers the animation and nothing around it. Every border, tick,
+label and background near an avatar is still greyscale, and the rule that colour
+must never be the only thing carrying information holds unchanged: selection in
+the picker is a thick border plus a tick, first place is a trophy icon.
 
-**They stand still unless the movement is the point.** `PlayerAvatar` takes
-`animate`, which defaults to off — a leaderboard of twenty rows would otherwise
-run twenty Lottie players at once and turn the projector into a slideshow.
-Movement is switched on in the picker, on the lobby wall and for the winner.
+The cost is real and worth stating: every avatar on screen is a running Lottie
+player. The lobby wall caps at 24, the picker shows 12, a display leaderboard
+shows 3. On the sort of laptop that drives a projector that is fine; a wall of
+several hundred would not be, which is what the cap is for.
 
 **The model never sees the catalogue.** `SessionModel.join` stores the avatar as
 a bare id string; `Avatars.js` is imported only by views. That is not tidiness:
