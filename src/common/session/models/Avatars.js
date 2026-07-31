@@ -10,24 +10,28 @@
  * least, and an avatar that has to be fetched from a CDN would leave visitors
  * staring at empty circles. They are imported statically rather than fetched
  * from `public/`, which keeps every view a pure function — no loading state, no
- * effect, the animation data is simply there. The price is roughly 2MB in the
+ * effect, the animation data is simply there. The price is roughly 3MB in the
  * bundle, which over a LAN is nothing.
  *
  * They play in full colour and never stop looping — the one deliberate exception
  * to this project's black-white-and-grey interface rule. See `PlayerAvatar`.
  *
  * **The size of this list is the player limit of one round.** An avatar belongs
- * to one player per session (see `SessionModel.join`), so the 36th visitor to
- * join takes the last animal and the 37th cannot join at all. Adding avatars
+ * to one player per session (see `SessionModel.join`), so the 50th visitor to
+ * join takes the last animal and the 51st cannot join at all. Adding avatars
  * raises the ceiling; nothing else does.
  *
  * Public API: AVATARS, DEFAULT_AVATAR_ID, avatarById(), isAvatarId(),
  * firstFreeAvatarId()
  */
+import bat from './data/avatars/bat.json'
 import bear from './data/avatars/bear.json'
 import bee from './data/avatars/bee.json'
+import bird from './data/avatars/bird.json'
 import butterfly from './data/avatars/butterfly.json'
+import camel from './data/avatars/camel.json'
 import cat from './data/avatars/cat.json'
+import caterpillar from './data/avatars/caterpillar.json'
 import chameleon from './data/avatars/chameleon.json'
 import chick from './data/avatars/chick.json'
 import cow from './data/avatars/cow.json'
@@ -41,23 +45,33 @@ import flamingo from './data/avatars/flamingo.json'
 import fox from './data/avatars/fox.json'
 import frog from './data/avatars/frog.json'
 import giraffe from './data/avatars/giraffe.json'
+import goldfish from './data/avatars/goldfish.json'
 import hedgehog from './data/avatars/hedgehog.json'
 import horse from './data/avatars/horse.json'
+import jellyfish from './data/avatars/jellyfish.json'
 import koala from './data/avatars/koala.json'
 import lion from './data/avatars/lion.json'
+import lizard from './data/avatars/lizard.json'
 import llama from './data/avatars/llama.json'
+import meerkat from './data/avatars/meerkat.json'
 import monkey from './data/avatars/monkey.json'
 import octopus from './data/avatars/octopus.json'
 import owl from './data/avatars/owl.json'
 import panda from './data/avatars/panda.json'
 import parrot from './data/avatars/parrot.json'
 import pig from './data/avatars/pig.json'
+import pigeon from './data/avatars/pigeon.json'
 import rabbit from './data/avatars/rabbit.json'
 import raccoon from './data/avatars/raccoon.json'
+import rooster from './data/avatars/rooster.json'
 import shark from './data/avatars/shark.json'
+import sheep from './data/avatars/sheep.json'
 import shiba from './data/avatars/shiba.json'
 import sloth from './data/avatars/sloth.json'
 import snail from './data/avatars/snail.json'
+import squirrel from './data/avatars/squirrel.json'
+import toucan from './data/avatars/toucan.json'
+import turkey from './data/avatars/turkey.json'
 import turtle from './data/avatars/turtle.json'
 import unicorn from './data/avatars/unicorn.json'
 
@@ -107,6 +121,20 @@ export const AVATARS = [
   { id: 'dinosaur', label: 'Dinosaur', animation: dinosaur, credit: 't0neu6hlbs6m2k5n' },
   { id: 'dragon', label: 'Dragon', animation: dragon, credit: 'matheus.mesk' },
   { id: 'unicorn', label: 'Unicorn', animation: unicorn, credit: 'nico' },
+  { id: 'squirrel', label: 'Squirrel', animation: squirrel, credit: '9n2tiv92urwjmd92' },
+  { id: 'meerkat', label: 'Meerkat', animation: meerkat, credit: 'debbiediaz' },
+  { id: 'camel', label: 'Camel', animation: camel, credit: 'directdesign22' },
+  { id: 'sheep', label: 'Sheep', animation: sheep, credit: 'avgyhsbmgz' },
+  { id: 'rooster', label: 'Rooster', animation: rooster, credit: 'directdesign22' },
+  { id: 'turkey', label: 'Turkey', animation: turkey, credit: 'kamotionstudio' },
+  { id: 'toucan', label: 'Toucan', animation: toucan, credit: 'iejtbbrdxq' },
+  { id: 'bird', label: 'Bird', animation: bird, credit: 'setya182' },
+  { id: 'pigeon', label: 'Pigeon', animation: pigeon, credit: 'rr8azqtmvscs6egy' },
+  { id: 'bat', label: 'Bat', animation: bat, credit: 'elflacosoyyo' },
+  { id: 'lizard', label: 'Lizard', animation: lizard, credit: 'smrony' },
+  { id: 'goldfish', label: 'Goldfish', animation: goldfish, credit: 'mandysasaaa' },
+  { id: 'jellyfish', label: 'Jellyfish', animation: jellyfish, credit: 'directdesign22' },
+  { id: 'caterpillar', label: 'Caterpillar', animation: caterpillar, credit: 'mujahid' },
 ]
 
 export const DEFAULT_AVATAR_ID = AVATARS[0].id

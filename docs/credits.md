@@ -2,7 +2,7 @@
 
 ## Avatar animations
 
-The thirty-six animals a player can pick when joining are free Lottie animations
+The fifty animals a player can pick when joining are free Lottie animations
 from [lottiefiles.com](https://lottiefiles.com/free-animations/), published under
 the **Lottie Simple License** — free to use, including commercially; they may not
 be resold as animations in their own right. The app only ever plays them as
@@ -16,8 +16,8 @@ They are played in full colour and always looping — the one deliberate excepti
 to the app's black-and-white interface rule.
 
 **The length of this table is the player limit of a round.** Each animal belongs
-to one player per session, so thirty-six visitors can be in a round at once and
-the thirty-seventh is turned away. Adding rows is what raises that ceiling.
+to one player per session, so fifty visitors can be in a round at once and the
+fifty-first is turned away. Adding rows is what raises that ceiling.
 
 | Avatar | Animation | Author |
 | --- | --- | --- |
@@ -57,6 +57,20 @@ the thirty-seventh is turned away. Adding rows is what raises that ceiling.
 | Dinosaur | [Dinosaur Running](https://lottiefiles.com/animations/dinosaur-running-xHaKfzjT4A) | t0neu6hlbs6m2k5n |
 | Dragon | [Dragon flying](https://lottiefiles.com/animations/dragon-flying-fly-dragao-voador-voando-3QZwbo98oF) | matheus.mesk |
 | Unicorn | [Unicorn stretching](https://lottiefiles.com/animations/unicorn-stretching-eoCPYLcpqk) | nico |
+| Squirrel | [Squirrel Sleeping](https://lottiefiles.com/animations/squirrel-sleeping-JjFcmSyHfw) | 9n2tiv92urwjmd92 |
+| Meerkat | [Meerkat looking around](https://lottiefiles.com/animations/meerkat-looking-around-LfPjv98PbJ) | debbiediaz |
+| Camel | [Baby Camel](https://lottiefiles.com/animations/baby-camel-rrbzYKU9KP) | directdesign22 |
+| Sheep | [Sheep](https://lottiefiles.com/animations/sheep-2ZEt9JoIOp) | avgyhsbmgz |
+| Rooster | [Rooster](https://lottiefiles.com/animations/rooster-dV1MG9IzOj) | directdesign22 |
+| Turkey | [Turkey Power Walk](https://lottiefiles.com/animations/turkey-power-walk-IvCkt0nJVL) | kamotionstudio |
+| Toucan | [Toucan](https://lottiefiles.com/animations/toucan-Lhl58T7nVZ) | iejtbbrdxq |
+| Bird | [Cute Bird Flapping Animation](https://lottiefiles.com/animations/cute-bird-flapping-animation-yHorjMIbGG) | setya182 |
+| Pigeon | [Waiting pigeon](https://lottiefiles.com/animations/waiting-pigeon-j2dizkZsPn) | rr8azqtmvscs6egy |
+| Bat | [Bat flying](https://lottiefiles.com/animations/bat-flying-Mm6AcIllK8) | elflacosoyyo |
+| Lizard | [Lizard running](https://lottiefiles.com/animations/lizard-running-lottie-animation-7WPd9MhCUl) | smrony |
+| Goldfish | [Goldfish](https://lottiefiles.com/animations/goldfish-YS8Pht3f1i) | mandysasaaa |
+| Jellyfish | [Jellyfish](https://lottiefiles.com/animations/jellyfish-EwE7VvqSsu) | directdesign22 |
+| Caterpillar | [Cute Caterpillar](https://lottiefiles.com/animations/cute-caterpillar-vPIULIksqF) | mujahid |
 
 ### Adding or replacing an avatar
 

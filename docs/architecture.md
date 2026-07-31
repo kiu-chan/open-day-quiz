@@ -301,7 +301,7 @@ acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
 
 ## Player avatars
 
-When joining, a visitor picks one of thirty-six animals, which then stands for
+When joining, a visitor picks one of fifty animals, which then stands for
 them on the projector: in the lobby wall, in the leaderboard, next to the winner.
 It is what turns a list of names into a room full of people.
 
@@ -311,7 +311,7 @@ in [credits.md](credits.md). Five decisions are worth writing down:
 **They are committed, not fetched.** Hall wifi is the least reliable thing on the
 day, and they are imported statically rather than served from `public/`, which is
 what keeps every view that draws an avatar a pure function — no loading state, no
-effect. The price is ~2MB in the bundle (≈380KB gzipped), which over a LAN is
+effect. The price is ~3MB in the bundle (≈480KB gzipped), which over a LAN is
 nothing.
 
 **One animal, one player, first come first served.** Two visitors sharing an
@@ -328,8 +328,8 @@ loser is sent back to the form with a note. The phone recovers on its own — it
 suggested animal is always "the first one still free", recomputed on every
 snapshot, so leaving the picker alone is enough.
 
-The consequence is a **player cap equal to the size of the catalogue**. Thirty-six
-people can be in a round; the thirty-seventh is told the round is full. That is
+The consequence is a **player cap equal to the size of the catalogue**. Fifty
+people can be in a round; the fifty-first is told the round is full. That is
 the honest trade for uniqueness, and the fix if it ever bites is more animals,
 not a looser rule.
 
@@ -358,18 +358,26 @@ prominent exactly when there is nothing else to look at, out of the way the
 moment there is.
 
 The cost is real and worth stating: every avatar on screen is a running Lottie
-player. The lobby wall caps at 24, the picker shows all 36, a display leaderboard
-shows 3. The picker is the heaviest of those and was measured rather than
-guessed — on a phone-sized viewport all 36 are on screen and animating well
-under a second after the page opens. On the sort of laptop that drives a
-projector that is fine; a wall of several hundred would not be, which is what the
-cap is for.
+player. The lobby wall caps at 24, a display leaderboard shows 3, and the picker
+shows 12 until the visitor presses **Show all 50 animals**. Both numbers were
+measured rather than guessed — even the full fifty are on screen and animating
+well under a second after the page opens on a phone-sized viewport, so the
+preview is not there to rescue a frame rate.
+
+It is there because fifty animals is thirteen rows, and someone happy with the
+animal already selected should not have to scroll past nine of them to find the
+join button. Collapsed, the whole form fits on one phone screen. The slice comes
+off the front of the catalogue rather than off the animals still free, so tiles
+never reshuffle under a finger already on its way down — joining as the wrong
+animal cannot be undone. The one thing that forces the list open is the selection
+sitting past the preview, which happens exactly when the first twelve have all
+been claimed and a preview of twelve padlocks would help nobody.
 
 **The model never sees the catalogue.** `SessionModel.join` stores the avatar as
 a bare id string and knows nothing beyond "this string is already taken";
 `Avatars.js` is imported only by views and by the player controller. That is not
 tidiness: `server/sessionStore.js` imports `SessionModel`, so a catalogue import
-would drag 2MB of JSON into the node server — which cannot even parse JSON
+would drag 3MB of JSON into the node server — which cannot even parse JSON
 imports without import attributes. It is also why the model refuses a duplicate
 rather than reassigning a free animal: it has no idea which animals exist.
 Whoever draws an avatar resolves the id, and `avatarById()` falls back to the
