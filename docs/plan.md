@@ -106,7 +106,7 @@ Placed in `common/session/models/` because all three surfaces read it.
 | `Quiz` | `id`, `title`, `questions[]` | Created by the admin, outlives individual sessions |
 | `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
 | `Session` | `id`, `quiz`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1. `id` is minted on every `openLobby` and is what makes phones join afresh each session |
-| `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the avatar **and the session id** — a refresh keeps your place, a new session starts a new person |
+| `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the avatar **and the session id** — a refresh keeps your place, a new session starts a new person. `avatarId` is **unique within a session**, first come first served, which caps a round at one player per animal |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
 | `PrizeBoxes` | `boxes[]` (a permutation of the prizes), `pickedIndex` | Reshuffled every session |
 
@@ -178,7 +178,7 @@ realtime decision is deferred as long as possible**.
 | **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done |
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
-| **7. Player avatars** | 12 Lottie animals to pick from when joining, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
+| **7. Player avatars** | 36 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
 
 The crux of this ordering held up in practice: **every other phase was completed
 without knowing which transport would be chosen**, because `SessionRepository` is

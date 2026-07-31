@@ -16,11 +16,17 @@
  * seat back. Different id → a stranger, who types a name and picks an animal
  * again.
  *
+ * The animals are handed out first come, first served, so the form works from
+ * what is still free rather than from what this phone picked last time.
+ *
  * Public API: usePlayerController()
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { newId } from '@common/ids.js'
-import { DEFAULT_AVATAR_ID } from '@common/session/models/Avatars.js'
+import {
+  DEFAULT_AVATAR_ID,
+  firstFreeAvatarId,
+} from '@common/session/models/Avatars.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 
@@ -81,6 +87,15 @@ export function usePlayerController() {
   )
 
   /**
+   * We asked for an animal and somebody else got there first. Only possible in
+   * a genuine race — the picker hides the taken ones — but the phone has to be
+   * told, because the server simply refused the join and nothing else on screen
+   * would explain why it is still looking at the form.
+   */
+  const avatarTaken =
+    identity !== null && me === null && session.isAvatarTaken(identity.avatarId)
+
+  /**
    * Rejoin automatically when the session cannot see us but our identity is
    * still valid for it — a screen lock, a refresh, a wifi drop. This never fires
    * across sessions: a new lobby changes the id, which makes `identity` null, so
@@ -89,9 +104,9 @@ export function usePlayerController() {
    * repeatedly is harmless.
    */
   useEffect(() => {
-    if (!identity || me || session.isIdle) return
+    if (!identity || me || session.isIdle || avatarTaken) return
     send({ type: 'join', ...identity })
-  }, [identity, me, session.isIdle, send])
+  }, [identity, me, session.isIdle, avatarTaken, send])
 
   const answer = useCallback(
     (optionIndex) => {
@@ -111,6 +126,7 @@ export function usePlayerController() {
 
   const state = useMemo(() => {
     const leaderboard = session.leaderboard
+    const takenAvatarIds = session.takenAvatarIds
 
     return {
       sessionState: session.state,
@@ -124,11 +140,21 @@ export function usePlayerController() {
        */
       name: me?.name ?? identity?.name ?? '',
       /**
+       * Once joined this is our animal and nothing moves it. Before joining it
+       * is only a *suggestion* — the first one still free — because the animal
+       * we held last round, or a moment ago, may well belong to somebody else
+       * by now.
+       *
        * `||`, not `??`: a player record can carry an **empty string** avatar,
        * which `??` would happily pass on — and an empty avatar id used to blank
        * the whole screen.
        */
-      avatarId: me?.avatarId || identity?.avatarId || DEFAULT_AVATAR_ID,
+      avatarId:
+        me?.avatarId || firstFreeAvatarId(takenAvatarIds) || DEFAULT_AVATAR_ID,
+      takenAvatarIds,
+      /** Every animal is spoken for: the round is full and nobody else can join. */
+      isFull: firstFreeAvatarId(takenAvatarIds) === null,
+      avatarTaken,
       playerCount: session.playerCount,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,
@@ -144,7 +170,7 @@ export function usePlayerController() {
       winnerName: session.winner?.name ?? null,
       prizeBoxes: session.prizeBoxes,
     }
-  }, [session, identity, me, now, isOffline])
+  }, [session, identity, me, now, isOffline, avatarTaken])
 
   return { ...state, join, answer, pickBox }
 }

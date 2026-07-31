@@ -31,8 +31,8 @@ function PlayerAvatar({ avatarId, className = 'size-10' }) {
       autoplay: true,
       // A copy per player: lottie-web writes its own bookkeeping into the data
       // it is handed, and the same avatar is on screen several times at once
-      // (the picker shows all twelve) — sharing one object lets those instances
-      // corrupt each other.
+      // (the picker shows the whole catalogue) — sharing one object lets those
+      // instances corrupt each other.
       animationData: structuredClone(avatar.animation),
       rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
     })

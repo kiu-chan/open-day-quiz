@@ -10,31 +10,65 @@
  * least, and an avatar that has to be fetched from a CDN would leave visitors
  * staring at empty circles. They are imported statically rather than fetched
  * from `public/`, which keeps every view a pure function — no loading state, no
- * effect, the animation data is simply there. The price is roughly 600KB in the
+ * effect, the animation data is simply there. The price is roughly 2MB in the
  * bundle, which over a LAN is nothing.
  *
  * They play in full colour and never stop looping — the one deliberate exception
  * to this project's black-white-and-grey interface rule. See `PlayerAvatar`.
  *
- * Public API: AVATARS, DEFAULT_AVATAR_ID, avatarById(), isAvatarId()
+ * **The size of this list is the player limit of one round.** An avatar belongs
+ * to one player per session (see `SessionModel.join`), so the 36th visitor to
+ * join takes the last animal and the 37th cannot join at all. Adding avatars
+ * raises the ceiling; nothing else does.
+ *
+ * Public API: AVATARS, DEFAULT_AVATAR_ID, avatarById(), isAvatarId(),
+ * firstFreeAvatarId()
  */
 import bear from './data/avatars/bear.json'
+import bee from './data/avatars/bee.json'
+import butterfly from './data/avatars/butterfly.json'
 import cat from './data/avatars/cat.json'
+import chameleon from './data/avatars/chameleon.json'
 import chick from './data/avatars/chick.json'
+import cow from './data/avatars/cow.json'
+import crab from './data/avatars/crab.json'
+import dinosaur from './data/avatars/dinosaur.json'
+import dolphin from './data/avatars/dolphin.json'
+import dragon from './data/avatars/dragon.json'
 import duck from './data/avatars/duck.json'
 import elephant from './data/avatars/elephant.json'
+import flamingo from './data/avatars/flamingo.json'
 import fox from './data/avatars/fox.json'
+import frog from './data/avatars/frog.json'
+import giraffe from './data/avatars/giraffe.json'
+import hedgehog from './data/avatars/hedgehog.json'
+import horse from './data/avatars/horse.json'
+import koala from './data/avatars/koala.json'
+import lion from './data/avatars/lion.json'
+import llama from './data/avatars/llama.json'
+import monkey from './data/avatars/monkey.json'
+import octopus from './data/avatars/octopus.json'
 import owl from './data/avatars/owl.json'
 import panda from './data/avatars/panda.json'
+import parrot from './data/avatars/parrot.json'
+import pig from './data/avatars/pig.json'
 import rabbit from './data/avatars/rabbit.json'
+import raccoon from './data/avatars/raccoon.json'
+import shark from './data/avatars/shark.json'
 import shiba from './data/avatars/shiba.json'
 import sloth from './data/avatars/sloth.json'
+import snail from './data/avatars/snail.json'
 import turtle from './data/avatars/turtle.json'
+import unicorn from './data/avatars/unicorn.json'
 
 /**
  * `credit` is the author on lottiefiles.com. The free animations are published
  * under the Lottie Simple License, which asks that the work not be resold as
  * such; crediting the authors is what `docs/credits.md` is for.
+ *
+ * The order is the order of the picker, and — because the first free animal is
+ * what a new phone starts on — roughly the order in which they get handed out.
+ * The familiar pets come first so the early visitors get those.
  */
 export const AVATARS = [
   { id: 'cat', label: 'Cat', animation: cat, credit: 'diane_soko' },
@@ -49,6 +83,30 @@ export const AVATARS = [
   { id: 'elephant', label: 'Elephant', animation: elephant, credit: 'directdesign22' },
   { id: 'chick', label: 'Chick', animation: chick, credit: 'teef' },
   { id: 'duck', label: 'Duck', animation: duck, credit: 'oshy' },
+  { id: 'koala', label: 'Koala', animation: koala, credit: 'directdesign22' },
+  { id: 'lion', label: 'Lion', animation: lion, credit: 'muammarfaiq' },
+  { id: 'monkey', label: 'Monkey', animation: monkey, credit: 'mandysasaaa' },
+  { id: 'pig', label: 'Pig', animation: pig, credit: 'spho3u5vg9' },
+  { id: 'cow', label: 'Cow', animation: cow, credit: 'directdesign22' },
+  { id: 'horse', label: 'Horse', animation: horse, credit: 'vspmvim0jm' },
+  { id: 'giraffe', label: 'Giraffe', animation: giraffe, credit: 'directdesign22' },
+  { id: 'llama', label: 'Llama', animation: llama, credit: 'directdesign22' },
+  { id: 'raccoon', label: 'Raccoon', animation: raccoon, credit: 'bx3piloub1' },
+  { id: 'hedgehog', label: 'Hedgehog', animation: hedgehog, credit: 'directdesign22' },
+  { id: 'frog', label: 'Frog', animation: frog, credit: '1uhgulyldf' },
+  { id: 'snail', label: 'Snail', animation: snail, credit: 'teef' },
+  { id: 'crab', label: 'Crab', animation: crab, credit: 'mpz1am1ach18fqww' },
+  { id: 'octopus', label: 'Octopus', animation: octopus, credit: 'tanjster' },
+  { id: 'dolphin', label: 'Dolphin', animation: dolphin, credit: 'directdesign22' },
+  { id: 'shark', label: 'Shark', animation: shark, credit: 'AlexBradt' },
+  { id: 'parrot', label: 'Parrot', animation: parrot, credit: 'directdesign22' },
+  { id: 'flamingo', label: 'Flamingo', animation: flamingo, credit: 'help2win' },
+  { id: 'bee', label: 'Bee', animation: bee, credit: 'iejtbbrdxq' },
+  { id: 'butterfly', label: 'Butterfly', animation: butterfly, credit: 'smrony' },
+  { id: 'chameleon', label: 'Chameleon', animation: chameleon, credit: 'rockerzz' },
+  { id: 'dinosaur', label: 'Dinosaur', animation: dinosaur, credit: 't0neu6hlbs6m2k5n' },
+  { id: 'dragon', label: 'Dragon', animation: dragon, credit: 'matheus.mesk' },
+  { id: 'unicorn', label: 'Unicorn', animation: unicorn, credit: 'nico' },
 ]
 
 export const DEFAULT_AVATAR_ID = AVATARS[0].id
@@ -66,4 +124,16 @@ export function isAvatarId(id) {
  */
 export function avatarById(id) {
   return BY_ID.get(id) ?? BY_ID.get(DEFAULT_AVATAR_ID)
+}
+
+/**
+ * The animal a phone that has just opened the join form should start on.
+ *
+ * Returns **null** when every one of them is spoken for, and that null is not a
+ * corner case to paper over: it means the round is full and the form has to say
+ * so rather than offer a pick that the server will refuse.
+ */
+export function firstFreeAvatarId(takenIds) {
+  const taken = new Set(takenIds)
+  return AVATARS.find((avatar) => !taken.has(avatar.id))?.id ?? null
 }

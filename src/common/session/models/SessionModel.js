@@ -212,6 +212,19 @@ export class SessionModel {
     return this.players.some((player) => player.name.toLowerCase() === wanted)
   }
 
+  /**
+   * The animals already spoken for. An avatar belongs to exactly one player per
+   * session, so the join form draws these as unavailable — see `join` for why
+   * the rule lives in the model and not only in the picker.
+   */
+  get takenAvatarIds() {
+    return this.players.map((player) => player.avatarId)
+  }
+
+  isAvatarTaken(avatarId) {
+    return this.players.some((player) => player.avatarId === avatarId)
+  }
+
   get currentAnswers() {
     const question = this.currentQuestion
     if (!question) return []
@@ -336,10 +349,22 @@ export class SessionModel {
    * up in dribs and drabs, and a latecomer only misses the points of the
    * questions already played. A returning player (refresh, screen lock) keeps
    * their name and score instead of becoming a new person.
+   *
+   * **Two people cannot share an animal.** The picker already hides the taken
+   * ones, but the picker is on a phone reading a snapshot that is a moment old:
+   * when two visitors tap the same animal at the same instant, only the one
+   * whose intent reaches the server first can have it, and the other is sent
+   * back to the form to pick again. Enforcing it here rather than only on the
+   * phone is what makes the avatar a reliable way to tell two players apart on
+   * the projector.
    */
   join({ id, name, avatarId, joinedAt }) {
     if (this.isIdle) return this
     if (this.findPlayer(id)) return this
+
+    const avatar = cleanAvatarId(avatarId)
+    if (avatar === '' || this.isAvatarTaken(avatar)) return this
+
     return this.#with({
       players: [
         ...this.players,
@@ -348,7 +373,7 @@ export class SessionModel {
         // ever needs, and importing them here would drag them into the node
         // server too, which runs this very file. Whoever draws the avatar
         // resolves the id, and falls back when it is unknown.
-        { id, name: name.trim(), avatarId: cleanAvatarId(avatarId), joinedAt },
+        { id, name: name.trim(), avatarId: avatar, joinedAt },
       ],
     })
   }

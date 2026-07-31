@@ -54,7 +54,10 @@ function PlayerBody({ player }) {
         <h1 className="text-text-h text-2xl tracking-tight">Join</h1>
         <JoinForm
           defaultName={player.name}
-          defaultAvatarId={player.avatarId}
+          suggestedAvatarId={player.avatarId}
+          takenAvatarIds={player.takenAvatarIds}
+          isFull={player.isFull}
+          lostTheRace={player.avatarTaken}
           onJoin={player.join}
         />
       </PlayerShell>

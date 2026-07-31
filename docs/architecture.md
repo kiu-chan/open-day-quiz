@@ -301,17 +301,37 @@ acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
 
 ## Player avatars
 
-When joining, a visitor picks one of twelve animals, which then stands for them
-on the projector: in the lobby wall, in the leaderboard, next to the winner. It
-is what turns a list of names into a room full of people.
+When joining, a visitor picks one of thirty-six animals, which then stands for
+them on the projector: in the lobby wall, in the leaderboard, next to the winner.
+It is what turns a list of names into a room full of people.
 
 The animations are Lottie files from lottiefiles.com, listed with their authors
-in [credits.md](credits.md). Four decisions are worth writing down:
+in [credits.md](credits.md). Five decisions are worth writing down:
 
 **They are committed, not fetched.** Hall wifi is the least reliable thing on the
 day, and they are imported statically rather than served from `public/`, which is
 what keeps every view that draws an avatar a pure function — no loading state, no
-effect. The price is ~600KB in the bundle, which over a LAN is nothing.
+effect. The price is ~2MB in the bundle (≈380KB gzipped), which over a LAN is
+nothing.
+
+**One animal, one player, first come first served.** Two visitors sharing an
+animal would undo the point of having them: the projector shows a wall of avatars
+and a leaderboard of avatars, and two identical pandas make those unreadable. So
+`SessionModel.join` refuses an avatar that is already spoken for, and the picker
+draws the taken ones locked — greyed, dashed, padlocked, still labelled, so it is
+clear the panda went to somebody rather than that the panda vanished.
+
+The rule has to sit in the model and not only in the picker, because the picker
+is reading a snapshot that is a moment old: when two people tap the same animal
+at the same instant, only the intent that reaches the server first wins, and the
+loser is sent back to the form with a note. The phone recovers on its own — its
+suggested animal is always "the first one still free", recomputed on every
+snapshot, so leaving the picker alone is enough.
+
+The consequence is a **player cap equal to the size of the catalogue**. Thirty-six
+people can be in a round; the thirty-seventh is told the round is full. That is
+the honest trade for uniqueness, and the fix if it ever bites is more animals,
+not a looser rule.
 
 **They are in colour, and they always move.** This is the one deliberate
 exception to the black-and-white rule, and it was taken on purpose: the avatar is
@@ -338,17 +358,23 @@ prominent exactly when there is nothing else to look at, out of the way the
 moment there is.
 
 The cost is real and worth stating: every avatar on screen is a running Lottie
-player. The lobby wall caps at 24, the picker shows 12, a display leaderboard
-shows 3. On the sort of laptop that drives a projector that is fine; a wall of
-several hundred would not be, which is what the cap is for.
+player. The lobby wall caps at 24, the picker shows all 36, a display leaderboard
+shows 3. The picker is the heaviest of those and was measured rather than
+guessed — on a phone-sized viewport all 36 are on screen and animating well
+under a second after the page opens. On the sort of laptop that drives a
+projector that is fine; a wall of several hundred would not be, which is what the
+cap is for.
 
 **The model never sees the catalogue.** `SessionModel.join` stores the avatar as
-a bare id string; `Avatars.js` is imported only by views. That is not tidiness:
-`server/sessionStore.js` imports `SessionModel`, so a catalogue import would drag
-600KB of JSON into the node server — which cannot even parse JSON imports without
-import attributes. Whoever draws an avatar resolves the id, and `avatarById()`
-falls back to the first avatar when the id is unknown, so no screen ever has to
-handle a player without a picture.
+a bare id string and knows nothing beyond "this string is already taken";
+`Avatars.js` is imported only by views and by the player controller. That is not
+tidiness: `server/sessionStore.js` imports `SessionModel`, so a catalogue import
+would drag 2MB of JSON into the node server — which cannot even parse JSON
+imports without import attributes. It is also why the model refuses a duplicate
+rather than reassigning a free animal: it has no idea which animals exist.
+Whoever draws an avatar resolves the id, and `avatarById()` falls back to the
+first avatar when the id is unknown, so no screen ever has to handle a player
+without a picture.
 
 `PlayerAvatar` is the one view in the project that runs an effect. Driving
 `lottie-web` means mounting a player into a DOM node and destroying it again,

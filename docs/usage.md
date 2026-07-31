@@ -115,9 +115,20 @@ makes every phone ask for a name and an animal again, whatever it played as last
 round. This is deliberate — one device at a stand is played by a stream of
 different people.
 
-**Someone wants a different animal.** The avatar is chosen when joining and
-cannot be changed during a round. If it really matters, cancel and reopen the
-session; everyone picks again from scratch (and all scores reset).
+**"The animal I wanted is greyed out."** Each animal belongs to one player per
+round — somebody got there first. The locked ones stay visible with a padlock so
+it is obvious what happened; any of the others is free. The choice cannot be
+changed once joined; if it really matters, cancel and reopen the session, and
+everyone picks again from scratch (and all scores reset).
+
+**"Somebody took that animal first. Pick another one."** Two phones tapped the
+same animal within the same instant and only one could have it. Tap a different
+one and join again — nothing else is lost.
+
+**A phone says the round is full.** There are 36 animals and each of them belongs
+to one player, so 36 is the ceiling for a single round. There is no way round it
+on the day; the fix is to add more animations before the next one, which
+[docs/credits.md](credits.md) explains.
 
 **A phone shows the black "Lost connection to the server" banner.** That device
 dropped off the wifi, or the server is down. Nothing to do — the page reconnects
