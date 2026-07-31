@@ -105,8 +105,8 @@ Placed in `common/session/models/` because all three surfaces read it.
 | --- | --- | --- |
 | `Quiz` | `id`, `title`, `questions[]` | Created by the admin, outlives individual sessions |
 | `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
-| `Session` | `id`, `quizId`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1 |
-| `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the chosen avatar so a refresh does not lose your place |
+| `Session` | `id`, `quiz`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1. `id` is minted on every `openLobby` and is what makes phones join afresh each session |
+| `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the avatar **and the session id** — a refresh keeps your place, a new session starts a new person |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
 | `PrizeBoxes` | `boxes[]` (a permutation of the prizes), `pickedIndex` | Reshuffled every session |
 
@@ -120,7 +120,10 @@ will complain.
 
 **Rejoining mid-game:** phones get their screen locked or refreshed all the time.
 `playerId` has to live in `localStorage` so rejoining restores the same name and
-score instead of creating a new player.
+score instead of creating a new player — but stamped with the session id, so it
+only counts for the round it was created in. One phone at a stand is played by a
+stream of different visitors, and the next one must not inherit the last one's
+name, animal and seat.
 
 ---
 

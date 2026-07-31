@@ -1,10 +1,20 @@
 /**
  * Controller of the player screen (P1–P6).
  *
- * The player identity is kept in localStorage: phones get their screen locked or
- * refreshed mid-game all the time, and coming back has to recognise the same
- * person rather than create a new one — otherwise their score disappears and the
- * leaderboard fills up with duplicate names.
+ * The player identity is kept in localStorage, but **only for the session it was
+ * created in**. Two requirements pull against each other here:
+ *
+ *  - A phone that locks its screen or gets refreshed mid-round has to come back
+ *    as the same person, or its score disappears and the leaderboard fills up
+ *    with duplicate names.
+ *  - A phone handed to the next visitor between rounds has to be a blank slate.
+ *    At an Open Day one device is played by a stream of different people, and
+ *    inheriting the previous visitor's name and animal is simply wrong.
+ *
+ * The session id settles it. Every `openLobby` mints a new one, and a stored
+ * identity only counts while it matches the session on screen. Same id → your
+ * seat back. Different id → a stranger, who types a name and picks an animal
+ * again.
  *
  * Public API: usePlayerController()
  */
@@ -16,10 +26,18 @@ import { useSession } from '@common/session/controllers/useSession.js'
 
 const IDENTITY_KEY = 'open-day-quiz:player'
 
+/**
+ * Identities written by older versions have no `sessionId` (and the oldest have
+ * no `avatarId` either). They simply never match a live session, so they are
+ * ignored exactly like a stale one — no migration needed.
+ */
 function loadIdentity() {
   try {
     const raw = localStorage.getItem(IDENTITY_KEY)
-    return raw ? JSON.parse(raw) : null
+    if (!raw) return null
+
+    const identity = JSON.parse(raw)
+    return { ...identity, avatarId: identity.avatarId || DEFAULT_AVATAR_ID }
   } catch {
     return null
   }
@@ -27,32 +45,46 @@ function loadIdentity() {
 
 export function usePlayerController() {
   const { session, isOffline, send } = useSession()
-  const [identity, setIdentity] = useState(loadIdentity)
+  const [stored, setStored] = useState(loadIdentity)
   const now = useNow(session.isCounting)
+
+  /**
+   * The stored identity, but only while it belongs to the session on screen.
+   * Checked on every render rather than once at mount: the phone is sitting on
+   * the lobby screen when the admin opens the next round, and it has to notice
+   * the switch as it happens.
+   */
+  const identity =
+    stored && session.id && stored.sessionId === session.id ? stored : null
 
   const me = identity ? session.findPlayer(identity.id) : null
 
   const join = useCallback(
     (name, avatarId) => {
       const trimmed = name.trim()
-      if (trimmed.length === 0) return
+      if (trimmed.length === 0 || !session.id) return
 
-      // The avatar is part of the stored identity, not just of this one join:
-      // the automatic rejoin below has to send it again, otherwise a phone that
-      // locked its screen comes back as a different animal.
-      const next = { id: identity?.id ?? newId('player'), name: trimmed, avatarId }
+      // A brand-new player id every time, stamped with the session it belongs
+      // to. Reusing the previous id would hand this round's seat to whoever
+      // held the phone last.
+      const next = {
+        sessionId: session.id,
+        id: newId('player'),
+        name: trimmed,
+        avatarId,
+      }
       localStorage.setItem(IDENTITY_KEY, JSON.stringify(next))
-      setIdentity(next)
+      setStored(next)
       send({ type: 'join', ...next })
     },
-    [identity, send],
+    [session.id, send],
   )
 
   /**
-   * If a name is already stored but the session cannot see us, rejoin
-   * automatically. Needed now that the state lives on the server: a server
-   * restart, or the admin opening a new round, wipes the player list — and we
-   * are not about to make the whole room retype their names.
+   * Rejoin automatically when the session cannot see us but our identity is
+   * still valid for it — a screen lock, a refresh, a wifi drop. This never fires
+   * across sessions: a new lobby changes the id, which makes `identity` null, so
+   * the join form appears instead.
    * The model's `join` ignores players who already exist, so calling it
    * repeatedly is harmless.
    */
@@ -84,9 +116,19 @@ export function usePlayerController() {
       sessionState: session.state,
       isOffline,
       hasJoined: me !== null,
-      /** The name entered last time, so the next session needs no retyping. */
+      /**
+       * Empty for anyone this session does not know — which, deliberately,
+       * includes a phone that played the previous round. Prefilled only while
+       * the identity is still the current session's, so a refresh mid-round
+       * does not make somebody retype.
+       */
       name: me?.name ?? identity?.name ?? '',
-      avatarId: me?.avatarId ?? identity?.avatarId ?? DEFAULT_AVATAR_ID,
+      /**
+       * `||`, not `??`: a player record can carry an **empty string** avatar,
+       * which `??` would happily pass on — and an empty avatar id used to blank
+       * the whole screen.
+       */
+      avatarId: me?.avatarId || identity?.avatarId || DEFAULT_AVATAR_ID,
       playerCount: session.playerCount,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,

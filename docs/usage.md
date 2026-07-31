@@ -106,15 +106,18 @@ constant `PRIZES`.
 ## Troubleshooting
 
 **A visitor's phone locked or got refreshed.** Reopening the URL brings back the
-same person with their score intact — the identity is stored in that device's
-`localStorage`, and the page rejoins the session without retyping a name or
-picking the animal again. As long as they do not clear browser data or switch
-devices.
+same person with their score intact — as long as it is still the same session.
+The identity is stored in that device's `localStorage` together with the id of
+the session it belongs to.
+
+**Handing one phone to the next visitor.** Nothing to do: opening a new session
+makes every phone ask for a name and an animal again, whatever it played as last
+round. This is deliberate — one device at a stand is played by a stream of
+different people.
 
 **Someone wants a different animal.** The avatar is chosen when joining and
-cannot be changed during a round; rejoining keeps the stored one. Clearing the
-`open-day-quiz:player` key on that phone makes it ask again — but it also creates
-a new player, so the score starts over. Not worth it mid-round.
+cannot be changed during a round. If it really matters, cancel and reopen the
+session; everyone picks again from scratch (and all scores reset).
 
 **A phone shows the black "Lost connection to the server" banner.** That device
 dropped off the wifi, or the server is down. Nothing to do — the page reconnects
@@ -123,8 +126,9 @@ on the machine running the server.
 
 **The server was stopped mid-round (Ctrl+C, power cut).** The state is RAM-only,
 so the round in progress is gone. Run `npm run serve` again and open a new
-session from `#/admin`; visitors' phones rejoin the lobby by themselves, but the
-scores from the old round cannot be recovered.
+session from `#/admin`. The new session gets a new id, so every phone shows the
+join form again — the scores and the names from the old round cannot be
+recovered.
 
 **Pressing "Next question" twice.** Harmless — the state machine blocks the
 second press, no question is skipped.

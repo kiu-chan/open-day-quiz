@@ -63,6 +63,7 @@ const CLEARED_ROUND = {
 
 export class SessionModel {
   constructor({
+    id = null,
     quiz = null,
     state = SESSION_STATES.IDLE,
     currentIndex = 0,
@@ -73,6 +74,15 @@ export class SessionModel {
     winnerId = null,
     prizeBoxes = null,
   }) {
+    /**
+     * Identifies this run of the game, and changes every time a lobby opens.
+     * Phones compare it against the session their stored identity belongs to:
+     * same id means "you refreshed, here is your seat back", a different id
+     * means the phone has been handed to somebody else and has to join afresh.
+     * Passed in rather than generated here, like every other non-pure value in
+     * this model.
+     */
+    this.id = id
     this.quiz = quiz
     this.state = state
     this.currentIndex = currentIndex
@@ -255,8 +265,9 @@ export class SessionModel {
 
   // ---- admin actions ----
 
-  openLobby(quiz) {
+  openLobby(quiz, id) {
     return this.#to(SESSION_STATES.LOBBY, {
+      id,
       quiz,
       ...CLEARED_ROUND,
       players: [],
@@ -265,7 +276,7 @@ export class SessionModel {
   }
 
   cancel() {
-    return this.#to(SESSION_STATES.IDLE, { ...CLEARED_ROUND })
+    return this.#to(SESSION_STATES.IDLE, { id: null, ...CLEARED_ROUND })
   }
 
   start(now) {

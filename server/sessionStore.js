@@ -16,6 +16,7 @@
  *
  * Public API: sessionStore.read() / apply(intent) / subscribe(fn)
  */
+import { newId } from '../src/common/ids.js'
 import { Quiz } from '../src/common/session/models/Quiz.js'
 import { SessionModel } from '../src/common/session/models/SessionModel.js'
 
@@ -47,7 +48,12 @@ function reduce(session, intent, now) {
     case 'openLobby':
       // Opening a new session means cancelling the running one: the state
       // machine only enters the lobby from idle, so reset first.
-      return session.reset().openLobby(Quiz.fromJSON(intent.quiz))
+      //
+      // The fresh id is what makes every session a clean slate for the phones:
+      // one handed to a different visitor between rounds sees an id it does not
+      // recognise and asks for a name again, instead of playing on as whoever
+      // held it last.
+      return session.reset().openLobby(Quiz.fromJSON(intent.quiz), newId('session'))
     case 'cancel':
       return session.cancel()
     case 'start':

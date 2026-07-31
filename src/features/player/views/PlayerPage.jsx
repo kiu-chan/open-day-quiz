@@ -1,4 +1,4 @@
-import { Check, Gift, Hourglass, MonitorOff, Trophy, Users, X } from 'lucide-react'
+import { Check, Gift, Hourglass, MonitorOff, Trophy, X } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
@@ -11,6 +11,7 @@ import JoinForm from './components/JoinForm.jsx'
 import PlayerShell from './components/PlayerShell.jsx'
 import PrizeBoxPicker from './components/PrizeBoxPicker.jsx'
 import StatusScreen from './components/StatusScreen.jsx'
+import WaitingAvatar from './components/WaitingAvatar.jsx'
 
 /** The right/wrong/too-late label — an icon alongside the text, never text alone. */
 function Verdict({ isCorrect }) {
@@ -64,7 +65,7 @@ function PlayerBody({ player }) {
     return (
       <PlayerShell name={player.name} avatarId={player.avatarId}>
         <StatusScreen
-          icon={Users}
+          avatarId={player.avatarId}
           title="You're in, waiting to start"
           note={`${player.playerCount} waiting`}
         />
@@ -113,9 +114,12 @@ function PlayerBody({ player }) {
         </ul>
 
         {player.myAnswer && (
-          <p className="text-center text-sm opacity-70">
-            Answer sent. Waiting for everyone else.
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-center text-sm opacity-70">
+              Answer sent. Waiting for everyone else.
+            </p>
+            <WaitingAvatar avatarId={player.avatarId} compact />
+          </div>
         )}
       </PlayerShell>
     )
