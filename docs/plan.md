@@ -144,7 +144,7 @@ the original plan — noted underneath.
 | --- | --- | --- | --- |
 | `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
 | `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
-| `admin` | `QuizRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
+| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController` | A1, A2, A3, `AdminGate` |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
@@ -184,6 +184,7 @@ realtime decision is deferred as long as possible**.
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
 | **7. Player avatars** | 50 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
+| **8. Admin password** | One password for the event, set on first run and stored as a scrypt hash in `.env`; `AdminGate` in front of A1–A3, token required to write a quiz or upload an image | ✅ done — see the admin password section of `docs/architecture.md` |
 
 The crux of this ordering held up in practice: **every other phase was completed
 without knowing which transport would be chosen**, because `SessionRepository` is
@@ -237,9 +238,12 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 The README says plainly *"do not over-engineer"*, so here is what **will not be
 built**, decided up front to prevent scope creep:
 
-- No login, no accounts, no roles — the admin page just needs its URL. (An
-  accepted risk: anyone who knows `/admin/live` can control the game. A typed PIN
-  would be enough if it ever mattered.)
+- No accounts and no roles — **one** password for the whole event, set the first
+  time somebody opens the admin page and kept as a scrypt hash in `.env`. It
+  gates the three admin pages and every admin write on the server. (The accepted
+  risk that remains: the intents driving a live round travel the open channel the
+  phones use, so they are not password-checked — see the admin password section
+  of [architecture.md](architecture.md).)
 - No history of past sessions, no statistics, no report export.
 - No parallel sessions — one at a time.
 - No video in questions. **Images yes** (both the question and each option can

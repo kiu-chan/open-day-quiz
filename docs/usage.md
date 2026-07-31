@@ -13,8 +13,29 @@
 The admin pages carry two quick links to `#/display` and `#/play` in the top
 right, for testing.
 
-> **There is no password.** Anyone who knows `#/admin/live` can drive the game.
-> Do not put the admin URL on the projector.
+The three admin pages are **behind a password**; `#/play` and `#/display` are not,
+since those are the two everybody in the room is meant to reach.
+
+## The admin password
+
+The **first** time anybody opens an admin page on a fresh installation, it asks
+for a password to set instead of a password to type. Pick one (at least 6
+characters) and confirm it. From then on:
+
+- The password is hashed with scrypt and the hash is written to `.env` on the
+  machine running the server. The password itself is stored nowhere, and `.env` is
+  gitignored.
+- Every admin browser types it once. It stays unlocked for 12 hours, or until the
+  server is restarted — restarting signs every admin browser out.
+- The first-run screen never comes back: once a password exists, the server
+  refuses to set another one.
+- **Forgotten it?** Delete the `ADMIN_PASSWORD_HASH=` line from `.env`, restart
+  the server, and the first-run screen returns.
+
+Writing a quiz and uploading an image are refused by the server without that
+password. Driving a running round is not: the play/pause intents travel the same
+open channel the phones use, so keep treating the admin URL as something you do
+not put on the projector.
 
 ## Before the event
 

@@ -42,7 +42,8 @@ server/                            # game server, node:http only
 │                                  #   + REST /api/quizzes
 ├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
 ├── quizStore.js                   #   the quizzes, written to quizzes.json
-└── imageStore.js                  #   question images, hash-named, written to uploads/
+├── imageStore.js                  #   question images, hash-named, written to uploads/
+└── adminAuth.js                   #   the admin password: scrypt hash in .env + tokens
 
 src/
 ├── main.jsx
@@ -73,10 +74,10 @@ src/
     │   └── views/
     ├── admin/                     # A1 list, A2 quiz editor, A3 control desk
     │   ├── models/                #   QuizRepository (talks to /api/quizzes)
-    │   │                          #   + the seed data
+    │   │                          #   + AdminAuthRepository + the seed data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
-    │   │                          #   useLiveController
-    │   └── views/
+    │   │                          #   useLiveController, useAdminAuthController
+    │   └── views/                 #   *Page.jsx + AdminGate.jsx (the password lock)
     ├── player/                    # P1–P6 on phones
     │   ├── controllers/usePlayerController.js
     │   └── views/
@@ -317,10 +318,58 @@ still returns a `SessionModel` (it reads the most recent snapshot received), so
 localStorage to a server. What changed is `update(fn)` → `send(intent)`: clients
 no longer apply the rules themselves.
 
+## The admin password
+
+The three admin pages sit behind one password for the whole event — no accounts,
+no roles, because the control desk is one machine run by one host.
+
+**The password is never stored, only a scrypt hash of it**, in `.env` under
+`ADMIN_PASSWORD_HASH` (gitignored, and invisible to the client bundle since Vite
+only exposes `VITE_*`). scrypt rather than sha256: sha256 is fast, which is
+exactly what makes it a bad password hash — a wordlist runs through it at millions
+of guesses per second. scrypt is deliberately slow and memory-hungry, and it ships
+with node, so it adds no dependency. The stored line is
+`scrypt:<salt hex>:<key hex>`; the colon separator keeps the line safe to `source`
+from a shell, where `$` — the usual separator — would expand.
+
+**No password anywhere means "not set up yet", not "wide open".** On first run
+`GET /api/admin/session` answers `configured: false` and the gate asks for a
+password to *set* instead of one to type; `server/adminAuth.js` hashes it, writes
+the line and refuses every later attempt to set another one, so the first-run
+screen cannot become a way to take the desk over. A forgotten password is
+recovered by deleting the line and restarting.
+
+```
+browser ── POST /api/admin/login ──→ adminAuth: scrypt compare, constant time
+        ←──────── { token } ────────  RAM only, 12h
+        ── x-admin-token on every admin write ──→ PUT /api/quizzes, POST /api/images
+```
+
+Tokens live in RAM exactly like the session state, so a restart signs every admin
+browser out — the behaviour you want at the end of a day rather than a bug. The
+browser keeps only the token, never the password. A wrong guess is answered after
+a 400ms pause, which the host never notices and a wordlist very much does.
+
+The three layers are the usual ones: `AdminAuthRepository` does the I/O (it is a
+repository, so it may), `useAdminAuthController` turns it into the five states the
+gate can be in — `checking / setup / locked / unlocked / unreachable` — and
+`AdminGate` draws them. `unreachable` is deliberately not merged into `locked`:
+telling a host their password is wrong when the real problem is a dead server
+sends them hunting for the wrong thing in the middle of an event.
+
+**What this does and does not cover.** The server refuses to write a quiz or
+accept an image without the token, and the pages will not render without it. The
+intents that drive a running round (`start`, `next`, `reveal`, …) are **not**
+checked: they go through `POST /api/intent`, the one channel every phone in the
+room uses, and gating them would mean pushing an admin token through
+`SessionRepository` in `common/` — which the player and display surfaces share.
+For a prototype in a hall that trade is deliberate; closing it means splitting the
+intent endpoint in two, not sprinkling checks.
+
 **Remaining limitations:** the state is RAM-only, so stopping the server mid-round
 loses the round in progress (start it again and open a new session — phones rejoin
-by themselves). And anyone who knows the address can open `#/admin/live`; that is
-acceptable in a hall, but if you want certainty, add a PIN to the admin intents.
+by themselves). And a live round can still be interfered with by anyone who knows
+the address, per the paragraph above.
 
 ## Interface rules
 

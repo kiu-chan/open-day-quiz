@@ -13,6 +13,10 @@
  *  - `GET /api/quizzes`, `PUT|DELETE /api/quizzes/<id>` — the quizzes the admin
  *    writes. Plain REST rather than intents: these are content edited by one
  *    person, not shared match state the whole room has to watch.
+ *  - `GET /api/admin/session`, `POST /api/admin/password`, `POST /api/admin/login`
+ *    — the admin password (see `server/adminAuth.js`). Everything that only the
+ *    admin does — writing a quiz, uploading an image — carries the token it
+ *    returns in an `x-admin-token` header.
  *
  * Why SSE rather than WebSocket / Socket.IO:
  *  - `EventSource` reconnects by itself when the network hiccups — a phone that
@@ -27,6 +31,7 @@
  *
  * Public API: handleApi(req, res, next)
  */
+import { adminAuth, MIN_PASSWORD_LENGTH } from './adminAuth.js'
 import { imageStore, MAX_IMAGE_BYTES } from './imageStore.js'
 import { quizStore } from './quizStore.js'
 import { sessionStore } from './sessionStore.js'
@@ -44,6 +49,9 @@ function sendJson(res, status, body) {
   })
   res.end(payload)
 }
+
+/** The browsers that typed the password send it back on every write. */
+const isAdmin = (req) => adminAuth.isSignedIn(req.headers['x-admin-token'])
 
 /**
  * Every frame carries the server clock along with it. Needed because
@@ -119,6 +127,37 @@ export async function handleApi(req, res, next) {
     return openStream(req, res)
   }
 
+  // What the admin page asks on load: does this installation have a password
+  // yet, and is this browser still signed in? Neither answer reveals anything a
+  // visitor could use.
+  if (req.method === 'GET' && path === '/api/admin/session') {
+    return sendJson(res, 200, {
+      configured: await adminAuth.isConfigured(),
+      authenticated: isAdmin(req),
+      minPasswordLength: MIN_PASSWORD_LENGTH,
+    })
+  }
+
+  if (req.method === 'POST' && path === '/api/admin/password') {
+    const body = await readJson(req)
+    if (!body) return sendJson(res, 400, { error: 'unreadable payload' })
+
+    const { token, error } = await adminAuth.setPassword(body.password)
+    if (error) return sendJson(res, 400, { error })
+
+    return sendJson(res, 201, { token })
+  }
+
+  if (req.method === 'POST' && path === '/api/admin/login') {
+    const body = await readJson(req)
+    if (!body) return sendJson(res, 400, { error: 'unreadable payload' })
+
+    const token = await adminAuth.login(body.password)
+    if (!token) return sendJson(res, 401, { error: 'wrong password' })
+
+    return sendJson(res, 200, { token })
+  }
+
   if (req.method === 'POST' && path === '/api/intent') {
     const intent = await readJson(req)
     if (!intent) return sendJson(res, 400, { error: 'unreadable payload' })
@@ -131,6 +170,8 @@ export async function handleApi(req, res, next) {
   }
 
   if (req.method === 'POST' && path === '/api/images') {
+    if (!isAdmin(req)) return sendJson(res, 401, { error: 'sign in to the admin page first' })
+
     const contentType = (req.headers['content-type'] ?? '').split(';')[0].trim()
     const body = await readBody(req, MAX_IMAGE_BYTES)
     if (!body) return sendJson(res, 413, { error: 'image too large' })
@@ -148,6 +189,12 @@ export async function handleApi(req, res, next) {
 
   if (path.startsWith('/api/quizzes/')) {
     const id = decodeURIComponent(path.slice('/api/quizzes/'.length))
+
+    // Reading the quizzes stays open — the projector and the phones need them —
+    // but writing one is the admin's alone.
+    if (req.method !== 'GET' && !isAdmin(req)) {
+      return sendJson(res, 401, { error: 'sign in to the admin page first' })
+    }
 
     if (req.method === 'PUT') {
       const raw = await readJson(req)

@@ -15,6 +15,7 @@
  */
 import { newId } from '@common/ids.js'
 import { Quiz } from '@common/session/models/Quiz.js'
+import { adminAuthRepository } from './AdminAuthRepository.js'
 
 const BASE_URL = '/api/quizzes'
 
@@ -24,11 +25,24 @@ const LEGACY_STORAGE_KEY = 'open-day-quiz:quizzes'
 async function request(method, url, body) {
   const response = await fetch(url, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      // Reading is open; writing is the admin's alone, so every request carries
+      // the token the password bought (see AdminAuthRepository).
+      ...adminAuthRepository.authHeaders(),
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   })
 
   if (!response.ok) {
+    // A token the server has forgotten — it restarted, or twelve hours passed —
+    // is dead weight: drop it so the next page load shows the password form
+    // instead of failing again in the same way.
+    if (response.status === 401) {
+      adminAuthRepository.forget()
+      throw new Error('the admin session expired — reload the page and sign in again')
+    }
+
     const { error } = await response.json().catch(() => ({}))
     throw new Error(error ?? 'the server did not answer')
   }

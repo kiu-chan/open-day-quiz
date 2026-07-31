@@ -10,6 +10,8 @@
  *
  * Public API: imageRepository.upload(file) → url
  */
+import { adminAuthRepository } from './AdminAuthRepository.js'
+
 const UPLOAD_URL = '/api/images'
 
 /** Sharp enough for a projector, still light enough to load fast over venue wifi. */
@@ -49,11 +51,17 @@ export const imageRepository = {
 
     const response = await fetch(UPLOAD_URL, {
       method: 'POST',
-      headers: { 'Content-Type': body.type },
+      // Uploading is admin-only, so the token from the password goes along.
+      headers: { 'Content-Type': body.type, ...adminAuthRepository.authHeaders() },
       body,
     })
 
     if (!response.ok) {
+      if (response.status === 401) {
+        adminAuthRepository.forget()
+        throw new Error('the admin session expired — reload the page and sign in again')
+      }
+
       const { error } = await response.json().catch(() => ({}))
       throw new Error(error ?? 'the server did not accept the image')
     }

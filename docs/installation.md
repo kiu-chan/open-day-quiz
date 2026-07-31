@@ -9,8 +9,14 @@
 | Browser | recent Chrome / Edge / Safari | Needs `localStorage` and `EventSource` |
 | Wifi | computer and phones on **the same network** | see the last section |
 
-No database, no environment variables, no internet connection. The game server is
-a single Node process that ships with the repo and adds no dependencies.
+No database, no internet connection, and nothing to configure before the first
+run. The game server is a single Node process that ships with the repo and adds
+no dependencies.
+
+The one environment variable, `ADMIN_PASSWORD_HASH`, writes itself: the first
+time you open `#/admin` the page asks for an admin password, hashes it and puts
+the hash into `.env` for you. See [.env.example](../.env.example) and the admin
+password section of [usage.md](usage.md).
 
 ## Install
 
@@ -28,6 +34,10 @@ npm run dev       # http://localhost:5173, reachable from this machine only
 
 The session API is already plugged into the dev server, so there is no second
 process to start.
+
+One quirk of setting the admin password under `npm run dev`: writing `.env` makes
+Vite restart itself, which clears the tokens held in RAM, so the page asks you to
+type the password you have just chosen. It happens once, on the first run only.
 
 ## Running for real (phones joining by QR code)
 
@@ -110,6 +120,9 @@ The game state is RAM-only: **stopping the server mid-round loses the round in
 progress**. Start it again and open a new session — visitors' phones rejoin by
 themselves because their name is stored on their own device.
 
-Anyone who knows the address can open `#/admin/live` and control the game. That
-is acceptable in a hall (the QR code only points at `#/play`), but do not
-advertise the admin URL.
+The admin pages ask for a password (set on first run, hashed into `.env`), and the
+server refuses to write a quiz or accept an image without it. The intents that
+drive a running round are **not** password-checked — they share the open channel
+the phones use — so somebody who knows the address could still interfere with a
+live round. Acceptable in a hall, where the QR code only points at `#/play`, but
+do not advertise the admin URL.
