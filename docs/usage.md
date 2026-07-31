@@ -144,9 +144,17 @@ winner to hand a prize to.
 The prize positions are reshuffled **every time a winner is announced**, so
 nobody can guess what is in which. Only the winner can click, and only once.
 
+Tapping a box unwraps it — on the phone and on the big screen at the same time.
+The other two boxes disappear, the chosen one slides to the middle of the screen
+and grows, fireworks go off, and the prize inside comes out with its name and a
+line describing it.
+
 Edit the prize list in
 [src/common/session/models/PrizeBoxes.js](../src/common/session/models/PrizeBoxes.js),
-constant `PRIZES`.
+constant `PRIZES`: three entries of `{ id, name, description }`. The id is what a
+box stores, so keep it stable; if you add a prize, give
+`PRIZE_ICONS` in [src/common/views/PrizeBox.jsx](../src/common/views/PrizeBox.jsx)
+a lucide icon for it (unknown ids fall back to the gift icon).
 
 ## Troubleshooting
 

@@ -1,16 +1,17 @@
-import { ArrowLeft, Check, Gift, Hourglass, MonitorOff, Trophy, X } from 'lucide-react'
+import { ArrowLeft, Check, Gift, Hourglass, MonitorOff, X } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
+import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
+import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
 import { usePlayerController } from '../controllers/usePlayerController.js'
 import AnswerOption from './components/AnswerOption.jsx'
 import JoinForm from './components/JoinForm.jsx'
 import PlayerShell from './components/PlayerShell.jsx'
-import PrizeBoxPicker from './components/PrizeBoxPicker.jsx'
 import StatusScreen from './components/StatusScreen.jsx'
 import WaitingAvatar from './components/WaitingAvatar.jsx'
 
@@ -185,7 +186,7 @@ function PlayerBody({ player }) {
     return (
       <PlayerShell name={player.name} avatarId={player.avatarId}>
         <section className="flex flex-col items-center gap-2 py-4 text-center">
-          <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
+          <PlayerAvatar avatarId={player.avatarId} className="size-16 border-2" />
           <p className="text-sm opacity-70">Your rank</p>
           <p className="text-text-h font-mono text-5xl tabular-nums">
             {player.myRow?.rank ?? '—'}
@@ -211,7 +212,7 @@ function PlayerBody({ player }) {
     return (
       <PlayerShell name={player.name} avatarId={player.avatarId}>
         <section className="flex flex-col items-center gap-2 text-center">
-          <Trophy className="text-text-h size-10" strokeWidth={1.5} aria-hidden="true" />
+          <PlayerAvatar avatarId={player.avatarId} className="size-20 border-2" />
           <h2 className="text-text-h text-2xl">You won!</h2>
           <p className="text-sm opacity-70">
             {player.prizeBoxes.isPicked
@@ -220,7 +221,7 @@ function PlayerBody({ player }) {
           </p>
         </section>
 
-        <PrizeBoxPicker boxes={player.prizeBoxes} onPick={player.pickBox} />
+        <PrizeBoxRow boxes={player.prizeBoxes} onPick={player.pickBox} />
       </PlayerShell>
     )
   }
@@ -231,7 +232,7 @@ function PlayerBody({ player }) {
         icon={Gift}
         title={
           player.prizeBoxes?.isPicked
-            ? `${player.winnerName} got ${player.prizeBoxes.pickedPrize}`
+            ? `${player.winnerName} got ${player.prizeBoxes.pickedPrize.name}`
             : `${player.winnerName} is picking a prize`
         }
         note="Watch the big screen."

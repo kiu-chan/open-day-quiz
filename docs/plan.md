@@ -109,7 +109,7 @@ Placed in `common/session/models/` because all three surfaces read it.
 | `Session` | `id`, `quiz`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1. `id` is minted on every `openLobby` and is what makes phones join afresh each session |
 | `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the avatar **and the session id** — a refresh keeps your place, a new session starts a new person. `avatarId` is **unique within a session**, first come first served, which caps a round at one player per animal |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
-| `PrizeBoxes` | `boxes[]` (a permutation of the prizes), `pickedIndex` | Reshuffled every session |
+| `PrizeBoxes` | `prizeIds[]` (a permutation of the prize catalogue), `pickedIndex` | Reshuffled every session. A prize is `{ id, name, description }`; only the id travels in the session state |
 
 ### Two technical details that are easy to get wrong
 
@@ -217,7 +217,7 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 | # | Item | Notes |
 | --- | --- | --- |
 | 6 | **The real question content** | Not a coding task — the university needs to write it and type it into the admin page. There is a 5-question sample set for now |
-| 7 | **The real prizes** | Currently exactly the examples from the README. Edit the `PRIZES` constant in `PrizeBoxes.js` |
+| 7 | **The real prizes** | Names are exactly the examples from the README; the one-line descriptions shown when a box opens are placeholders. Edit the `PRIZES` constant in `PrizeBoxes.js` |
 
 ### Settled during the build
 

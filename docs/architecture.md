@@ -59,7 +59,7 @@ src/
 │   │   │   ├── Quiz.js            #   the quiz (+ its editing methods)
 │   │   │   ├── Question.js        #   a question, right/wrong marking, duration
 │   │   │   ├── Leaderboard.js     #   scoring, ranking, ties
-│   │   │   ├── PrizeBoxes.js      #   shuffles the 3 prize boxes (Fisher–Yates)
+│   │   │   ├── PrizeBoxes.js      #   the prize catalogue + the shuffle (Fisher–Yates)
 │   │   │   ├── Avatars.js         #   the 12 animals a player can pick
 │   │   │   └── data/avatars/      #   their Lottie files (see docs/credits.md)
 │   │   └── controllers/
@@ -67,7 +67,8 @@ src/
 │   │       └── useNow.js          #   the clock tick for countdowns
 │   └── views/                     # Button, Countdown, ProgressBar,
 │                                  # LeaderboardTable, JoinQr, ConnectionBanner,
-│                                  # PlayerAvatar
+│                                  # PlayerAvatar, PrizeBoxRow + PrizeBox
+│                                  # + PrizeCelebration, QuizImage
 └── features/
     ├── home/                      # H1 home page `/` — intro + entry to all 3 screens
     │   ├── controllers/useHomeController.js
@@ -445,6 +446,14 @@ While there is still a choice to make, though, the only avatar on screen is the
 prominent exactly when there is nothing else to look at, out of the way the
 moment there is.
 
+The two screens that are *about* the player sit in between: the rank on the
+podium and "You won!" before the boxes are opened both head their section with
+the player's own animal at 64–80px, where a trophy icon used to be. It is their
+result being announced, so the mark at the top of it is the one thing on screen
+they own — but there is a leaderboard and a row of boxes to read underneath, so
+it stops well short of the waiting screen's 160px. The trophy stays where it
+carries information: marking first place in `LeaderboardTable`.
+
 The cost is real and worth stating: every avatar on screen is a running Lottie
 player. The lobby wall caps at 24, a display leaderboard shows 3, and the picker
 shows 12 until the visitor presses **Show all 50 animals**. Both numbers were
@@ -477,6 +486,46 @@ without a picture.
 which no amount of architecture turns into a pure render — and it is presentation
 machinery, not a game rule, so it stays in the view rather than being pushed into
 a controller. Nothing else touches the animation player.
+
+## Opening a prize box
+
+A box holds a **prize id**, not the prize itself: `PrizeBoxes.prizeIds` is a
+permutation of the catalogue's ids, which is all the session state has to carry
+over the wire, and `PRIZES` in
+[PrizeBoxes.js](../src/common/session/models/PrizeBoxes.js) stays the one place
+where the name and the description of a prize are written down. The views read
+the rest through `prizeAt(index)` and `pickedPrize`. Which lucide icon stands for
+which prize is presentation, so that map lives in the view, not in the model.
+
+The unwrapping is three shared views — `PrizeBoxRow` (the row), `PrizeBox` (one
+box) and `PrizeCelebration` (the fireworks) — and the winner's phone and the
+projector draw all three in two sizes, so the two surfaces cannot drift apart in
+what the room sees. The boxes wobble while they are closed. The moment one is
+picked the other two collapse to nothing and the chosen one widens into the
+space they leave, ending up in the middle of the screen at about twice its
+resting size; then it shakes, throws the closed box off, pops the open one in
+behind a burst of rays, stars and falling streamers, and finally raises the
+prize and its description out of it.
+
+The move to the middle is layout, not measurement: the row is centred, the two
+abandoned boxes transition their width, padding and opacity to zero, and the
+chosen one grows to fill the row — so it drifts to the centre on its own. The
+spacing between boxes is padding on the items rather than a `gap`, because a
+`gap` survives an item collapsing and would leave the last box hanging off
+centre. Nothing here reads a bounding box, which is what keeps the whole reveal
+inside the view layer.
+
+The sequence is **CSS `animation-delay`, not a timer in a controller**. Every
+step is a keyframe animation in [index.css](../src/index.css) with its own delay,
+which keeps the animation out of the state machine entirely: it starts when the
+snapshot carrying `pickedIndex` arrives, so the phone and the big screen open the
+box together, and a device that reconnects halfway through simply plays it from
+the top instead of catching up on a timer it never started. Individual stars and
+streamers set a `--stagger` that the animation adds to that shared start time
+(`calc(1.15s + var(--stagger, 0s))`), which is what stops the burst from firing
+as one mechanical pulse. The reduced-motion block has to zero `animation-delay`
+as well as the durations — shortening a duration does not shorten a delay, and
+the whole reveal is delays.
 
 ## Adding a feature
 

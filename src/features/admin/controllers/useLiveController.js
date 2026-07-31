@@ -64,7 +64,7 @@ export function useLiveController() {
       topRows: leaderboard.topRows,
       hasTieAtTop: leaderboard.hasTieAtTop,
       winnerName: session.winner?.name ?? null,
-      pickedPrize: session.prizeBoxes?.pickedPrize ?? null,
+      pickedPrize: session.prizeBoxes?.pickedPrize?.name ?? null,
     }
   }, [session, now, isOffline])
 

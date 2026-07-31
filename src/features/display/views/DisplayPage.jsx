@@ -6,13 +6,13 @@ import Countdown from '@common/views/Countdown.jsx'
 import JoinQr from '@common/views/JoinQr.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
+import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
 import { useDisplayController } from '../controllers/useDisplayController.js'
 import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
 import PlayerWall from './components/PlayerWall.jsx'
-import PrizeShowcase from './components/PrizeShowcase.jsx'
 
 function DisplayBody({ display }) {
   if (display.state === SESSION_STATES.IDLE) {
@@ -167,7 +167,9 @@ function DisplayBody({ display }) {
           <span className="text-text-h font-medium">{display.winnerName}</span>
         </p>
 
-        {display.prizeBoxes && <PrizeShowcase boxes={display.prizeBoxes} />}
+        {display.prizeBoxes && (
+          <PrizeBoxRow boxes={display.prizeBoxes} variant="display" />
+        )}
       </div>
     </DisplayShell>
   )
