@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ChevronDown,
   MonitorPlay,
   QrCode,
   Settings2,
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { useHomeController } from '../controllers/useHomeController.js'
+import FloatingIcons from './components/FloatingIcons.jsx'
 import LiveStatus from './components/LiveStatus.jsx'
 import Marquee from './components/Marquee.jsx'
 import PrizeTeaser from './components/PrizeTeaser.jsx'
@@ -31,6 +33,7 @@ function HomePage() {
           className="animate-drift absolute inset-0 -z-10 bg-[radial-gradient(circle,_var(--color-border)_1.5px,_transparent_1.5px)] bg-[length:28px_28px] opacity-70"
           aria-hidden="true"
         />
+        <FloatingIcons />
 
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <p className="animate-rise border-accent-border text-text-h inline-flex w-fit items-center gap-2 rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide uppercase">
@@ -47,9 +50,12 @@ function HomePage() {
             DAY
             <br />
             {/* The tilted black block: the "festive" accent made out of shape
-                rather than colour. */}
-            <span className="bg-accent mt-2 inline-block -rotate-2 px-4 pt-1 pb-2 text-white">
-              QUIZ
+                rather than colour. It rocks slowly around that tilt, which is
+                the one bit of movement in the headline itself. */}
+            <span className="mt-2 inline-block -rotate-2">
+              <span className="bg-accent animate-tilt inline-block px-4 pt-1 pb-2 text-white">
+                QUIZ
+              </span>
             </span>
           </h1>
 
@@ -71,10 +77,19 @@ function HomePage() {
           >
             <a
               href={`#${ROUTES.PLAY}`}
-              className={`${CTA_BASE} bg-accent border-accent-border text-white`}
+              className={`${CTA_BASE} bg-accent border-accent-border relative overflow-hidden text-white`}
             >
-              <Smartphone className="size-5 shrink-0" aria-hidden="true" />
-              Play now
+              {/* A white glint crossing the black button every few seconds —
+                  brightness, not colour, doing the "press me". */}
+              <span
+                className="animate-sweep absolute inset-y-0 -left-1/3 w-1/3 bg-white/25 blur-sm"
+                aria-hidden="true"
+              />
+              <Smartphone
+                className="relative size-5 shrink-0"
+                aria-hidden="true"
+              />
+              <span className="relative">Play now</span>
             </a>
             <a
               href={`#${ROUTES.DISPLAY}`}
@@ -88,13 +103,21 @@ function HomePage() {
           <div className="animate-rise" style={{ animationDelay: '320ms' }}>
             <LiveStatus {...home} />
           </div>
+
+          {/* Tells the eye there is more below the fold. Decorative — the
+              sections underneath are reachable without it. */}
+          <ChevronDown
+            className="animate-bob text-text-h mt-4 hidden size-7 self-center sm:block"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
         </div>
       </section>
 
       <Marquee />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
-        <header className="flex flex-col gap-2">
+        <header className="reveal flex flex-col gap-2">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
             How do you play?
           </h2>
@@ -123,7 +146,7 @@ function HomePage() {
       </section>
 
       <section className="bg-code-bg border-border border-y">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-5 py-16 text-center">
+        <div className="reveal mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-5 py-16 text-center">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
             And the prize…
           </h2>
@@ -137,7 +160,7 @@ function HomePage() {
       </section>
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
-        <header className="flex flex-col gap-2">
+        <header className="reveal flex flex-col gap-2">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
             Three screens, one game
           </h2>

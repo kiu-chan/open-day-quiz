@@ -25,6 +25,10 @@
   --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-drift: drift 60s linear infinite;
   --animate-wobble: wobble 3.4s ease-in-out infinite;
+  --animate-float: float 12s ease-in-out infinite;
+  --animate-tilt: tilt 7s ease-in-out infinite;
+  --animate-sweep: sweep 4.5s ease-out infinite;
+  --animate-bob: bob 1.8s ease-in-out infinite;
 
   /* The waiting screen on a phone. Slow on purpose: the avatar in the middle is
      already moving, so its frame must read as "still here, still connected"
@@ -96,6 +100,67 @@
   }
 }
 
+/* The decorative icons floating behind the hero. Long and out of phase, so the
+   background never falls into a rhythm the eye can lock onto while reading. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-1.75rem) rotate(5deg);
+  }
+}
+
+/* Rocks around whatever tilt the parent already holds, so with reduced motion
+   switched on the block simply stays at its resting angle. */
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+/* The shine crossing the "Play now" button. It sits still for the first half of
+   the cycle, so it reads as an occasional glint rather than a loading bar. */
+@keyframes sweep {
+  0%,
+  55% {
+    transform: translateX(-160%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(160%) skewX(-20deg);
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(0.4rem);
+    opacity: 1;
+  }
+}
+
+/* Everything below the fold plays its entrance as it is scrolled into view
+   instead of on page load, where nobody is looking at it yet. A scroll-driven
+   timeline keeps this in CSS — no observer, no effect in a view. Browsers
+   without `animation-timeline` simply keep the plain time-based `animate-rise`
+   the elements already carry. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 15% cover 35%;
+  }
+}
+
 /* People who ask for reduced motion still have to be able to read the page: turn
    the animations off rather than subjecting them to an endlessly scrolling band. */
 @media (prefers-reduced-motion: reduce) {
@@ -105,6 +170,14 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* A scroll-driven animation takes its progress from the scroller, not from a
+     duration, so shortening the duration above does not stop it — it has to be
+     switched off by name. Without the animation the element keeps its normal,
+     fully visible state. */
+  .reveal {
+    animation: none !important;
   }
 }
 

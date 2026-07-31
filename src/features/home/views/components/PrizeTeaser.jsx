@@ -13,15 +13,15 @@ const BOXES = [
  */
 function PrizeTeaser() {
   return (
-    <ul className="flex list-none flex-wrap justify-center gap-6 p-0">
+    <ul className="reveal flex list-none flex-wrap justify-center gap-6 p-0">
       {BOXES.map(({ key, label, delay }) => (
         <li
           key={key}
-          className="animate-wobble border-accent-border flex size-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed sm:size-32"
+          className="animate-wobble border-accent-border hover:shadow-card group flex size-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed transition-shadow duration-300 sm:size-32"
           style={{ animationDelay: delay }}
         >
           <Gift
-            className="text-text-h size-10 shrink-0"
+            className="text-text-h size-10 shrink-0 transition duration-300 group-hover:-translate-y-1 group-hover:scale-110"
             strokeWidth={1.5}
             aria-hidden="true"
           />

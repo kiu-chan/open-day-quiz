@@ -14,9 +14,13 @@ function SurfaceCard({ href, Icon, title, description, featured = false, delay =
     <a
       href={href}
       style={{ animationDelay: delay }}
-      className={`animate-rise hover:shadow-card flex flex-col gap-3 rounded-2xl border-2 p-6 no-underline transition duration-300 hover:-translate-y-1 ${tone}`}
+      className={`reveal animate-rise hover:shadow-card group flex flex-col gap-3 rounded-2xl border-2 p-6 no-underline transition duration-300 hover:-translate-y-1 ${tone}`}
     >
-      <Icon className="size-8 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+      <Icon
+        className="size-8 shrink-0 transition duration-300 group-hover:scale-110"
+        strokeWidth={1.5}
+        aria-hidden="true"
+      />
 
       <h3
         className={`text-xl font-semibold ${featured ? 'text-white' : 'text-text-h'}`}
@@ -27,7 +31,10 @@ function SurfaceCard({ href, Icon, title, description, featured = false, delay =
 
       <span className="mt-auto inline-flex items-center gap-2 pt-3 text-sm font-medium">
         Open
-        <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+        <ArrowRight
+          className="size-4 shrink-0 transition duration-300 group-hover:translate-x-1.5"
+          aria-hidden="true"
+        />
       </span>
     </a>
   )

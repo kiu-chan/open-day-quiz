@@ -31,12 +31,13 @@ function Strip({ hidden }) {
  * twice and the animation shifts by exactly half the width, so when the loop
  * restarts the viewport looks identical to where it began — no gap flashing past.
  * The second copy is decorative, so it is `aria-hidden` to stop screen readers
- * reading it twice.
+ * reading it twice. Hovering the band stops it, so anybody who wants to read an
+ * item that is sliding away can.
  */
 function Marquee() {
   return (
-    <div className="bg-accent flex overflow-hidden py-4 text-white select-none">
-      <div className="animate-marquee flex shrink-0">
+    <div className="bg-accent group flex overflow-hidden py-4 text-white select-none">
+      <div className="animate-marquee flex shrink-0 group-hover:[animation-play-state:paused]">
         <Strip />
         <Strip hidden />
       </div>
