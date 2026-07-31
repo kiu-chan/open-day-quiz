@@ -15,7 +15,7 @@
  *
  * Public API: SESSION_STATES, SessionModel.empty()/fromJSON(), the getters, and
  * the actions openLobby / cancel / start / reveal / next / announceWinner /
- * reset / join / leave / submitAnswer.
+ * setAutoAdvance / reset / join / leave / submitAnswer.
  */
 import { Leaderboard, pointsOf } from './Leaderboard.js'
 import { PrizeBoxes } from './PrizeBoxes.js'
@@ -23,6 +23,18 @@ import { Quiz } from './Quiz.js'
 
 /** An avatar id is a short slug; anything else is a client sending junk. */
 const MAX_AVATAR_ID_LENGTH = 32
+
+/**
+ * How long the revealed answer stays on screen before auto mode moves on. Long
+ * enough to read the right answer and the tally on a projector, short enough
+ * that a hall does not go quiet — it is a rule of the game, so it lives here
+ * next to the question duration rather than in a view.
+ */
+const AUTO_REVEAL_SECONDS = 6
+
+function revealDeadline(now) {
+  return now + AUTO_REVEAL_SECONDS * 1000
+}
 
 function cleanAvatarId(avatarId) {
   return typeof avatarId === 'string' ? avatarId.slice(0, MAX_AVATAR_ID_LENGTH) : ''
@@ -57,6 +69,7 @@ const CLEARED_ROUND = {
   currentIndex: 0,
   questionStartedAt: null,
   questionEndsAt: null,
+  revealEndsAt: null,
   winnerId: null,
   prizeBoxes: null,
 }
@@ -69,10 +82,12 @@ export class SessionModel {
     currentIndex = 0,
     questionStartedAt = null,
     questionEndsAt = null,
+    revealEndsAt = null,
     players = [],
     answers = [],
     winnerId = null,
     prizeBoxes = null,
+    autoAdvance = true,
   }) {
     /**
      * Identifies this run of the game, and changes every time a lobby opens.
@@ -90,12 +105,28 @@ export class SessionModel {
     this.questionStartedAt = questionStartedAt
     /** When the current question ends, see the "countdown" note below. */
     this.questionEndsAt = questionEndsAt
+    /**
+     * When the revealed answer stops being shown — set only while auto mode is
+     * on, and an end timestamp for the same reason as `questionEndsAt`.
+     */
+    this.revealEndsAt = revealEndsAt
     this.players = players
     this.answers = answers
     /** Who gets the prize; the admin confirms it at the announcement step (usually rank 1). */
     this.winnerId = winnerId
     /** The three prize boxes, only present once the winner has been announced. */
     this.prizeBoxes = prizeBoxes
+    /**
+     * Auto mode: the round walks itself from question to reveal to the next
+     * question, up to the final results. The host still opens the lobby, starts
+     * the round and announces the winner — a tie at the top needs a human, and
+     * so does handing over the prize.
+     *
+     * **On by default.** At a stand nobody is watching the laptop, and a round
+     * stuck on a revealed answer because no one pressed anything is the worse
+     * failure; a host who wants to talk between questions switches it off.
+     */
+    this.autoAdvance = autoAdvance
   }
 
   static empty() {
@@ -202,6 +233,17 @@ export class SessionModel {
     return this.questionEndsAt !== null && now >= this.questionEndsAt
   }
 
+  /** Seconds left on the revealed answer before auto mode moves on. */
+  autoRemainingSeconds(now) {
+    if (this.revealEndsAt === null) return 0
+    return Math.ceil(Math.max(0, this.revealEndsAt - now) / 1000)
+  }
+
+  /** The reveal has been on screen long enough — the server may move on. */
+  isAutoDue(now) {
+    return this.revealEndsAt !== null && now >= this.revealEndsAt
+  }
+
   // ---- players and answers ----
 
   get playerCount() {
@@ -306,19 +348,38 @@ export class SessionModel {
   }
 
   /** Close the question and reveal the answer. Clearing the deadline stops the clock everywhere. */
-  reveal() {
-    return this.#to(SESSION_STATES.REVEAL, { questionEndsAt: null })
+  reveal(now) {
+    return this.#to(SESSION_STATES.REVEAL, {
+      questionEndsAt: null,
+      revealEndsAt: this.autoAdvance ? revealDeadline(now) : null,
+    })
   }
 
   /** Move to the next question, or to the podium when there are none left. */
   next(now) {
     if (this.state !== SESSION_STATES.REVEAL) return this
-    if (this.isLastQuestion) return this.#to(SESSION_STATES.PODIUM)
+    if (this.isLastQuestion) return this.#to(SESSION_STATES.PODIUM, { revealEndsAt: null })
 
     const index = this.currentIndex + 1
     return this.#to(SESSION_STATES.QUESTION, {
       currentIndex: index,
+      revealEndsAt: null,
       ...this.#timingOf(index, now),
+    })
+  }
+
+  /**
+   * Switch auto mode on or off. Toggling it during a reveal has to arm or
+   * disarm that reveal's deadline as well, otherwise the host turning auto on
+   * mid-round would see nothing happen until the *next* question was revealed —
+   * and turning it off would not stop the move already scheduled.
+   */
+  setAutoAdvance(enabled, now) {
+    if (enabled === this.autoAdvance) return this
+    const isRevealing = this.state === SESSION_STATES.REVEAL
+    return this.#with({
+      autoAdvance: enabled,
+      revealEndsAt: enabled && isRevealing ? revealDeadline(now) : null,
     })
   }
 

@@ -63,7 +63,7 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | A1 | Quiz list | `/admin` | The table of quizzes, with New / Edit / Delete / Duplicate |
 | A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration |
-| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; the leaderboard; the Announce winner button |
+| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the final results by itself; the leaderboard; the Announce winner button |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
 allowed to **change the session state**. Player and display only read.
@@ -85,11 +85,12 @@ held portrait.
 ### 2.3 Display — `features/display/`
 
 One route `/display`, whose content changes with the session state. Projector,
-viewed from 10 metres, nobody clicks anything.
+viewed from 10 metres. The one thing clickable on it is **Start the quiz** on
+D1 — the host is usually standing at the screen, not at the laptop.
 
 | # | Screen | When |
 | --- | --- | --- |
-| D1 | Giant QR + the join count | `lobby` |
+| D1 | Giant QR + the join count + a Start button | `lobby` |
 | D2 | The question, options and countdown | `question` |
 | D3 | The correct answer + live leaderboard | `reveal` |
 | D4 | The winner / top 3 | `podium` |
@@ -145,7 +146,7 @@ the original plan — noted underneath.
 | `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
 | `admin` | `QuizRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController` | A1, A2, A3 |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
-| `display` | — (reads the session) | `useDisplayController` | D1–D5 |
+| `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
 **Deviation 1 — no separate `leaderboard` and `prizes` features.** Scoring rules
 and prize shuffling are read by all three surfaces, so by CLAUDE.md's own rule
@@ -197,7 +198,10 @@ Phase 3 is done, and this is where the original prediction was not quite right:
   changed by one line.
 - Auto-closing a question when time is up moved from `useLiveController` to the
   server: there must be exactly one clock, and the game must not hang when the
-  admin locks their screen.
+  admin locks their screen. The same tick later grew **auto mode**
+  (`setAutoAdvance` + `revealEndsAt`), on by default, which holds a revealed
+  answer for 6 seconds and then moves on, up to the final results but no
+  further.
 - Added an `isOffline` flag plus the disconnect banner. No loading flag was
   needed: `read()` is still synchronous, it just reads the latest snapshot.
 - The player resends `join` when the session no longer knows their name (after a

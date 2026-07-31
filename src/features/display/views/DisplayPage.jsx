@@ -1,5 +1,6 @@
-import { Gift, MonitorOff, Trophy, Users } from 'lucide-react'
+import { Gift, MonitorOff, Play, Trophy, Users } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
+import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import JoinQr from '@common/views/JoinQr.jsx'
@@ -47,6 +48,23 @@ function DisplayBody({ display }) {
           </p>
 
           <PlayerWall players={display.players} />
+
+          {/* Starting from the big screen saves the host walking back to the
+              laptop. Disabled until someone has joined: a round started in front
+              of an empty hall cannot be rewound, only cancelled from the desk. */}
+          <Button
+            variant="primary"
+            className="px-10 py-5 text-3xl"
+            disabled={display.playerCount === 0}
+            onClick={display.start}
+          >
+            <Play className="size-8" aria-hidden="true" />
+            Start the quiz
+          </Button>
+
+          {display.playerCount === 0 && (
+            <p className="text-xl">Waiting for the first player to join.</p>
+          )}
         </div>
       </DisplayShell>
     )

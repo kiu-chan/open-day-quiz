@@ -21,6 +21,7 @@ import ProgressBar from '@common/views/ProgressBar.jsx'
 import { useLiveController } from '../controllers/useLiveController.js'
 import AdminShell from './components/AdminShell.jsx'
 import AnswerTally from './components/AnswerTally.jsx'
+import AutoToggle from './components/AutoToggle.jsx'
 import JoinLinkCard from './components/JoinLinkCard.jsx'
 import Panel from './components/Panel.jsx'
 import PlayerList from './components/PlayerList.jsx'
@@ -41,9 +42,15 @@ function ActionBar({ children }) {
   )
 }
 
-function IdlePage() {
+function IdlePage({ live }) {
   return (
-    <AdminShell current="live" title="Control desk">
+    <AdminShell
+      current="live"
+      title="Control desk"
+      // Auto mode can be armed before the round starts — it carries into the
+      // session the admin is about to open.
+      actions={<AutoToggle isOn={live.isAuto} onToggle={live.setAuto} />}
+    >
       <Panel dashed className="items-center py-14 text-center">
         <MessageCircleQuestion
           className="text-text-h size-10"
@@ -76,7 +83,12 @@ function LiveBody({ live }) {
           ? `Question ${live.questionNumber} of ${live.total}`
           : 'The round is running on the big screen'
       }
-      actions={<StateBadge state={live.state} />}
+      actions={
+        <>
+          <AutoToggle isOn={live.isAuto} onToggle={live.setAuto} />
+          <StateBadge state={live.state} />
+        </>
+      }
     >
       <ProgressBar value={live.progress} />
 
@@ -100,6 +112,8 @@ function LiveBody({ live }) {
               {live.playerCount === 0
                 ? 'Waiting for at least one player to join.'
                 : `${live.playerCount} player(s) ready.`}
+              {live.isAuto &&
+                ' Auto is on — the round runs itself to the final results.'}
             </span>
             <Button variant="quiet" className="ml-auto" onClick={live.cancel}>
               <X className="size-4" aria-hidden="true" />
@@ -188,6 +202,15 @@ function LiveBody({ live }) {
               <ArrowRight className="size-5" aria-hidden="true" />
               {live.isLastQuestion ? 'See results' : 'Next question'}
             </Button>
+            {live.isAuto && (
+              <span className="text-sm opacity-70">
+                Auto is on —{' '}
+                {live.isLastQuestion
+                  ? 'the final results appear'
+                  : 'the next question starts'}{' '}
+                in {live.autoSecondsLeft}s. Press to go now.
+              </span>
+            )}
           </ActionBar>
         </>
       )}
@@ -282,7 +305,11 @@ function AdminLivePage() {
   return (
     <>
       <ConnectionBanner isOffline={live.isOffline} />
-      {live.state === SESSION_STATES.IDLE ? <IdlePage /> : <LiveBody live={live} />}
+      {live.state === SESSION_STATES.IDLE ? (
+        <IdlePage live={live} />
+      ) : (
+        <LiveBody live={live} />
+      )}
     </>
   )
 }

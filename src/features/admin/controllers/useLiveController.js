@@ -21,7 +21,9 @@ function joinUrl() {
 
 export function useLiveController() {
   const { session, isOffline, send } = useSession()
-  const now = useNow(session.isCounting)
+  // Two things count down here: the question, and the revealed answer while
+  // auto mode is armed.
+  const now = useNow(session.isCounting || session.revealEndsAt !== null)
 
   const start = useCallback(() => send({ type: 'start' }), [send])
   const reveal = useCallback(() => send({ type: 'reveal' }), [send])
@@ -32,6 +34,10 @@ export function useLiveController() {
   )
   const cancel = useCallback(() => send({ type: 'cancel' }), [send])
   const reset = useCallback(() => send({ type: 'reset' }), [send])
+  const setAuto = useCallback(
+    (enabled) => send({ type: 'setAutoAdvance', enabled }),
+    [send],
+  )
 
   const state = useMemo(() => {
     const leaderboard = session.leaderboard
@@ -46,6 +52,8 @@ export function useLiveController() {
       isLastQuestion: session.isLastQuestion,
       progress: session.progress,
       secondsLeft: session.remainingSeconds(now),
+      isAuto: session.autoAdvance,
+      autoSecondsLeft: session.autoRemainingSeconds(now),
       players: session.players,
       playerCount: session.playerCount,
       answeredCount: session.answeredCount,
@@ -60,5 +68,14 @@ export function useLiveController() {
     }
   }, [session, now, isOffline])
 
-  return { ...state, start, reveal, goNext, announceWinner, cancel, reset }
+  return {
+    ...state,
+    start,
+    reveal,
+    goNext,
+    announceWinner,
+    cancel,
+    reset,
+    setAuto,
+  }
 }

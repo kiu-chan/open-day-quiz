@@ -45,7 +45,7 @@ function commit(next) {
  */
 function reduce(session, intent, now) {
   switch (intent.type) {
-    case 'openLobby':
+    case 'openLobby': {
       // Opening a new session means cancelling the running one: the state
       // machine only enters the lobby from idle, so reset first.
       //
@@ -53,17 +53,25 @@ function reduce(session, intent, now) {
       // one handed to a different visitor between rounds sees an id it does not
       // recognise and asks for a name again, instead of playing on as whoever
       // held it last.
-      return session.reset().openLobby(Quiz.fromJSON(intent.quiz), newId('session'))
+      const lobby = session
+        .reset()
+        .openLobby(Quiz.fromJSON(intent.quiz), newId('session'))
+      // Auto mode is how the host runs the stand, not part of the round, so it
+      // carries over instead of having to be switched on again every round.
+      return lobby.setAutoAdvance(session.autoAdvance, now)
+    }
     case 'cancel':
       return session.cancel()
     case 'start':
       return session.start(now)
     case 'reveal':
-      return session.reveal()
+      return session.reveal(now)
     case 'next':
       return session.next(now)
     case 'announceWinner':
       return session.announceWinner(intent.winnerId)
+    case 'setAutoAdvance':
+      return session.setAutoAdvance(intent.enabled === true, now)
     case 'reset':
       return session.reset()
     case 'join':
@@ -113,15 +121,20 @@ export const sessionStore = {
 }
 
 /**
- * Close the question automatically when time is up. This belongs to the server
- * because there must be exactly one clock: the admin tab used to do it, but if
- * phones and the projector closed questions too, each would close at a slightly
- * different moment — and if the admin locked their screen, the game would hang
- * on the current question forever.
+ * Close the question automatically when time is up, and — in auto mode — move
+ * on from the revealed answer to the next question or to the final results.
+ * This belongs to the server because there must be exactly one clock: the admin
+ * tab used to do it, but if phones and the projector closed questions too, each
+ * would close at a slightly different moment — and if the admin locked their
+ * screen, the game would hang on the current question forever.
+ *
+ * Both steps go through the same model actions the admin's buttons send, so
+ * auto mode cannot reach a state a host could not reach by hand.
  */
 const ticker = setInterval(() => {
   const now = Date.now()
-  if (current.isCounting && current.isTimeUp(now)) commit(current.reveal())
+  if (current.isCounting && current.isTimeUp(now)) commit(current.reveal(now))
+  else if (current.isAutoDue(now)) commit(current.next(now))
 }, TICK_MS)
 
 // Only the HTTP server should keep the process alive; this ticker should not.

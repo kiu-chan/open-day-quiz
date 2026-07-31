@@ -59,10 +59,10 @@ pick a jpg/png/webp/gif file.
 | --- | --- | --- | --- |
 | 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
 | 2 | Visitors scan the QR, enter a name and pick an animal | "You're in, waiting to start" | their animal appearing on the wall, the count going up |
-| 3 | Press **Start** | 4 option tiles + a clock | the question in large type + a clock |
+| 3 | Press **Start** — on the control desk, or **Start the quiz** on the big screen itself | 4 option tiles + a clock | the question in large type + a clock |
 | 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
-| 5 | Press **Next question** | the new question | the new question |
-| 6 | After the last question, press **See results** | their own rank + the top 3 | the leaderboard |
+| 5 | Nothing — auto mode starts the next question after 6s (or press **Next question**) | the new question | the new question |
+| 6 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
 | 7 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
 | 8 | The winner picks a box | the prize name | the box opens, prize name in large type |
 | 9 | Press **End session** | back to the waiting screen | back to the waiting screen |
@@ -71,14 +71,38 @@ pick a jpg/png/webp/gif file.
 the big screen — to blow it up full screen. Click anywhere or press `Esc` to
 close.
 
-Only the control desk issues control commands. Phones only send answers and the
-prize pick; the projector only reads. Every change goes through the server, so
-the three screens always agree — the projector can never be on question 3 while
-the phones are still on question 2.
+Control commands come from the control desk, with one exception: the big screen
+has its own **Start the quiz** button under the QR code, so the host standing at
+the screen does not have to walk back to the laptop to begin. It is greyed out
+until the first player has joined, and it is the only button on the projector —
+everything after the start still comes from the desk. Phones only send answers
+and the prize pick. Every change goes through the server, so the three screens
+always agree — the projector can never be on question 3 while the phones are
+still on question 2.
 
 When time runs out the **server** closes the question, not the admin tab. The
 admin locking their screen or closing the tab mid-round does not hang the game;
 reopening shows the current state.
+
+### Auto mode
+
+**Auto mode is on by default**, because at a stand nobody is watching the
+laptop. The round runs itself: the question closes when its clock runs out, the
+answer stays up for 6 seconds, and then the next question starts — all the way
+to the final results.
+
+The **Auto on / Auto off** button sits next to the state badge on the control
+desk. Switch it off if you want to talk the hall through each answer yourself.
+
+- It can be switched on and off at any moment, including mid-question, and the
+  choice carries over to the next round.
+- Steps 4, 5 and 6 of the table above happen by themselves. The buttons keep
+  working: pressing **Next question** during the 6-second pause goes now instead
+  of waiting.
+- **Auto stops at the final results.** Announcing the winner, the prize boxes
+  and ending the session are still yours to press — a tie for first place needs
+  somebody to choose, and a prize needs somebody to hand it over.
+- The pause is timed by the server, so it is the same on every screen.
 
 ## Scoring
 

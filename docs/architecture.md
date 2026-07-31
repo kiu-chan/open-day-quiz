@@ -129,6 +129,14 @@ server broadcasts the outcome. Auto-closing a question when time is up belongs t
 the server too: there must be exactly one clock, and the game must not hang when
 the admin locks their screen.
 
+The same server tick drives **auto mode** (the *Auto* button on the control
+desk, on by default): with `autoAdvance` on, `reveal` stamps a `revealEndsAt` deadline and the
+tick calls `next()` once it passes, walking the round from question to reveal to
+the next question and finally to the podium. It reuses the very transitions the
+admin's buttons send, so auto mode can never reach a state a host could not
+reach by hand — and it deliberately stops at the podium, because a tie for first
+place needs a human to choose the winner.
+
 ## Three technical decisions worth remembering
 
 **The countdown stores an end timestamp, not "N seconds left".** The session
