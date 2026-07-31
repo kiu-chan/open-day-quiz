@@ -66,16 +66,28 @@ export function usePlayerController() {
    */
   const joinedHere = useRef(false)
 
+  /** Set while a request to give the seat back is in flight — see `leave`. */
+  const [isLeaving, setIsLeaving] = useState(false)
+
   /**
    * The stored identity, but only while it belongs to the session on screen.
    * Checked on every render rather than once at mount: the phone is sitting on
    * the lobby screen when the admin opens the next round, and it has to notice
    * the switch as it happens.
    */
-  const identity =
+  const claimed =
     stored && session.id && stored.sessionId === session.id ? stored : null
 
-  const me = identity ? session.findPlayer(identity.id) : null
+  const me = claimed ? session.findPlayer(claimed.id) : null
+
+  /**
+   * The seat we asked to give up is gone from the session: stop being that
+   * player in this very render, rather than waiting for the effect below to
+   * clear the storage. One render as "a player the session does not know" is
+   * enough for the join form to mount carrying the old name.
+   */
+  const hasLeft = isLeaving && me === null
+  const identity = hasLeft ? null : claimed
 
   /**
    * Reopening the page before the game starts means "let me do that again".
@@ -112,16 +124,29 @@ export function usePlayerController() {
   )
 
   /**
-   * Hand the seat back: the name and the animal return to the pool and the join
-   * form comes up blank. Used both by the Back button and by a reload in the
+   * Ask for the seat back. Used by both the Back button and a reload in the
    * lobby, so the two routes cannot drift apart.
+   *
+   * It only *asks*. Forgetting the identity here would be the client deciding an
+   * outcome that belongs to the server, and when the server disagrees the phone
+   * lands on a join form it cannot get out of: the old player still holds the
+   * animal, so picking it again is refused, and there is nothing on screen to
+   * explain why. Waiting for the snapshot costs a few milliseconds and makes the
+   * failure honest — the waiting screen simply stays put.
    */
   const leave = useCallback(() => {
-    if (!identity) return
+    if (!identity || isLeaving) return
+    setIsLeaving(true)
     send({ type: 'leave', playerId: identity.id })
+  }, [identity, isLeaving, send])
+
+  /** The seat is really gone: now the stored identity can go too. */
+  useEffect(() => {
+    if (!hasLeft) return
     localStorage.removeItem(IDENTITY_KEY)
     setStored(null)
-  }, [identity, send])
+    setIsLeaving(false)
+  }, [hasLeft])
 
   /**
    * We asked for an animal and somebody else got there first. Only possible in
@@ -139,6 +164,9 @@ export function usePlayerController() {
    * the join form appears instead.
    * The model's `join` ignores players who already exist, so calling it
    * repeatedly is harmless.
+   *
+   * A seat being given up cannot trip this: `identity` is already null by the
+   * time the session stops knowing us, so there is nothing left to rejoin as.
    */
   useEffect(() => {
     if (!identity || me || session.isIdle || avatarTaken || isRestarting) return

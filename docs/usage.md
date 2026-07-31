@@ -141,6 +141,13 @@ to one player, so 50 is the ceiling for a single round. There is no way round it
 on the day; the fix is to add more animations before the next one, which
 [docs/credits.md](credits.md) explains.
 
+**Change name or animal does nothing, or the animal stays locked after
+leaving.** The page is talking to a server that predates the feature. Stop it and
+run `npm run dev` (or `npm run start`) again: `npm run dev` reloads the pages
+whenever you edit them, but the game server it mounts alongside them is a Node
+module loaded once at startup, so changes under `server/` only take effect on a
+restart.
+
 **A phone shows the black "Lost connection to the server" banner.** That device
 dropped off the wifi, or the server is down. Nothing to do — the page reconnects
 and the banner disappears by itself. If the whole room shows it, check the wifi

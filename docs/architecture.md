@@ -184,6 +184,16 @@ page load inherited rather than created. The check waits for the first SSE
 snapshot rather than running at mount, because at mount the session is still
 empty and a phone that reloaded mid-question would be thrown out of its own game.
 
+**Leaving only *asks*; the snapshot decides.** `leave()` sends the intent and
+nothing else — the stored identity is dropped when the session comes back
+without us, not when we ask. Clearing it optimistically was tried and is a trap:
+if the server does not carry out the leave, the phone lands on a join form it
+cannot get out of, because the old player still holds the animal, so picking it
+again is refused and nothing on screen explains why. Waiting for the snapshot
+costs milliseconds and makes the failure honest — the waiting screen stays put.
+The switch happens in the render that notices, not in the effect that follows
+it, so the join form never mounts carrying the previous name.
+
 **Scores are recomputed from the answers, not stored on the player.** With only a
 few dozen people and a handful of questions, recomputing is cheap, and it rules
 out stored scores drifting out of sync with the answers.
