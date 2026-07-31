@@ -19,9 +19,14 @@
  * The animals are handed out first come, first served, so the form works from
  * what is still free rather than from what this phone picked last time.
  *
+ * Within a session there is one more way out: while the game has not started, a
+ * player may hand the seat back and join again as somebody else — by pressing
+ * Back or simply by reloading. Once the first question is out, both stop
+ * working and a reload restores the seat instead.
+ *
  * Public API: usePlayerController()
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { newId } from '@common/ids.js'
 import {
   DEFAULT_AVATAR_ID,
@@ -55,6 +60,13 @@ export function usePlayerController() {
   const now = useNow(session.isCounting)
 
   /**
+   * Did this page load do the joining, or did it inherit a seat from the load
+   * before it? A ref, because it must start false on every fresh page load —
+   * that is exactly what tells a reload apart from an ordinary re-render.
+   */
+  const joinedHere = useRef(false)
+
+  /**
    * The stored identity, but only while it belongs to the session on screen.
    * Checked on every render rather than once at mount: the phone is sitting on
    * the lobby screen when the admin opens the next round, and it has to notice
@@ -64,6 +76,18 @@ export function usePlayerController() {
     stored && session.id && stored.sessionId === session.id ? stored : null
 
   const me = identity ? session.findPlayer(identity.id) : null
+
+  /**
+   * Reopening the page before the game starts means "let me do that again".
+   * Someone who mistyped their name or regrets their animal reaches for reload
+   * long before they look for a button, and in the lobby there is nothing to
+   * lose by honouring it — no score exists yet.
+   *
+   * After the first question this is deliberately dead: there a reload is a
+   * dropped connection, not a change of mind, and it has to restore the seat.
+   */
+  const isRestarting =
+    identity !== null && !joinedHere.current && session.isLobby
 
   const join = useCallback(
     (name, avatarId) => {
@@ -81,10 +105,23 @@ export function usePlayerController() {
       }
       localStorage.setItem(IDENTITY_KEY, JSON.stringify(next))
       setStored(next)
+      joinedHere.current = true
       send({ type: 'join', ...next })
     },
     [session.id, send],
   )
+
+  /**
+   * Hand the seat back: the name and the animal return to the pool and the join
+   * form comes up blank. Used both by the Back button and by a reload in the
+   * lobby, so the two routes cannot drift apart.
+   */
+  const leave = useCallback(() => {
+    if (!identity) return
+    send({ type: 'leave', playerId: identity.id })
+    localStorage.removeItem(IDENTITY_KEY)
+    setStored(null)
+  }, [identity, send])
 
   /**
    * We asked for an animal and somebody else got there first. Only possible in
@@ -104,9 +141,18 @@ export function usePlayerController() {
    * repeatedly is harmless.
    */
   useEffect(() => {
-    if (!identity || me || session.isIdle || avatarTaken) return
+    if (!identity || me || session.isIdle || avatarTaken || isRestarting) return
     send({ type: 'join', ...identity })
-  }, [identity, me, session.isIdle, avatarTaken, send])
+  }, [identity, me, session.isIdle, avatarTaken, isRestarting, send])
+
+  /**
+   * Carry out the restart once the first snapshot has told us we really are in
+   * the lobby. It cannot happen at mount: the session is still empty then, and
+   * a phone that reloaded mid-question would be thrown out of its own game.
+   */
+  useEffect(() => {
+    if (isRestarting) leave()
+  }, [isRestarting, leave])
 
   const answer = useCallback(
     (optionIndex) => {
@@ -155,6 +201,8 @@ export function usePlayerController() {
       /** Every animal is spoken for: the round is full and nobody else can join. */
       isFull: firstFreeAvatarId(takenAvatarIds) === null,
       avatarTaken,
+      /** Offer the way back only while there is nothing to lose by taking it. */
+      canLeave: me !== null && session.isLobby,
       playerCount: session.playerCount,
       question: session.currentQuestion,
       questionNumber: session.questionNumber,
@@ -172,5 +220,5 @@ export function usePlayerController() {
     }
   }, [session, identity, me, now, isOffline, avatarTaken])
 
-  return { ...state, join, answer, pickBox }
+  return { ...state, join, leave, answer, pickBox }
 }

@@ -15,7 +15,7 @@
  *
  * Public API: SESSION_STATES, SessionModel.empty()/fromJSON(), the getters, and
  * the actions openLobby / cancel / start / reveal / next / announceWinner /
- * reset / join / submitAnswer.
+ * reset / join / leave / submitAnswer.
  */
 import { Leaderboard, pointsOf } from './Leaderboard.js'
 import { PrizeBoxes } from './PrizeBoxes.js'
@@ -176,6 +176,11 @@ export class SessionModel {
 
   get isIdle() {
     return this.state === SESSION_STATES.IDLE
+  }
+
+  /** Nobody has played a question yet — the only window in which a player may start over. */
+  get isLobby() {
+    return this.state === SESSION_STATES.LOBBY
   }
 
   get isCounting() {
@@ -375,6 +380,23 @@ export class SessionModel {
         // resolves the id, and falls back when it is unknown.
         { id, name: name.trim(), avatarId: avatar, joinedAt },
       ],
+    })
+  }
+
+  /**
+   * Give up a seat, freeing the name and the animal for somebody else.
+   *
+   * **Only from the lobby.** A visitor who mistyped their name or regrets their
+   * animal should be able to start over, but the moment the first question is
+   * out there are answers and a score attached to this player, and leaving would
+   * either throw those away or leave orphaned answers behind. So the window
+   * closes when the game starts, and everywhere else this returns `this`.
+   */
+  leave(playerId) {
+    if (!this.isLobby) return this
+    if (!this.findPlayer(playerId)) return this
+    return this.#with({
+      players: this.players.filter((player) => player.id !== playerId),
     })
   }
 

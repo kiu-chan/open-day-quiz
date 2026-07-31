@@ -73,6 +73,8 @@ function reduce(session, intent, now) {
         avatarId: intent.avatarId,
         joinedAt: now,
       })
+    case 'leave':
+      return session.leave(intent.playerId)
     case 'answer':
       return session.submitAnswer({
         playerId: intent.playerId,

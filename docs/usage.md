@@ -105,10 +105,18 @@ constant `PRIZES`.
 
 ## Troubleshooting
 
-**A visitor's phone locked or got refreshed.** Reopening the URL brings back the
-same person with their score intact — as long as it is still the same session.
-The identity is stored in that device's `localStorage` together with the id of
-the session it belongs to.
+**A visitor mistyped their name, or wants a different animal.** On the waiting
+screen there is a **Change name or animal** button: it hands the seat back and
+brings up the join form again, with the animal returned to the pool. Reloading
+the page does the same thing. Both only work **before you press Start** — once
+the first question is out, the choice is final for that round.
+
+**A visitor's phone locked or got refreshed.** Once the game is running,
+reopening the URL brings back the same person with their score intact — as long
+as it is still the same session. The identity is stored in that device's
+`localStorage` together with the id of the session it belongs to. In the lobby a
+reload deliberately does the opposite and starts over, which is what the point
+above is about.
 
 **Handing one phone to the next visitor.** Nothing to do: opening a new session
 makes every phone ask for a name and an animal again, whatever it played as last
@@ -121,9 +129,8 @@ whole thing fits on one phone screen. **Show all 50 animals** opens the rest, an
 
 **"The animal I wanted is greyed out."** Each animal belongs to one player per
 round — somebody got there first. The locked ones stay visible with a padlock so
-it is obvious what happened; any of the others is free. The choice cannot be
-changed once joined; if it really matters, cancel and reopen the session, and
-everyone picks again from scratch (and all scores reset).
+it is obvious what happened; any of the others is free. If the person holding it
+is still in the lobby and presses **Change name or animal**, it comes back.
 
 **"Somebody took that animal first. Pick another one."** Two phones tapped the
 same animal within the same instant and only one could have it. Tap a different

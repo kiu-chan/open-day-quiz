@@ -163,6 +163,27 @@ The consequence worth knowing: a **server restart also ends the session**, so
 everyone types their name again. That is the honest reading of RAM-only state —
 the old round is gone, so the old identities should be too.
 
+**Inside a session there is one way back, and it closes when the game starts.**
+A visitor who mistypes their name or regrets their animal can hand the seat back:
+`SessionModel.leave` drops the player and returns the name and the animal to the
+pool. It works from the lobby and nowhere else — the moment the first question is
+out, this player has answers and a score attached, and leaving would either throw
+those away or strand the answers.
+
+Two things trigger it and they share one code path so they cannot drift apart: a
+**Change name or animal** button on the waiting screen, and a **reload of the
+page**. Reload is in there because it is what people actually reach for, and in
+the lobby there is nothing to lose by honouring it. After the first question the
+same reload means the opposite — a dropped connection, not a change of mind — and
+restores the seat instead.
+
+Telling those two reloads apart needs no extra state on the wire: the controller
+keeps a `joinedHere` ref, which is false on every fresh page load and set by
+`join()`. An identity that exists while `joinedHere` is still false is one this
+page load inherited rather than created. The check waits for the first SSE
+snapshot rather than running at mount, because at mount the session is still
+empty and a phone that reloaded mid-question would be thrown out of its own game.
+
 **Scores are recomputed from the answers, not stored on the player.** With only a
 few dozen people and a handful of questions, recomputing is cheap, and it rules
 out stored scores drifting out of sync with the answers.

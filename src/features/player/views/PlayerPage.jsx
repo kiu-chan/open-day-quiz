@@ -1,5 +1,6 @@
-import { Check, Gift, Hourglass, MonitorOff, Trophy, X } from 'lucide-react'
+import { ArrowLeft, Check, Gift, Hourglass, MonitorOff, Trophy, X } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
+import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
@@ -72,6 +73,19 @@ function PlayerBody({ player }) {
           title="You're in, waiting to start"
           note={`${player.playerCount} waiting`}
         />
+
+        {/* The only way back, and only while it costs nothing: once the first
+            question is out there is a score attached to this seat. */}
+        {player.canLeave && (
+          <Button
+            variant="quiet"
+            onClick={player.leave}
+            className="self-center text-sm"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Change name or animal
+          </Button>
+        )}
       </PlayerShell>
     )
   }

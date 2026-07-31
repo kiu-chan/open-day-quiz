@@ -76,7 +76,7 @@ held portrait.
 | # | Screen | When |
 | --- | --- | --- |
 | P1 | Enter a name to join | arrived from the QR, no name yet |
-| P2 | Waiting in the lobby | has a name, session not started |
+| P2 | Waiting in the lobby | has a name, session not started; the only screen with a way back to P1 |
 | P3 | Answering a question | `question` — 4 large tiles, a clock, locks after tapping |
 | P4 | Right/wrong + points | `reveal` |
 | P5 | Their own rank | `podium` |
@@ -124,6 +124,10 @@ score instead of creating a new player — but stamped with the session id, so i
 only counts for the round it was created in. One phone at a stand is played by a
 stream of different visitors, and the next one must not inherit the last one's
 name, animal and seat.
+
+The same reload means the opposite **before** the game starts, where there is no
+score to protect: it hands the seat back so a mistyped name or a regretted animal
+can be redone, which the **Change name or animal** button on P2 also does.
 
 ---
 
