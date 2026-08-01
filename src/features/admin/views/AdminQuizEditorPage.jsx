@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import {
   ArrowLeft,
   Check,
   ListChecks,
   LoaderCircle,
+  PencilLine,
   Plus,
+  Save,
   Timer,
   TriangleAlert,
 } from 'lucide-react'
@@ -13,16 +16,20 @@ import {
   MIN_DURATION_SECONDS,
 } from '@common/session/models/Question.js'
 import { useQuizEditorController } from '../controllers/useQuizEditorController.js'
+import Button from '@common/views/Button.jsx'
 import AdminShell from './components/AdminShell.jsx'
 import Panel from './components/Panel.jsx'
 import QuestionEditor from './components/QuestionEditor.jsx'
+import SaveDialog from './components/SaveDialog.jsx'
 
 /**
- * Whether the last change reached the server. Saving is a network round trip
- * now, so this has to be shown rather than assumed — the icon carries the
- * meaning, the colour never does.
+ * Whether what is on screen is what the server holds. Nothing is written until
+ * the Save button is pressed, so this badge is the only thing telling an admin
+ * their work is still only in this tab — the icon carries the meaning, the
+ * colour never does.
  */
 const SAVE_BADGES = {
+  unsaved: { Icon: PencilLine, label: 'Unsaved changes', iconClass: '' },
   saving: { Icon: LoaderCircle, label: 'Saving…', iconClass: 'animate-spin' },
   saved: { Icon: Check, label: 'Saved', iconClass: '' },
   error: {
@@ -34,9 +41,12 @@ const SAVE_BADGES = {
 
 function SaveBadge({ state }) {
   const { Icon, label, iconClass } = SAVE_BADGES[state]
-  // A failed save is marked by a heavier dashed border, not by a colour.
+  // Anything not safely on the server is marked by a heavier dashed border,
+  // not by a colour.
   const border =
-    state === 'error' ? 'border-accent-border border-2 border-dashed' : 'border-border'
+    state === 'error' || state === 'unsaved'
+      ? 'border-accent-border border-2 border-dashed'
+      : 'border-border'
 
   return (
     <span
@@ -50,6 +60,9 @@ function SaveBadge({ state }) {
 
 function AdminQuizEditorPage({ quizId }) {
   const editor = useQuizEditorController(quizId)
+  // Whether the save confirmation is up. Purely local: the controller owns what
+  // saving *is*, this only owns whether the dialog is on screen.
+  const [isConfirming, setIsConfirming] = useState(false)
 
   if (editor.loadError) {
     return (
@@ -115,8 +128,20 @@ function AdminQuizEditorPage({ quizId }) {
     <AdminShell
       current="list"
       title="Edit quiz"
-      subtitle="Every change is saved on the server right away"
-      actions={<SaveBadge state={editor.saveState} />}
+      subtitle="Changes stay in this tab until you save them"
+      actions={
+        <>
+          <SaveBadge state={editor.saveState} />
+          <Button
+            variant="primary"
+            disabled={!editor.hasUnsavedChanges}
+            onClick={() => setIsConfirming(true)}
+          >
+            <Save className="size-4" aria-hidden="true" />
+            Save
+          </Button>
+        </>
+      }
     >
       <Panel>
         <label className="flex flex-col gap-2 text-sm" htmlFor="quiz-title">
@@ -236,7 +261,7 @@ function AdminQuizEditorPage({ quizId }) {
         Add question
       </button>
 
-      <footer className="border-border mt-auto border-t pt-4 text-sm">
+      <footer className="border-border mt-auto flex flex-wrap items-center gap-3 border-t pt-4 text-sm">
         <a
           href={`#${ROUTES.ADMIN}`}
           className="inline-flex items-center gap-2 no-underline"
@@ -244,7 +269,27 @@ function AdminQuizEditorPage({ quizId }) {
           <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
           Back to the quiz list
         </a>
+
+        {/* Leaving the page throws the edits away, so say so next to the way out. */}
+        {editor.hasUnsavedChanges && (
+          <span className="flex items-center gap-1.5 text-xs">
+            <TriangleAlert
+              className="size-4 shrink-0"
+              aria-label="Unsaved changes"
+            />
+            Unsaved changes — leaving now loses them.
+          </span>
+        )}
       </footer>
+
+      {isConfirming && (
+        <SaveDialog
+          quiz={quiz}
+          state={editor.saveState}
+          onConfirm={editor.save}
+          onClose={() => setIsConfirming(false)}
+        />
+      )}
     </AdminShell>
   )
 }

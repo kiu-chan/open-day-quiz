@@ -181,7 +181,7 @@ realtime decision is deferred as long as possible**.
 | Phase | Content | Status |
 | --- | --- | --- |
 | **0. Foundations** | 5-route routing; the `common/session` state machine; a session repository backed by `localStorage` | ✅ done |
-| **1. Quiz editing** | A1 + A2, autosaved after every change | ✅ done — storage later moved from `localStorage` to `server/quizzes.json`, so a quiz belongs to the event rather than to one browser |
+| **1. Quiz editing** | A1 + A2, saved on demand from a Save button with a confirmation dialog | ✅ done — storage later moved from `localStorage` to `server/quizzes.json`, so a quiz belongs to the event rather than to one browser |
 | **2. Single-machine round** | A3 + P1–P4 + D1–D3 | ✅ done — works across several tabs on one machine, not just one tab |
 | **3. Realtime** | A Node server on the LAN holding the state; `SessionRepository` switched to SSE + POST intents | ✅ done |
 | **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done — a `standings` step showing the top 10 with the rank change and a climbing score was added between the answer and the next question afterwards |

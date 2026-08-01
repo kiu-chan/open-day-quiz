@@ -41,8 +41,10 @@ not put on the projector.
 
 1. Run `npm run start` and note the IP address it prints (for example
    `http://192.168.1.20:3000`).
-2. Open `#/admin` using that address and write your questions. Everything saves
-   itself — there is no Save button.
+2. Open `#/admin` using that address and write your questions. Nothing reaches
+   the server until you press **Save** and confirm it in the dialog that comes
+   up; until then the badge next to the button reads "Unsaved changes" and
+   closing the tab asks you first.
 3. Set the countdown (5–120 seconds). **Countdown for every question** at the top
    of the editor sets the whole set at once; the field under each question sets
    that one alone, and long, wordy questions deserve more time. The quiz-wide

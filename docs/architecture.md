@@ -308,11 +308,15 @@ Plain REST is enough:
 Two details worth knowing. Everything written goes through `Quiz.fromJSON(…)
 .toJSON()` on the way in, so the file only ever holds the canonical shape and the
 rules stay in one copy — the same reasoning as `sessionStore` importing
-`SessionModel`. And because the editor saves on every keystroke, several requests
-are in flight at once: `quizStore` chains its writes through one promise so two
-`writeFile` calls cannot interleave, while the editor controller lets only the
-newest request update the "Saved" badge so a slow early reply cannot claim a
-later change has landed.
+`SessionModel`. And a `PUT` overwrites the quiz every session is opened from, so
+the editor does not send one behind the admin's back: edits live in the
+controller's own state, the Save button asks for confirmation in `SaveDialog`,
+and only that dialog calls `save()`. `saveState` ('unsaved' → 'saving' → 'saved'
+| 'error') is what the badge and the dialog both read, and while it is 'unsaved'
+the controller keeps a `beforeunload` guard on the window so a closed tab cannot
+take the work quietly. Writes still cannot interleave server-side either:
+`quizStore` chains them through one promise, which also covers two admins editing
+from different machines.
 
 `QuizRepository` is where all of this stops: every method became `async` and
 `localStorage` became `fetch`, and nothing outside the admin controllers noticed

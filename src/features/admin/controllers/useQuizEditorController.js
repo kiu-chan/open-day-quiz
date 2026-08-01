@@ -1,15 +1,13 @@
 /**
  * Controller of the quiz editor page (A2).
  *
- * Saves immediately after every change instead of having a "Save" button: the
- * prototype has no undo, and retyping a whole question set because a tab was
- * closed by accident is thoroughly annoying.
+ * Edits stay in the browser until the admin presses "Save": the quiz on the
+ * server is the one every session is opened from, so overwriting it is a
+ * deliberate act, not something a keystroke does behind the editor's back.
  *
- * The save goes to the server and the local state is updated *first*, without
- * waiting for it: typing must never wait for a round trip. What the round trip
- * feeds is `saveState`, so the page can show whether the last change actually
- * landed — with the writing now happening over the network, "saved" stops being
- * something the page may simply assume.
+ * The price of that is work that only exists in this tab, so `saveState` tracks
+ * it ('unsaved' the moment anything changes) and a `beforeunload` guard makes
+ * the browser ask before a reload or a closed tab takes it away.
  *
  * Every editing rule (where `correctIndex` goes when an option is removed, the
  * minimum duration, reordering questions) lives in Quiz/Question — this file
@@ -17,7 +15,7 @@
  *
  * Public API: useQuizEditorController(quizId)
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { newId } from '@common/ids.js'
 import { Question } from '@common/session/models/Question.js'
 import { imageRepository } from '../models/ImageRepository.js'
@@ -32,7 +30,7 @@ export function useQuizEditorController(quizId) {
   const [quiz, setQuiz] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
-  /** 'saved' | 'saving' | 'error' */
+  /** 'saved' | 'unsaved' | 'saving' | 'error' */
   const [saveState, setSaveState] = useState('saved')
 
   useEffect(() => {
@@ -55,25 +53,35 @@ export function useQuizEditorController(quizId) {
     }
   }, [quizId])
 
+  const hasUnsavedChanges = saveState === 'unsaved' || saveState === 'error'
+
   /**
-   * Typing fires one save per keystroke, so several are in flight at once and
-   * they can come back out of order. Each save takes a ticket and only the
-   * newest one is allowed to set the badge — otherwise a slow early response
-   * would report "saved" over a later change that has not landed yet.
+   * Nothing but a closed tab can take unsaved questions away, so let the browser
+   * ask first. It only warns while there is something to lose.
    */
-  const latestSave = useRef(0)
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
 
-  const save = useCallback(async (next) => {
-    const ticket = (latestSave.current += 1)
+    const warn = (event) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasUnsavedChanges])
+
+  /**
+   * Write the quiz to the server. Called by the page once the admin has
+   * confirmed it in the dialog, never by an edit.
+   */
+  const save = useCallback(async () => {
+    if (!quiz) return
+
     setSaveState('saving')
-
     try {
-      await quizRepository.save(next)
-      if (latestSave.current === ticket) setSaveState('saved')
+      await quizRepository.save(quiz)
+      setSaveState('saved')
     } catch {
-      if (latestSave.current === ticket) setSaveState('error')
+      setSaveState('error')
     }
-  }, [])
+  }, [quiz])
 
   const apply = useCallback(
     (mutate) => {
@@ -82,9 +90,9 @@ export function useQuizEditorController(quizId) {
       if (next === quiz) return
 
       setQuiz(next)
-      save(next)
+      setSaveState('unsaved')
     },
-    [quiz, save],
+    [quiz],
   )
 
   /** Edit one question in place: takes the old question, returns the new one. */
@@ -191,6 +199,8 @@ export function useQuizEditorController(quizId) {
     isLoading,
     loadError,
     saveState,
+    hasUnsavedChanges,
+    save,
     notFound: !isLoading && !loadError && quiz === null,
     errors: quiz?.errors ?? [],
     setTitle,
