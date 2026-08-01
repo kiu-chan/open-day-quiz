@@ -27,7 +27,9 @@ View  →  Controller  →  Model
   rules.
 - **View** — JSX and Tailwind classes only. Only page-level views (`*Page.jsx`)
   may call a controller hook; components under `views/components/` are pure
-  functions of their props.
+  functions of their props. Two shared views in `common/views/` run animation
+  machinery a render cannot express — `PlayerAvatar` drives `lottie-web` and
+  `ScoreCounter` a counting hook — and both are noted where they come up below.
 
 **The single exception:** repositories live in `models/` but are allowed to touch
 I/O (network, `localStorage`) — that is precisely why they exist. They are the
@@ -58,15 +60,17 @@ src/
 │   │   │   ├── SessionRepository.js #  I/O: SSE in, POST intents out
 │   │   │   ├── Quiz.js            #   the quiz (+ its editing methods)
 │   │   │   ├── Question.js        #   a question, right/wrong marking, duration
-│   │   │   ├── Leaderboard.js     #   scoring, ranking, ties
+│   │   │   ├── Leaderboard.js     #   scoring, ranking, ties, the top-ten movement
 │   │   │   ├── PrizeBoxes.js      #   the prize catalogue + the shuffle (Fisher–Yates)
 │   │   │   ├── Avatars.js         #   the 12 animals a player can pick
 │   │   │   └── data/avatars/      #   their Lottie files (see docs/credits.md)
 │   │   └── controllers/
 │   │       ├── useSession.js      #   listens to the server + sends intents
-│   │       └── useNow.js          #   the clock tick for countdowns
+│   │       ├── useNow.js          #   the clock tick for countdowns
+│   │       └── useCountUp.js      #   the ticker a climbing score is drawn from
 │   └── views/                     # Button, Countdown, ProgressBar,
-│                                  # LeaderboardTable, JoinQr, ConnectionBanner,
+│                                  # LeaderboardTable, StandingsBoard,
+│                                  # ScoreCounter, JoinQr, ConnectionBanner,
 │                                  # PlayerAvatar, PrizeBoxRow + PrizeBox
 │                                  # + PrizeCelebration, QuizImage
 └── features/
@@ -96,7 +100,7 @@ The three screens **are not three applications**. All three read the same
 | --- | --- | --- | --- |
 | `lobby` | the join list, Start button | "Waiting..." | large QR + join count |
 | `question` | how many have answered | 4 tappable tiles | the question in huge type + clock |
-| `reveal` | the pick distribution, Next button | right/wrong + points | the correct answer |
+| `reveal` | the pick distribution, Next button | right/wrong + points + the top ten | the correct answer + the top ten |
 | `podium` | the leaderboard, Announce button | their own rank | the top 3 |
 | `prize` | waiting | 3 boxes (winner only) | 3 boxes, prize opening |
 
@@ -526,6 +530,42 @@ streamers set a `--stagger` that the animation adds to that shared start time
 as one mechanical pulse. The reduced-motion block has to zero `animation-delay`
 as well as the durations — shortening a duration does not shorten a delay, and
 the whole reveal is delays.
+
+## The standings between two questions
+
+At every reveal the phone and the projector show the **top ten** with the move
+each player has just made: their new rank, how many places they gained or lost,
+and the rank they came from.
+
+**Nothing about "before" is stored.** `SessionModel.previousLeaderboard` runs the
+same scoring a second time over the answers with the current question's left out,
+and `Leaderboard.movementFrom(previous)` joins the two rankings into rows
+carrying `previousRank`, `previousScore`, `previousIndex` and `rankDelta`.
+Keeping a snapshot of the last ranking on the session would be a second source of
+truth for something the answers already say, and it would have to survive a
+reconnect. Both are getters, so a device that joins mid-round computes the same
+rows as everyone else from the snapshot it is handed.
+
+Before the first question is scored the comparison is deliberately empty: at that
+point everybody is level, and marking every row as "changed" says nothing. Those
+rows draw no move at all, and their scores count up from zero.
+
+`StandingsBoard` is a separate view from `LeaderboardTable` rather than a variant
+of it, because it draws something the table has no use for: its rows are
+**positioned by hand** at a fixed height so each one can travel from the place it
+held to the place it holds now. The order of the three beats is what makes it
+read as a change — the board appears in the **old** order, the scores tick up,
+and only then do the rows slide past each other. A list that arrives already
+sorted shows no movement, which is the one thing it is there for.
+
+The travelling is CSS again (`animate-rank-slide`, with `--rank-from` /
+`--rank-to` set per row and `both` parking the row at its old place for the
+length of the delay), so it needs no measurement and no timer. The **score** is
+the exception: a number cannot be counted up in CSS, so `useCountUp` ticks it
+with `requestAnimationFrame` and `ScoreCounter` draws it. That hook sits in
+`common/session/controllers/` with `useNow` because it owns a timer, and it also
+has to check `prefers-reduced-motion` itself — the global CSS rule that flattens
+every animation cannot reach a number counted in JavaScript.
 
 ## Adding a feature
 

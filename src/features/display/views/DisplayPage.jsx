@@ -9,6 +9,7 @@ import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
+import StandingsBoard from '@common/views/StandingsBoard.jsx'
 import { useDisplayController } from '../controllers/useDisplayController.js'
 import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
@@ -104,26 +105,46 @@ function DisplayBody({ display }) {
         )}
 
         {/* The image is capped by viewport height so the four option tiles below
-            can never be pushed off the projected area. */}
+            can never be pushed off the projected area — and capped harder at the
+            reveal, where the standings share the screen with them. */}
         <QuizImage
           src={display.question.image}
           alt="Question image"
-          className="mx-auto max-h-[36vh] w-auto"
+          className={`mx-auto w-auto ${
+            isRevealed ? 'max-h-[18vh]' : 'max-h-[36vh]'
+          }`}
         />
 
-        <ul className="grid gap-4 lg:grid-cols-2">
-          {display.question.options.map((option, i) => (
-            <BigOption
-              key={i}
-              label={display.question.labelOf(i)}
-              text={option}
-              image={display.question.imageOf(i)}
-              isRevealed={isRevealed}
-              isAnswer={display.question.isCorrect(i)}
-              count={display.distribution[i] ?? 0}
-            />
-          ))}
-        </ul>
+        {/* At the reveal the options move aside to make room for the standings;
+            during the question they have the width to themselves. */}
+        <div
+          className={
+            isRevealed
+              ? 'grid items-start gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
+              : ''
+          }
+        >
+          <ul className="grid gap-4 lg:grid-cols-2">
+            {display.question.options.map((option, i) => (
+              <BigOption
+                key={i}
+                label={display.question.labelOf(i)}
+                text={option}
+                image={display.question.imageOf(i)}
+                isRevealed={isRevealed}
+                isAnswer={display.question.isCorrect(i)}
+                count={display.distribution[i] ?? 0}
+              />
+            ))}
+          </ul>
+
+          {isRevealed && (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-text-h text-3xl">Top 10</h2>
+              <StandingsBoard rows={display.standings} variant="display" />
+            </section>
+          )}
+        </div>
 
         <ProgressBar value={display.progress} className="h-3" />
       </DisplayShell>

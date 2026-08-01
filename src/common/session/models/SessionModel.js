@@ -309,6 +309,34 @@ export class SessionModel {
     return Leaderboard.from(this)
   }
 
+  /**
+   * Where everybody stood **before** the question currently on screen. Nothing
+   * is stored: the same scoring runs a second time over the answers with the
+   * current question's left out, which is what lets the reveal show "was 4th,
+   * now 2nd" and tick a score up from its old value. Storing a snapshot of the
+   * ranking on every question would be a second source of truth for something
+   * the answers already say.
+   *
+   * Empty until a second question is scored: before that everyone is level, and
+   * a "change" on every row means nothing.
+   */
+  get previousLeaderboard() {
+    const question = this.currentQuestion
+    if (!question) return new Leaderboard([])
+
+    const earlier = this.answers.filter(
+      (answer) => answer.questionId !== question.id,
+    )
+    if (earlier.length === 0) return new Leaderboard([])
+
+    return Leaderboard.from(this.#with({ answers: earlier }))
+  }
+
+  /** The top ten, each row carrying where it came from — drawn between questions. */
+  get standings() {
+    return this.leaderboard.movementFrom(this.previousLeaderboard)
+  }
+
   get winner() {
     return this.winnerId ? this.findPlayer(this.winnerId) : null
   }

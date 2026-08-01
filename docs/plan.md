@@ -23,7 +23,7 @@ all look at **one single session state**, differing only in how they draw it:
 | --- | --- | --- | --- |
 | `lobby` | The join list, Start button | "Waiting..." + their name | Large QR + player count |
 | `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
-| `reveal` | Next question button | Right/wrong + their points | The correct answer + pick distribution |
+| `reveal` | Next question button | Right/wrong + their points + the top 10 | The correct answer + pick distribution + the top 10 |
 | `podium` | Announce winner button | Their own rank | Top 3 |
 | `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
 
@@ -78,7 +78,7 @@ held portrait.
 | P1 | Enter a name to join | arrived from the QR, no name yet |
 | P2 | Waiting in the lobby | has a name, session not started; the only screen with a way back to P1 |
 | P3 | Answering a question | `question` — 4 large tiles, a clock, locks after tapping |
-| P4 | Right/wrong + points | `reveal` |
+| P4 | Right/wrong + points + the top 10 with the rank change | `reveal` |
 | P5 | Their own rank | `podium` |
 | P6 | Pick a prize box | `prize`, **winner only**; everyone else gets a waiting screen |
 
@@ -92,7 +92,7 @@ D1 — the host is usually standing at the screen, not at the laptop.
 | --- | --- | --- |
 | D1 | Giant QR + the join count + a Start button | `lobby` |
 | D2 | The question, options and countdown | `question` |
-| D3 | The correct answer + live leaderboard | `reveal` |
+| D3 | The correct answer + the top 10 with the rank change | `reveal` |
 | D4 | The winner / top 3 | `podium` |
 | D5 | 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
 
@@ -142,8 +142,8 @@ the original plan — noted underneath.
 
 | Feature | Model (rules) | Controller | View |
 | --- | --- | --- | --- |
-| `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow` | — |
-| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
+| `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow`, `useCountUp` | — |
+| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `StandingsBoard`, `ScoreCounter`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
 | `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController` | A1, A2, A3, `AdminGate` |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
@@ -180,7 +180,7 @@ realtime decision is deferred as long as possible**.
 | **1. Quiz editing** | A1 + A2, autosaved after every change | ✅ done — storage later moved from `localStorage` to `server/quizzes.json`, so a quiz belongs to the event rather than to one browser |
 | **2. Single-machine round** | A3 + P1–P4 + D1–D3 | ✅ done — works across several tabs on one machine, not just one tab |
 | **3. Realtime** | A Node server on the LAN holding the state; `SessionRepository` switched to SSE + POST intents | ✅ done |
-| **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done |
+| **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done — the top 10 with the rank change and a climbing score was added to the reveal afterwards |
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
 | **7. Player avatars** | 50 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |

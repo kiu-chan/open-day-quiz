@@ -81,7 +81,7 @@ pick a jpg/png/webp/gif file.
 | 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
 | 2 | Visitors scan the QR, enter a name and pick an animal | "You're in, waiting to start" | their animal appearing on the wall, the count going up |
 | 3 | Press **Start** — on the control desk, or **Start the quiz** on the big screen itself | 4 option tiles + a clock | the question in large type + a clock |
-| 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
+| 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned + the top 10 | the correct answer, how many picked each option + the top 10 |
 | 5 | Nothing — auto mode starts the next question after 6s (or press **Next question**) | the new question | the new question |
 | 6 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
 | 7 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
@@ -124,6 +124,24 @@ desk. Switch it off if you want to talk the hall through each answer yourself.
   and ending the session are still yours to press — a tie for first place needs
   somebody to choose, and a prize needs somebody to hand it over.
 - The pause is timed by the server, so it is the same on every screen.
+
+## The top 10 after each question
+
+Every reveal shows the ten best players — on the phones under the verdict, on the
+big screen beside the answer. It is not a static list: it appears in the order it
+had **before** the question, each score climbs from its old value to the new one,
+and then the rows slide past each other into their new places. Next to every rank
+is how many places that player just gained or lost and the rank they came from
+("was 4").
+
+The very first question has no "before" to compare with, so there the rows carry
+no move and the scores simply count up from zero. Somebody who joined late, or
+who has just climbed into the ten, slides in from the bottom edge with no move
+marked either.
+
+The reveal stays on screen for 6 seconds in auto mode and the whole sequence takes
+about 2, so nobody has to hold anything back. Switch auto mode off if you want to
+talk over the movement.
 
 ## Scoring
 

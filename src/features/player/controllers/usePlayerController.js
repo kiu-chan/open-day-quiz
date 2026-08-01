@@ -241,6 +241,11 @@ export function usePlayerController() {
       isCorrect: identity ? session.isCorrectOf(identity.id) : null,
       pointsThisQuestion: identity ? session.currentPointsOf(identity.id) : 0,
       myRow: identity ? leaderboard.rowOf(identity.id) : null,
+      /** Our score before this question, so the reveal can count up to the new one. */
+      myPreviousScore: identity
+        ? (session.previousLeaderboard.rowOf(identity.id)?.score ?? 0)
+        : 0,
+      standings: session.standings,
       topRows: leaderboard.top,
       isWinner: identity !== null && session.winnerId === identity.id,
       winnerName: session.winner?.name ?? null,

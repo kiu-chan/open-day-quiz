@@ -39,6 +39,8 @@ export function useDisplayController() {
       joinUrl: `${window.location.origin}${window.location.pathname}#${ROUTES.PLAY}`,
       leaderboardRows: leaderboard.rows,
       topRows: leaderboard.top,
+      /** The top ten with the move each player just made — drawn at the reveal. */
+      standings: session.standings,
       winnerName: session.winner?.name ?? null,
       winnerAvatarId: session.winner?.avatarId ?? null,
       prizeBoxes: session.prizeBoxes,

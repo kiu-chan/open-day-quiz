@@ -8,6 +8,8 @@ import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
 import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
+import ScoreCounter from '@common/views/ScoreCounter.jsx'
+import StandingsBoard from '@common/views/StandingsBoard.jsx'
 import { usePlayerController } from '../controllers/usePlayerController.js'
 import AnswerOption from './components/AnswerOption.jsx'
 import JoinForm from './components/JoinForm.jsx'
@@ -152,10 +154,22 @@ function PlayerBody({ player }) {
         <Verdict isCorrect={player.isCorrect} />
 
         {player.myRow && (
-          <p className="font-mono text-sm tabular-nums">
-            +{player.pointsThisQuestion} points · total {player.myRow.score}
+          <p className="flex items-center gap-1 font-mono text-sm tabular-nums">
+            +{player.pointsThisQuestion} points · total
+            <ScoreCounter
+              from={player.myPreviousScore}
+              to={player.myRow.score}
+            />
           </p>
         )}
+
+        {/* Above the answer recap: the standings are what moves, and on a phone
+            whatever is below the fold during those two seconds is missed. */}
+        <h2 className="text-text-h text-lg">Top 10</h2>
+        <StandingsBoard
+          rows={player.standings}
+          highlightId={player.myRow?.playerId}
+        />
 
         {player.question.prompt && (
           <h2 className="text-text-h text-lg leading-snug">

@@ -54,6 +54,14 @@
   --animate-confetti-fall: confetti-fall 1.6s cubic-bezier(0.3, 0.5, 0.6, 1)
     calc(1.15s + var(--stagger, 0s)) both;
 
+  /* The standings between two questions. The board is drawn in the order it had
+     *before* this question and only reorders once the scores have finished
+     ticking up — a ranking that arrives already sorted shows no change, which is
+     the one thing it is there to show. Each row carries its own `--rank-from` /
+     `--rank-to` inline, and `both` is what parks it at the old place for the
+     length of the delay. */
+  --animate-rank-slide: rank-slide 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 1.1s both;
+
   /* The waiting screen on a phone. Slow on purpose: the avatar in the middle is
      already moving, so its frame must read as "still here, still connected"
      without competing with it. A full turn takes half a minute and the halo
@@ -247,6 +255,17 @@
   100% {
     opacity: 0;
     transform: translateY(var(--confetti-drop)) rotate(540deg);
+  }
+}
+
+/* One row of the standings travelling to its new place. Both ends are set per
+   row, so a single pair of keyframes moves ten rows in ten directions. */
+@keyframes rank-slide {
+  from {
+    transform: translateY(var(--rank-from));
+  }
+  to {
+    transform: translateY(var(--rank-to));
   }
 }
 

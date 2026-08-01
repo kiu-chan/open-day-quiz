@@ -12,11 +12,18 @@
  * Does not import React and does not know where the session is stored — it only
  * takes a session in and returns a ranking.
  *
- * Public API: BASE_POINTS, MAX_SPEED_BONUS, pointsOf(question, answer),
- * Leaderboard.from(session)
+ * Public API: BASE_POINTS, MAX_SPEED_BONUS, STANDINGS_COUNT,
+ * pointsOf(question, answer), Leaderboard.from(session)
  */
 export const BASE_POINTS = 1000
 export const MAX_SPEED_BONUS = 500
+
+/**
+ * How many rows the standings shown between two questions carry. Ten is what a
+ * projector holds at a readable size, and it is a rule of the round rather than
+ * a layout choice — the phone and the big screen show the same ten.
+ */
+export const STANDINGS_COUNT = 10
 
 /** Points for one answer. Wrong or unanswered scores 0. */
 export function pointsOf(question, answer) {
@@ -116,5 +123,33 @@ export class Leaderboard {
 
   rowOf(playerId) {
     return this.rows.find((row) => row.playerId === playerId) ?? null
+  }
+
+  /**
+   * The top rows, each carrying where that player stood in `previous`:
+   * `previousRank`, `previousScore`, `previousIndex` (their line in the earlier
+   * ordering, so a view can move the row from where it was) and `rankDelta`,
+   * positive when they climbed.
+   *
+   * Everything is `null` / 0 for somebody the earlier ranking does not know — a
+   * latecomer, or the first scored question, where there is no "before" to
+   * compare against and a change on every row would be noise.
+   */
+  movementFrom(previous) {
+    const before = new Map(
+      previous.rows.map((row, index) => [row.playerId, { ...row, index }]),
+    )
+
+    return this.rows.slice(0, STANDINGS_COUNT).map((row) => {
+      const was = before.get(row.playerId) ?? null
+
+      return {
+        ...row,
+        previousRank: was?.rank ?? null,
+        previousScore: was?.score ?? 0,
+        previousIndex: was?.index ?? null,
+        rankDelta: was ? was.rank - row.rank : null,
+      }
+    })
   }
 }
