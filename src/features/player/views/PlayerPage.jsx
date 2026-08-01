@@ -3,6 +3,7 @@ import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
+import CountdownBar from '@common/views/CountdownBar.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
@@ -102,6 +103,10 @@ function PlayerBody({ player }) {
           </p>
           <Countdown seconds={player.secondsLeft} className="text-sm" />
         </div>
+        <CountdownBar
+          percent={player.timeLeftPercent}
+          seconds={player.secondsLeft}
+        />
         <ProgressBar value={player.progress} />
 
         {player.question.prompt && (

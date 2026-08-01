@@ -68,7 +68,7 @@ src/
 │   │       ├── useSession.js      #   listens to the server + sends intents
 │   │       ├── useNow.js          #   the clock tick for countdowns
 │   │       └── useCountUp.js      #   the ticker a climbing score is drawn from
-│   └── views/                     # Button, Countdown, ProgressBar,
+│   └── views/                     # Button, Countdown + CountdownBar, ProgressBar,
 │                                  # LeaderboardTable, StandingsBoard,
 │                                  # ScoreCounter, JoinQr, ConnectionBanner,
 │                                  # PlayerAvatar, PrizeBoxRow + PrizeBox

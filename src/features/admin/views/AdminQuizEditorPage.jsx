@@ -8,6 +8,10 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
+import {
+  MAX_DURATION_SECONDS,
+  MIN_DURATION_SECONDS,
+} from '@common/session/models/Question.js'
 import { useQuizEditorController } from '../controllers/useQuizEditorController.js'
 import AdminShell from './components/AdminShell.jsx'
 import Panel from './components/Panel.jsx'
@@ -136,6 +140,35 @@ function AdminQuizEditorPage({ quizId }) {
             {quiz.totalSeconds}s
           </span>
         </div>
+
+        {/* One countdown for the whole set. It stays empty while the questions
+            disagree, so it never claims a value only some of them have — typing
+            in it is what makes them agree. */}
+        <label
+          className="flex flex-wrap items-center gap-2 text-sm"
+          htmlFor="quiz-duration"
+        >
+          Countdown for every question
+          <input
+            id="quiz-duration"
+            type="number"
+            value={quiz.uniformDurationSeconds ?? ''}
+            min={MIN_DURATION_SECONDS}
+            max={MAX_DURATION_SECONDS}
+            placeholder="Mixed"
+            disabled={quiz.total === 0}
+            onChange={(event) =>
+              editor.setDurationForAll(Number(event.target.value))
+            }
+            className="border-border focus:border-accent-border text-text-h w-24 rounded-lg border-2 px-3 py-1.5 font-mono text-sm outline-none disabled:opacity-25"
+          />
+          seconds
+          <span className="text-xs opacity-70">
+            {quiz.uniformDurationSeconds === null && quiz.total > 0
+              ? 'The questions run for different times — type here to give them all the same one.'
+              : 'A single question can still be set on its own below.'}
+          </span>
+        </label>
 
         {editor.errors.length > 0 ? (
           <ul className="border-border flex list-none flex-col gap-1.5 rounded-xl border border-dashed p-3 text-sm">

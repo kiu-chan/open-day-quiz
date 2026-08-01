@@ -237,6 +237,8 @@ export function usePlayerController() {
       total: session.total,
       progress: session.progress,
       secondsLeft: session.remainingSeconds(now),
+      /** The same countdown as a share of the question's duration, for the bar. */
+      timeLeftPercent: session.remainingPercent(now),
       myAnswer: identity ? session.currentAnswerOf(identity.id) : null,
       isCorrect: identity ? session.isCorrectOf(identity.id) : null,
       pointsThisQuestion: identity ? session.currentPointsOf(identity.id) : 0,

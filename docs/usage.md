@@ -43,8 +43,12 @@ not put on the projector.
    `http://192.168.1.20:3000`).
 2. Open `#/admin` using that address and write your questions. Everything saves
    itself — there is no Save button.
-3. Set a duration per question (5–120 seconds). Long, wordy questions deserve
-   more time.
+3. Set the countdown (5–120 seconds). **Countdown for every question** at the top
+   of the editor sets the whole set at once; the field under each question sets
+   that one alone, and long, wordy questions deserve more time. The quiz-wide
+   field shows "Mixed" when the questions no longer agree — typing in it makes
+   them agree again. Players see this countdown both as the number and as a bar
+   draining under it.
 4. A quiz has to be "playable" before a session can open: it needs a title, at
    least one question, and every question needs content plus a correct answer.
    The admin page lists exactly what is missing.

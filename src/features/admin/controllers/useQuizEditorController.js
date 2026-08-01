@@ -170,6 +170,11 @@ export function useQuizEditorController(quizId) {
     [editQuestion],
   )
 
+  const setDurationForAll = useCallback(
+    (seconds) => apply((current) => current.withDurationForAll(seconds)),
+    [apply],
+  )
+
   const addOption = useCallback(
     (index) => editQuestion(index, (question) => question.withOptionAdded()),
     [editQuestion],
@@ -200,6 +205,7 @@ export function useQuizEditorController(quizId) {
     uploadImage,
     setCorrect,
     setDuration,
+    setDurationForAll,
     addOption,
     removeOption,
   }

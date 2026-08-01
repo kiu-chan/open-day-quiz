@@ -32,6 +32,21 @@ export class Quiz {
     return this.questions.reduce((sum, q) => sum + q.durationSeconds, 0)
   }
 
+  /**
+   * The countdown every question runs for, or `null` when they do not all share
+   * one. The editor needs to tell "all 20s" from "mixed", because a single field
+   * for the whole quiz must not claim a value only some questions have.
+   */
+  get uniformDurationSeconds() {
+    if (this.total === 0) return null
+
+    const first = this.questions[0].durationSeconds
+    const isShared = this.questions.every(
+      (question) => question.durationSeconds === first,
+    )
+    return isShared ? first : null
+  }
+
   /** Why it is not playable yet, in plain words, so the admin can fix it. Empty = playable. */
   get errors() {
     const errors = []
@@ -61,6 +76,18 @@ export class Quiz {
 
   withTitle(title) {
     return this.#with({ title })
+  }
+
+  /**
+   * Give every question the same countdown. The clamping to a playable range is
+   * `Question.withDuration`'s job, so setting it for the whole quiz cannot slip
+   * past the limits one question at a time can't.
+   */
+  withDurationForAll(seconds) {
+    if (this.total === 0) return this
+    return this.#with({
+      questions: this.questions.map((question) => question.withDuration(seconds)),
+    })
   }
 
   withQuestionAdded(question) {

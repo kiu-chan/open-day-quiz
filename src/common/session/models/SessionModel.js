@@ -258,6 +258,18 @@ export class SessionModel {
     return Math.ceil(this.remainingMs(now) / 1000)
   }
 
+  /**
+   * How much of the answer time is still on the clock, 100 → 0, for the bar that
+   * drains next to the countdown. It is measured against *this* question's own
+   * duration, which the admin may set per question — which is why it is computed
+   * here and not from a fixed number in a view.
+   */
+  remainingPercent(now) {
+    const duration = this.currentQuestion?.durationSeconds ?? 0
+    if (duration <= 0) return 0
+    return Math.min(100, (this.remainingMs(now) / (duration * 1000)) * 100)
+  }
+
   isTimeUp(now) {
     return this.questionEndsAt !== null && now >= this.questionEndsAt
   }
