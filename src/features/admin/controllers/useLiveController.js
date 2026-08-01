@@ -21,9 +21,9 @@ function joinUrl() {
 
 export function useLiveController() {
   const { session, isOffline, send } = useSession()
-  // Two things count down here: the question, and the revealed answer while
-  // auto mode is armed.
-  const now = useNow(session.isCounting || session.revealEndsAt !== null)
+  // Two things count down here: the question, and whichever step auto mode is
+  // holding on screen (the revealed answer, then the standings).
+  const now = useNow(session.isCounting || session.autoStepEndsAt !== null)
 
   const start = useCallback(() => send({ type: 'start' }), [send])
   const reveal = useCallback(() => send({ type: 'reveal' }), [send])
@@ -60,6 +60,7 @@ export function useLiveController() {
       distribution: session.currentDistribution,
       joinUrl: joinUrl(),
       leaderboardRows: leaderboard.rows,
+      standings: session.standings,
       /** Several people sharing first place means the admin picks who gets the prize. */
       topRows: leaderboard.topRows,
       hasTieAtTop: leaderboard.hasTieAtTop,

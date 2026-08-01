@@ -121,8 +121,9 @@ export const sessionStore = {
 }
 
 /**
- * Close the question automatically when time is up, and — in auto mode — move
- * on from the revealed answer to the next question or to the final results.
+ * Close the question automatically when time is up, and — in auto mode — walk
+ * the steps that follow it: the revealed answer, the standings, then the next
+ * question or the final results.
  * This belongs to the server because there must be exactly one clock: the admin
  * tab used to do it, but if phones and the projector closed questions too, each
  * would close at a slightly different moment — and if the admin locked their

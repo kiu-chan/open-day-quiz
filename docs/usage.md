@@ -81,12 +81,13 @@ pick a jpg/png/webp/gif file.
 | 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
 | 2 | Visitors scan the QR, enter a name and pick an animal | "You're in, waiting to start" | their animal appearing on the wall, the count going up |
 | 3 | Press **Start** — on the control desk, or **Start the quiz** on the big screen itself | 4 option tiles + a clock | the question in large type + a clock |
-| 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned + the top 10 | the correct answer, how many picked each option + the top 10 |
-| 5 | Nothing — auto mode starts the next question after 6s (or press **Next question**) | the new question | the new question |
-| 6 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
-| 7 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
-| 8 | The winner picks a box | the prize name | the box opens, prize name in large type |
-| 9 | Press **End session** | back to the waiting screen | back to the waiting screen |
+| 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
+| 5 | Nothing — auto mode shows the standings after 6s (or press **Show standings**) | the top 10 + their own rank | the top 10, moving |
+| 6 | Nothing — auto mode starts the next question after 8s (or press **Next question**) | the new question | the new question |
+| 7 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
+| 8 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
+| 9 | The winner picks a box | the prize name | the box opens, prize name in large type |
+| 10 | Press **End session** | back to the waiting screen | back to the waiting screen |
 
 **Visitors struggling to scan?** Click the QR code — on the control desk or on
 the big screen — to blow it up full screen. Click anywhere or press `Esc` to
@@ -109,17 +110,17 @@ reopening shows the current state.
 
 **Auto mode is on by default**, because at a stand nobody is watching the
 laptop. The round runs itself: the question closes when its clock runs out, the
-answer stays up for 6 seconds, and then the next question starts — all the way
-to the final results.
+answer stays up for 6 seconds, the standings for 8, and then the next question
+starts — all the way to the final results.
 
 The **Auto on / Auto off** button sits next to the state badge on the control
 desk. Switch it off if you want to talk the hall through each answer yourself.
 
 - It can be switched on and off at any moment, including mid-question, and the
   choice carries over to the next round.
-- Steps 4, 5 and 6 of the table above happen by themselves. The buttons keep
-  working: pressing **Next question** during the 6-second pause goes now instead
-  of waiting.
+- Steps 4 to 7 of the table above happen by themselves. The buttons keep
+  working: pressing **Show standings** or **Next question** during a pause goes
+  now instead of waiting.
 - **Auto stops at the final results.** Announcing the winner, the prize boxes
   and ending the session are still yours to press — a tie for first place needs
   somebody to choose, and a prize needs somebody to hand it over.
@@ -127,21 +128,22 @@ desk. Switch it off if you want to talk the hall through each answer yourself.
 
 ## The top 10 after each question
 
-Every reveal shows the ten best players — on the phones under the verdict, on the
-big screen beside the answer. It is not a static list: it appears in the order it
-had **before** the question, each score climbs from its old value to the new one,
-and then the rows slide past each other into their new places. Next to every rank
-is how many places that player just gained or lost and the rank they came from
-("was 4").
+After the answer has been shown, the round stops on its **own screen**: the ten
+best players, on the phones and on the big screen at the same moment. It is not a
+static list — it appears in the order it had **before** the question, each score
+climbs from its old value to the new one, and then the rows slide past each other
+into their new places. Next to every rank is how many places that player just
+gained or lost and the rank they came from ("was 4"). A player outside the ten
+sees their own rank spelled out above the board.
 
 The very first question has no "before" to compare with, so there the rows carry
 no move and the scores simply count up from zero. Somebody who joined late, or
 who has just climbed into the ten, slides in from the bottom edge with no move
 marked either.
 
-The reveal stays on screen for 6 seconds in auto mode and the whole sequence takes
-about 2, so nobody has to hold anything back. Switch auto mode off if you want to
-talk over the movement.
+In auto mode the board stays up for 8 seconds and the movement takes about 2 of
+them, so nobody has to hold anything back. Press **Next question** to go sooner,
+or switch auto mode off to talk the hall through the changes.
 
 ## Scoring
 

@@ -100,7 +100,8 @@ The three screens **are not three applications**. All three read the same
 | --- | --- | --- | --- |
 | `lobby` | the join list, Start button | "Waiting..." | large QR + join count |
 | `question` | how many have answered | 4 tappable tiles | the question in huge type + clock |
-| `reveal` | the pick distribution, Next button | right/wrong + points + the top ten | the correct answer + the top ten |
+| `reveal` | the pick distribution, Show standings | right/wrong + points | the correct answer |
+| `standings` | the top ten, Next button | the top ten + their own rank | the top ten, moving |
 | `podium` | the leaderboard, Announce button | their own rank | the top 3 |
 | `prize` | waiting | 3 boxes (winner only) | 3 boxes, prize opening |
 
@@ -116,8 +117,9 @@ stateDiagram-v2
     idle --> lobby: admin opens a session
     lobby --> question: admin starts
     question --> reveal: time up / admin clicks
-    reveal --> question: questions remain
-    reveal --> podium: no questions left
+    reveal --> standings: 6s / admin clicks
+    standings --> question: questions remain
+    standings --> podium: no questions left
     podium --> prize: admin announces the winner
     prize --> prizeRevealed: the winner picks a box
     prizeRevealed --> idle: session ended
@@ -136,9 +138,12 @@ the server too: there must be exactly one clock, and the game must not hang when
 the admin locks their screen.
 
 The same server tick drives **auto mode** (the *Auto* button on the control
-desk, on by default): with `autoAdvance` on, `reveal` stamps a `revealEndsAt` deadline and the
-tick calls `next()` once it passes, walking the round from question to reveal to
-the next question and finally to the podium. It reuses the very transitions the
+desk, on by default): with `autoAdvance` on, each self-advancing step stamps an
+`autoStepEndsAt` deadline and the tick calls `next()` once it passes, walking the
+round from question to answer to standings to the next question, and finally to
+the podium. One field serves both waiting steps because only one of them is ever
+on screen; how long each lasts is `AUTO_SECONDS` in the model, next to the
+question duration. It reuses the very transitions the
 admin's buttons send, so auto mode can never reach a state a host could not
 reach by hand — and it deliberately stops at the podium, because a tie for first
 place needs a human to choose the winner.
@@ -533,9 +538,16 @@ the whole reveal is delays.
 
 ## The standings between two questions
 
-At every reveal the phone and the projector show the **top ten** with the move
-each player has just made: their new rank, how many places they gained or lost,
-and the rank they came from.
+Between the revealed answer and the next question the round stops on the **top
+ten**, showing the move each player has just made: their new rank, how many
+places they gained or lost, and the rank they came from.
+
+It is a **state of the session** (`standings`), not a corner of the reveal
+screen. The answer and the ranking are two different things to look at, and on a
+projector they were fighting over the same space; a step of its own also means
+the server owns the switch, so every phone and the big screen turn to the board
+at the same moment — which is the whole reason the state machine lives on the
+server. It costs one line in `ALLOWED_NEXT` and one branch in `next()`.
 
 **Nothing about "before" is stored.** `SessionModel.previousLeaderboard` runs the
 same scoring a second time over the answers with the current question's left out,

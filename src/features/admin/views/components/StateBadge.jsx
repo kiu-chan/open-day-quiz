@@ -5,6 +5,7 @@ const LABELS = {
   [SESSION_STATES.LOBBY]: 'Waiting for players',
   [SESSION_STATES.QUESTION]: 'Answering',
   [SESSION_STATES.REVEAL]: 'Answer revealed',
+  [SESSION_STATES.STANDINGS]: 'Standings',
   [SESSION_STATES.PODIUM]: 'Results',
   [SESSION_STATES.PRIZE]: 'Choosing a prize box',
   [SESSION_STATES.PRIZE_REVEALED]: 'Prize opened',

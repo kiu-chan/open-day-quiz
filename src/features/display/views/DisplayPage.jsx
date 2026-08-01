@@ -1,4 +1,4 @@
-import { Gift, MonitorOff, Play, Trophy, Users } from 'lucide-react'
+import { Gift, ListOrdered, MonitorOff, Play, Trophy, Users } from 'lucide-react'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
@@ -105,45 +105,54 @@ function DisplayBody({ display }) {
         )}
 
         {/* The image is capped by viewport height so the four option tiles below
-            can never be pushed off the projected area — and capped harder at the
-            reveal, where the standings share the screen with them. */}
+            can never be pushed off the projected area. */}
         <QuizImage
           src={display.question.image}
           alt="Question image"
-          className={`mx-auto w-auto ${
-            isRevealed ? 'max-h-[18vh]' : 'max-h-[36vh]'
-          }`}
+          className="mx-auto max-h-[36vh] w-auto"
         />
 
-        {/* At the reveal the options move aside to make room for the standings;
-            during the question they have the width to themselves. */}
-        <div
-          className={
-            isRevealed
-              ? 'grid items-start gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
-              : ''
-          }
-        >
-          <ul className="grid gap-4 lg:grid-cols-2">
-            {display.question.options.map((option, i) => (
-              <BigOption
-                key={i}
-                label={display.question.labelOf(i)}
-                text={option}
-                image={display.question.imageOf(i)}
-                isRevealed={isRevealed}
-                isAnswer={display.question.isCorrect(i)}
-                count={display.distribution[i] ?? 0}
-              />
-            ))}
-          </ul>
+        <ul className="grid gap-4 lg:grid-cols-2">
+          {display.question.options.map((option, i) => (
+            <BigOption
+              key={i}
+              label={display.question.labelOf(i)}
+              text={option}
+              image={display.question.imageOf(i)}
+              isRevealed={isRevealed}
+              isAnswer={display.question.isCorrect(i)}
+              count={display.distribution[i] ?? 0}
+            />
+          ))}
+        </ul>
 
-          {isRevealed && (
-            <section className="flex flex-col gap-4">
-              <h2 className="text-text-h text-3xl">Top 10</h2>
-              <StandingsBoard rows={display.standings} variant="display" />
-            </section>
-          )}
+        <ProgressBar value={display.progress} className="h-3" />
+      </DisplayShell>
+    )
+  }
+
+  // The standings have the screen to themselves: the answer has been read by
+  // now, and a ranking that moves is worth looking at on its own.
+  if (display.state === SESSION_STATES.STANDINGS) {
+    return (
+      <DisplayShell
+        header={
+          <>
+            <p className="font-mono text-2xl">
+              After question {display.questionNumber} / {display.total}
+            </p>
+            <p className="font-mono text-2xl tabular-nums">
+              {display.playerCount} players
+            </p>
+          </>
+        }
+      >
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+          <h1 className="text-text-h flex items-center gap-4 text-4xl tracking-tight">
+            <ListOrdered className="size-10" strokeWidth={1.5} aria-hidden="true" />
+            Top 10
+          </h1>
+          <StandingsBoard rows={display.standings} variant="display" />
         </div>
 
         <ProgressBar value={display.progress} className="h-3" />

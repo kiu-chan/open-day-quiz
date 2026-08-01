@@ -24,18 +24,6 @@ import { Quiz } from './Quiz.js'
 /** An avatar id is a short slug; anything else is a client sending junk. */
 const MAX_AVATAR_ID_LENGTH = 32
 
-/**
- * How long the revealed answer stays on screen before auto mode moves on. Long
- * enough to read the right answer and the tally on a projector, short enough
- * that a hall does not go quiet — it is a rule of the game, so it lives here
- * next to the question duration rather than in a view.
- */
-const AUTO_REVEAL_SECONDS = 6
-
-function revealDeadline(now) {
-  return now + AUTO_REVEAL_SECONDS * 1000
-}
-
 function cleanAvatarId(avatarId) {
   return typeof avatarId === 'string' ? avatarId.slice(0, MAX_AVATAR_ID_LENGTH) : ''
 }
@@ -45,9 +33,26 @@ export const SESSION_STATES = {
   LOBBY: 'lobby',
   QUESTION: 'question',
   REVEAL: 'reveal',
+  STANDINGS: 'standings',
   PODIUM: 'podium',
   PRIZE: 'prize',
   PRIZE_REVEALED: 'prizeRevealed',
+}
+
+/**
+ * How long each self-advancing step stays on screen. Long enough to read the
+ * right answer and the tally on a projector, and long enough for the standings
+ * to finish moving and be read — short enough that a hall does not go quiet.
+ * These are rules of the round, so they live here next to the question duration
+ * rather than in a view.
+ */
+const AUTO_SECONDS = {
+  [SESSION_STATES.REVEAL]: 6,
+  [SESSION_STATES.STANDINGS]: 8,
+}
+
+function autoDeadline(state, now) {
+  return now + AUTO_SECONDS[state] * 1000
 }
 
 /**
@@ -58,7 +63,8 @@ const ALLOWED_NEXT = {
   idle: ['lobby'],
   lobby: ['idle', 'question'],
   question: ['reveal'],
-  reveal: ['question', 'podium'],
+  reveal: ['standings'],
+  standings: ['question', 'podium'],
   podium: ['prize'],
   prize: ['prizeRevealed'],
   prizeRevealed: ['idle'],
@@ -69,7 +75,7 @@ const CLEARED_ROUND = {
   currentIndex: 0,
   questionStartedAt: null,
   questionEndsAt: null,
-  revealEndsAt: null,
+  autoStepEndsAt: null,
   winnerId: null,
   prizeBoxes: null,
 }
@@ -82,7 +88,7 @@ export class SessionModel {
     currentIndex = 0,
     questionStartedAt = null,
     questionEndsAt = null,
-    revealEndsAt = null,
+    autoStepEndsAt = null,
     players = [],
     answers = [],
     winnerId = null,
@@ -106,10 +112,12 @@ export class SessionModel {
     /** When the current question ends, see the "countdown" note below. */
     this.questionEndsAt = questionEndsAt
     /**
-     * When the revealed answer stops being shown — set only while auto mode is
-     * on, and an end timestamp for the same reason as `questionEndsAt`.
+     * When the step now on screen stops being shown — the revealed answer, or
+     * the standings after it. Set only while auto mode is on, and an end
+     * timestamp for the same reason as `questionEndsAt`. One field for both
+     * steps because only one of them is ever on screen.
      */
-    this.revealEndsAt = revealEndsAt
+    this.autoStepEndsAt = autoStepEndsAt
     this.players = players
     this.answers = answers
     /** Who gets the prize; the admin confirms it at the announcement step (usually rank 1). */
@@ -197,11 +205,12 @@ export class SessionModel {
     if (this.total === 0) return 0
     if (this.isAfterPlay) return 100
 
-    // At the reveal step the current question counts as finished.
-    const done =
-      this.state === SESSION_STATES.REVEAL
-        ? this.questionNumber
-        : this.currentIndex
+    // Once the answer is out the current question counts as finished, and it
+    // stays finished while the standings that follow it are on screen.
+    const isDone = [SESSION_STATES.REVEAL, SESSION_STATES.STANDINGS].includes(
+      this.state,
+    )
+    const done = isDone ? this.questionNumber : this.currentIndex
     return (Math.min(done, this.total) / this.total) * 100
   }
 
@@ -233,15 +242,15 @@ export class SessionModel {
     return this.questionEndsAt !== null && now >= this.questionEndsAt
   }
 
-  /** Seconds left on the revealed answer before auto mode moves on. */
+  /** Seconds left on the answer or the standings before auto mode moves on. */
   autoRemainingSeconds(now) {
-    if (this.revealEndsAt === null) return 0
-    return Math.ceil(Math.max(0, this.revealEndsAt - now) / 1000)
+    if (this.autoStepEndsAt === null) return 0
+    return Math.ceil(Math.max(0, this.autoStepEndsAt - now) / 1000)
   }
 
-  /** The reveal has been on screen long enough — the server may move on. */
+  /** The step on screen has been up long enough — the server may move on. */
   isAutoDue(now) {
-    return this.revealEndsAt !== null && now >= this.revealEndsAt
+    return this.autoStepEndsAt !== null && now >= this.autoStepEndsAt
   }
 
   // ---- players and answers ----
@@ -379,35 +388,57 @@ export class SessionModel {
   reveal(now) {
     return this.#to(SESSION_STATES.REVEAL, {
       questionEndsAt: null,
-      revealEndsAt: this.autoAdvance ? revealDeadline(now) : null,
+      autoStepEndsAt: this.autoAdvance
+        ? autoDeadline(SESSION_STATES.REVEAL, now)
+        : null,
     })
   }
 
-  /** Move to the next question, or to the podium when there are none left. */
+  /**
+   * Move on: the revealed answer hands over to the standings, and the standings
+   * to the next question — or to the podium when there are none left.
+   *
+   * The standings are a **step of the round**, not a corner of the reveal
+   * screen. The answer and the ranking are two different things to look at, and
+   * on a projector they were fighting for the same space; giving the board a
+   * state of its own is also what keeps the phones and the big screen showing it
+   * at the same moment, since the server owns the switch.
+   */
   next(now) {
-    if (this.state !== SESSION_STATES.REVEAL) return this
-    if (this.isLastQuestion) return this.#to(SESSION_STATES.PODIUM, { revealEndsAt: null })
+    if (this.state === SESSION_STATES.REVEAL) {
+      return this.#to(SESSION_STATES.STANDINGS, {
+        autoStepEndsAt: this.autoAdvance
+          ? autoDeadline(SESSION_STATES.STANDINGS, now)
+          : null,
+      })
+    }
+
+    if (this.state !== SESSION_STATES.STANDINGS) return this
+    if (this.isLastQuestion) {
+      return this.#to(SESSION_STATES.PODIUM, { autoStepEndsAt: null })
+    }
 
     const index = this.currentIndex + 1
     return this.#to(SESSION_STATES.QUESTION, {
       currentIndex: index,
-      revealEndsAt: null,
+      autoStepEndsAt: null,
       ...this.#timingOf(index, now),
     })
   }
 
   /**
-   * Switch auto mode on or off. Toggling it during a reveal has to arm or
-   * disarm that reveal's deadline as well, otherwise the host turning auto on
-   * mid-round would see nothing happen until the *next* question was revealed —
-   * and turning it off would not stop the move already scheduled.
+   * Switch auto mode on or off. Toggling it while a self-advancing step is on
+   * screen has to arm or disarm that step's deadline as well, otherwise the host
+   * turning auto on mid-round would see nothing happen until the *next* question
+   * was revealed — and turning it off would not stop the move already scheduled.
    */
   setAutoAdvance(enabled, now) {
     if (enabled === this.autoAdvance) return this
-    const isRevealing = this.state === SESSION_STATES.REVEAL
+    const isWaiting = AUTO_SECONDS[this.state] !== undefined
     return this.#with({
       autoAdvance: enabled,
-      revealEndsAt: enabled && isRevealing ? revealDeadline(now) : null,
+      autoStepEndsAt:
+        enabled && isWaiting ? autoDeadline(this.state, now) : null,
     })
   }
 

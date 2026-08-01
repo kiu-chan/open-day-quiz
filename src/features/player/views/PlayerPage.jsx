@@ -163,14 +163,6 @@ function PlayerBody({ player }) {
           </p>
         )}
 
-        {/* Above the answer recap: the standings are what moves, and on a phone
-            whatever is below the fold during those two seconds is missed. */}
-        <h2 className="text-text-h text-lg">Top 10</h2>
-        <StandingsBoard
-          rows={player.standings}
-          highlightId={player.myRow?.playerId}
-        />
-
         {player.question.prompt && (
           <h2 className="text-text-h text-lg leading-snug">
             {player.question.prompt}
@@ -192,6 +184,33 @@ function PlayerBody({ player }) {
             </li>
           ))}
         </ul>
+      </PlayerShell>
+    )
+  }
+
+  // The standings step, on its own screen — the phone shows the same ten the
+  // big screen does, with this player's row marked.
+  if (player.sessionState === SESSION_STATES.STANDINGS) {
+    return (
+      <PlayerShell name={player.name} avatarId={player.avatarId}>
+        <p className="font-mono text-xs">
+          After question {player.questionNumber} / {player.total}
+        </p>
+        <h2 className="text-text-h text-lg">Top 10</h2>
+
+        {/* Spelled out because a player outside the ten finds no row of their
+            own on the board below. */}
+        {player.myRow && (
+          <p className="font-mono text-sm tabular-nums">
+            You are {player.myRow.rank} of {player.playerCount} ·{' '}
+            {player.myRow.score} points
+          </p>
+        )}
+
+        <StandingsBoard
+          rows={player.standings}
+          highlightId={player.myRow?.playerId}
+        />
       </PlayerShell>
     )
   }

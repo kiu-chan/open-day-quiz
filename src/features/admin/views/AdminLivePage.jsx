@@ -3,6 +3,7 @@ import {
   Eye,
   Gift,
   ListChecks,
+  ListOrdered,
   MessageCircleQuestion,
   Play,
   RotateCcw,
@@ -71,8 +72,11 @@ function IdlePage({ live }) {
 }
 
 function LiveBody({ live }) {
-  const isPlaying =
-    live.state === SESSION_STATES.QUESTION || live.state === SESSION_STATES.REVEAL
+  const isPlaying = [
+    SESSION_STATES.QUESTION,
+    SESSION_STATES.REVEAL,
+    SESSION_STATES.STANDINGS,
+  ].includes(live.state)
 
   return (
     <AdminShell
@@ -191,6 +195,34 @@ function LiveBody({ live }) {
               distribution={live.distribution}
               playerCount={live.playerCount}
             />
+          </Panel>
+
+          <ActionBar>
+            <Button
+              variant="primary"
+              className="px-6 py-3 text-lg"
+              onClick={live.goNext}
+            >
+              <ListOrdered className="size-5" aria-hidden="true" />
+              Show standings
+            </Button>
+            {live.isAuto && (
+              <span className="text-sm opacity-70">
+                Auto is on — the standings come up in {live.autoSecondsLeft}s.
+                Press to go now.
+              </span>
+            )}
+          </ActionBar>
+        </>
+      )}
+
+      {live.state === SESSION_STATES.STANDINGS && (
+        <>
+          <Panel
+            title={`Top 10 after question ${live.questionNumber} / ${live.total}`}
+            Icon={ListOrdered}
+          >
+            <LeaderboardTable rows={live.standings} />
           </Panel>
 
           <ActionBar>

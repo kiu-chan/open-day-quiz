@@ -23,7 +23,8 @@ all look at **one single session state**, differing only in how they draw it:
 | --- | --- | --- | --- |
 | `lobby` | The join list, Start button | "Waiting..." + their name | Large QR + player count |
 | `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
-| `reveal` | Next question button | Right/wrong + their points + the top 10 | The correct answer + pick distribution + the top 10 |
+| `reveal` | Show standings button | Right/wrong + their points | The correct answer + pick distribution |
+| `standings` | The top 10, Next question button | The top 10 + their own rank | The top 10, moving |
 | `podium` | Announce winner button | Their own rank | Top 3 |
 | `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
 
@@ -37,8 +38,9 @@ stateDiagram-v2
     idle --> lobby: admin opens a session
     lobby --> question: admin starts
     question --> reveal: time up / admin clicks
-    reveal --> question: questions remain
-    reveal --> podium: no questions left
+    reveal --> standings: 6s / admin clicks
+    standings --> question: questions remain
+    standings --> podium: no questions left
     podium --> prize: admin announces
     prize --> prizeRevealed: the winner picks a box
     prizeRevealed --> [*]
@@ -78,7 +80,8 @@ held portrait.
 | P1 | Enter a name to join | arrived from the QR, no name yet |
 | P2 | Waiting in the lobby | has a name, session not started; the only screen with a way back to P1 |
 | P3 | Answering a question | `question` — 4 large tiles, a clock, locks after tapping |
-| P4 | Right/wrong + points + the top 10 with the rank change | `reveal` |
+| P4 | Right/wrong + points | `reveal` |
+| P4b | The top 10 with the rank change | `standings` |
 | P5 | Their own rank | `podium` |
 | P6 | Pick a prize box | `prize`, **winner only**; everyone else gets a waiting screen |
 
@@ -92,7 +95,8 @@ D1 — the host is usually standing at the screen, not at the laptop.
 | --- | --- | --- |
 | D1 | Giant QR + the join count + a Start button | `lobby` |
 | D2 | The question, options and countdown | `question` |
-| D3 | The correct answer + the top 10 with the rank change | `reveal` |
+| D3 | The correct answer + the pick distribution | `reveal` |
+| D3b | The top 10 with the rank change, alone on the screen | `standings` |
 | D4 | The winner / top 3 | `podium` |
 | D5 | 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
 
@@ -180,7 +184,7 @@ realtime decision is deferred as long as possible**.
 | **1. Quiz editing** | A1 + A2, autosaved after every change | ✅ done — storage later moved from `localStorage` to `server/quizzes.json`, so a quiz belongs to the event rather than to one browser |
 | **2. Single-machine round** | A3 + P1–P4 + D1–D3 | ✅ done — works across several tabs on one machine, not just one tab |
 | **3. Realtime** | A Node server on the LAN holding the state; `SessionRepository` switched to SSE + POST intents | ✅ done |
-| **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done — the top 10 with the rank change and a climbing score was added to the reveal afterwards |
+| **4. Scoring & leaderboard** | Speed-based scoring, ranks, ties, P5 + D4 | ✅ done — a `standings` step showing the top 10 with the rank change and a climbing score was added between the answer and the next question afterwards |
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
 | **7. Player avatars** | 50 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
@@ -200,9 +204,9 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 - Auto-closing a question when time is up moved from `useLiveController` to the
   server: there must be exactly one clock, and the game must not hang when the
   admin locks their screen. The same tick later grew **auto mode**
-  (`setAutoAdvance` + `revealEndsAt`), on by default, which holds a revealed
-  answer for 6 seconds and then moves on, up to the final results but no
-  further.
+  (`setAutoAdvance` + `autoStepEndsAt`), on by default, which holds a revealed
+  answer for 6 seconds and the standings after it for 8, then moves on — up to
+  the final results but no further.
 - Added an `isOffline` flag plus the disconnect banner. No loading flag was
   needed: `read()` is still synchronous, it just reads the latest snapshot.
 - The player resends `join` when the session no longer knows their name (after a

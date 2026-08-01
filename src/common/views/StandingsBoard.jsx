@@ -36,8 +36,10 @@ const VARIANTS = {
     score: 'text-sm',
   },
   display: {
-    rowHeight: 60,
-    gap: 10,
+    // Ten rows plus a heading have to fit a projector without scrolling, which
+    // is what caps the height rather than how big the type could be.
+    rowHeight: 56,
+    gap: 8,
     row: 'gap-4 px-5 text-2xl',
     rank: 'w-9 text-2xl',
     trophy: 'size-7',

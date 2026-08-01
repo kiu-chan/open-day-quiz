@@ -19,6 +19,7 @@ const STATUS_LABELS = {
   [SESSION_STATES.LOBBY]: 'The lobby is open',
   [SESSION_STATES.QUESTION]: 'A round is in progress',
   [SESSION_STATES.REVEAL]: 'A round is in progress',
+  [SESSION_STATES.STANDINGS]: 'A round is in progress',
   [SESSION_STATES.PODIUM]: 'Announcing the results',
   [SESSION_STATES.PRIZE]: 'Handing out the prize',
   [SESSION_STATES.PRIZE_REVEALED]: 'The prize has been awarded',
