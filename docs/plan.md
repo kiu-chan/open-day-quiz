@@ -25,7 +25,7 @@ all look at **one single session state**, differing only in how they draw it:
 | `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
 | `reveal` | Show standings button | Right/wrong + their points | The correct answer + pick distribution |
 | `standings` | The top 10, Next question button | The top 10 + their own rank | The top 10, moving |
-| `podium` | Announce winner button | Their own rank | Top 3 |
+| `podium` | The leaderboard, Announce winner button | Their own rank | Top 3 |
 | `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
 
 The consequence: **this state machine is a shared model**, belonging to no single
@@ -41,7 +41,7 @@ stateDiagram-v2
     reveal --> standings: 6s / admin clicks
     standings --> question: questions remain
     standings --> podium: no questions left
-    podium --> prize: admin announces
+    podium --> prize: 10s / admin announces
     prize --> prizeRevealed: the winner picks a box
     prizeRevealed --> [*]
     lobby --> idle: admin cancels
@@ -65,7 +65,7 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | A1 | Quiz list | `/admin` | The table of quizzes, with New / Edit / Delete / Duplicate |
 | A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration |
-| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the final results by itself; the leaderboard; the Announce winner button |
+| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winner button |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
 allowed to **change the session state**. Player and display only read.
@@ -205,8 +205,10 @@ Phase 3 is done, and this is where the original prediction was not quite right:
   server: there must be exactly one clock, and the game must not hang when the
   admin locks their screen. The same tick later grew **auto mode**
   (`setAutoAdvance` + `autoStepEndsAt`), on by default, which holds a revealed
-  answer for 6 seconds and the standings after it for 8, then moves on — up to
-  the final results but no further.
+  answer for 6 seconds, the standings after it for 8 and the final results for
+  10, then moves on — all the way to announcing the winner. It stops only where a
+  person is genuinely needed: a tie for first place, and the winner's tap on a
+  prize box.
 - Added an `isOffline` flag plus the disconnect banner. No loading flag was
   needed: `read()` is still synchronous, it just reads the latest snapshot.
 - The player resends `join` when the session no longer knows their name (after a

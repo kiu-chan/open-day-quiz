@@ -41,18 +41,17 @@ export const SESSION_STATES = {
 
 /**
  * How long each self-advancing step stays on screen. Long enough to read the
- * right answer and the tally on a projector, and long enough for the standings
- * to finish moving and be read — short enough that a hall does not go quiet.
- * These are rules of the round, so they live here next to the question duration
- * rather than in a view.
+ * right answer and the tally on a projector, long enough for the standings to
+ * finish moving and be read, long enough to take in the final results before the
+ * winner is called out — short enough that a hall does not go quiet. These are
+ * rules of the round, so they live here next to the question duration rather
+ * than in a view. A state missing from this table is one auto mode never leaves
+ * by itself.
  */
 const AUTO_SECONDS = {
   [SESSION_STATES.REVEAL]: 6,
   [SESSION_STATES.STANDINGS]: 8,
-}
-
-function autoDeadline(state, now) {
-  return now + AUTO_SECONDS[state] * 1000
+  [SESSION_STATES.PODIUM]: 10,
 }
 
 /**
@@ -157,6 +156,27 @@ export class SessionModel {
   #to(state, patch = {}) {
     if (!ALLOWED_NEXT[this.state].includes(state)) return this
     return this.#with({ state, ...patch })
+  }
+
+  /**
+   * When the step being entered should hand over by itself, or `null` when it
+   * has to wait for a human: auto mode is off, the step is not one that moves on
+   * (a question ends on its own clock, the prize on a tap), or **several people
+   * are tied for first place** — that last one is a decision, not a step, and no
+   * automatic rule can be fair about it. The control desk shows the tied names
+   * for the host to choose from.
+   */
+  #autoDeadlineFor(state, now) {
+    if (!this.autoAdvance || AUTO_SECONDS[state] === undefined) return null
+
+    if (state === SESSION_STATES.PODIUM) {
+      const leaderboard = this.leaderboard
+      // No clear single winner, no automatic announcement — an empty round has
+      // nobody to call out, and a tie has too many.
+      if (leaderboard.winner === null || leaderboard.hasTieAtTop) return null
+    }
+
+    return now + AUTO_SECONDS[state] * 1000
   }
 
   /**
@@ -388,34 +408,43 @@ export class SessionModel {
   reveal(now) {
     return this.#to(SESSION_STATES.REVEAL, {
       questionEndsAt: null,
-      autoStepEndsAt: this.autoAdvance
-        ? autoDeadline(SESSION_STATES.REVEAL, now)
-        : null,
+      autoStepEndsAt: this.#autoDeadlineFor(SESSION_STATES.REVEAL, now),
     })
   }
 
   /**
-   * Move on: the revealed answer hands over to the standings, and the standings
-   * to the next question — or to the podium when there are none left.
+   * Move on one step: the revealed answer hands over to the standings, the
+   * standings to the next question — or to the podium when there are none left —
+   * and the podium calls out the winner.
    *
    * The standings are a **step of the round**, not a corner of the reveal
    * screen. The answer and the ranking are two different things to look at, and
    * on a projector they were fighting for the same space; giving the board a
    * state of its own is also what keeps the phones and the big screen showing it
    * at the same moment, since the server owns the switch.
+   *
+   * "Move on" from the podium means announcing whoever tops the leaderboard, so
+   * that auto mode and the host's button take the exact same route into the
+   * prize step. A tie for first place is refused here: that one needs a person.
    */
   next(now) {
     if (this.state === SESSION_STATES.REVEAL) {
       return this.#to(SESSION_STATES.STANDINGS, {
-        autoStepEndsAt: this.autoAdvance
-          ? autoDeadline(SESSION_STATES.STANDINGS, now)
-          : null,
+        autoStepEndsAt: this.#autoDeadlineFor(SESSION_STATES.STANDINGS, now),
       })
+    }
+
+    if (this.state === SESSION_STATES.PODIUM) {
+      const leaderboard = this.leaderboard
+      if (leaderboard.hasTieAtTop) return this
+      return this.announceWinner(leaderboard.winner?.playerId)
     }
 
     if (this.state !== SESSION_STATES.STANDINGS) return this
     if (this.isLastQuestion) {
-      return this.#to(SESSION_STATES.PODIUM, { autoStepEndsAt: null })
+      return this.#to(SESSION_STATES.PODIUM, {
+        autoStepEndsAt: this.#autoDeadlineFor(SESSION_STATES.PODIUM, now),
+      })
     }
 
     const index = this.currentIndex + 1
@@ -434,11 +463,11 @@ export class SessionModel {
    */
   setAutoAdvance(enabled, now) {
     if (enabled === this.autoAdvance) return this
-    const isWaiting = AUTO_SECONDS[this.state] !== undefined
-    return this.#with({
-      autoAdvance: enabled,
-      autoStepEndsAt:
-        enabled && isWaiting ? autoDeadline(this.state, now) : null,
+    // Armed from the new setting, not the old one, which is why the deadline is
+    // worked out on the switched instance.
+    const switched = this.#with({ autoAdvance: enabled })
+    return switched.#with({
+      autoStepEndsAt: switched.#autoDeadlineFor(switched.state, now),
     })
   }
 
@@ -449,7 +478,13 @@ export class SessionModel {
    */
   announceWinner(winnerId, boxes = PrizeBoxes.shuffled()) {
     if (!winnerId || !this.findPlayer(winnerId)) return this
-    return this.#to(SESSION_STATES.PRIZE, { winnerId, prizeBoxes: boxes })
+    // The prize step waits for a tap, so the auto deadline stops here — leaving
+    // the podium's behind would have the server trying to move on every tick.
+    return this.#to(SESSION_STATES.PRIZE, {
+      winnerId,
+      prizeBoxes: boxes,
+      autoStepEndsAt: null,
+    })
   }
 
   /** Pick a prize box. Only the winner may pick, and only once. */

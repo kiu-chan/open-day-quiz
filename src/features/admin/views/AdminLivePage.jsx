@@ -265,7 +265,8 @@ function LiveBody({ live }) {
             <Panel title="Choose who gets the prize" Icon={Gift} dashed>
               <p className="text-sm">
                 {live.topRows.length} people are tied on both score and time —
-                please pick one:
+                please pick one
+                {live.isAuto && ' (auto mode will not choose for you)'}:
               </p>
               <div className="flex flex-wrap gap-2">
                 {live.topRows.map((row) => (
@@ -295,6 +296,12 @@ function LiveBody({ live }) {
                 {live.leaderboardRows.length > 0 &&
                   `: ${live.leaderboardRows[0].name}`}
               </Button>
+              {live.isAuto && live.leaderboardRows.length > 0 && (
+                <span className="text-sm opacity-70">
+                  Auto is on — the winner is announced in {live.autoSecondsLeft}
+                  s. Press to go now.
+                </span>
+              )}
             </ActionBar>
           )}
         </>

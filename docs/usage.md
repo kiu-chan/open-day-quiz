@@ -85,7 +85,7 @@ pick a jpg/png/webp/gif file.
 | 5 | Nothing — auto mode shows the standings after 6s (or press **Show standings**) | the top 10 + their own rank | the top 10, moving |
 | 6 | Nothing — auto mode starts the next question after 8s (or press **Next question**) | the new question | the new question |
 | 7 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
-| 8 | Press **Announce the winner** | the winner sees 3 prize boxes | 3 prize boxes |
+| 8 | Nothing — auto mode announces the winner after 10s (or press **Announce the winner**) | the winner sees 3 prize boxes | 3 prize boxes |
 | 9 | The winner picks a box | the prize name | the box opens, prize name in large type |
 | 10 | Press **End session** | back to the waiting screen | back to the waiting screen |
 
@@ -111,19 +111,21 @@ reopening shows the current state.
 **Auto mode is on by default**, because at a stand nobody is watching the
 laptop. The round runs itself: the question closes when its clock runs out, the
 answer stays up for 6 seconds, the standings for 8, and then the next question
-starts — all the way to the final results.
+starts — all the way to the final results and the winner being announced.
 
 The **Auto on / Auto off** button sits next to the state badge on the control
 desk. Switch it off if you want to talk the hall through each answer yourself.
 
 - It can be switched on and off at any moment, including mid-question, and the
   choice carries over to the next round.
-- Steps 4 to 7 of the table above happen by themselves. The buttons keep
+- Steps 4 to 8 of the table above happen by themselves. The buttons keep
   working: pressing **Show standings** or **Next question** during a pause goes
   now instead of waiting.
-- **Auto stops at the final results.** Announcing the winner, the prize boxes
-  and ending the session are still yours to press — a tie for first place needs
-  somebody to choose, and a prize needs somebody to hand it over.
+- **Auto runs to the prize.** The final results stay up for 10 seconds and then
+  the winner is announced by itself. It stops for two things only: a **tie for
+  first place**, where the desk asks you to pick one of the tied names (auto will
+  not choose for you), and the **prize box**, which is the winner's to tap.
+  Ending the session is still yours to press.
 - The pause is timed by the server, so it is the same on every screen.
 
 ## The top 10 after each question

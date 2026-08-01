@@ -120,7 +120,7 @@ stateDiagram-v2
     reveal --> standings: 6s / admin clicks
     standings --> question: questions remain
     standings --> podium: no questions left
-    podium --> prize: admin announces the winner
+    podium --> prize: 10s / admin announces the winner
     prize --> prizeRevealed: the winner picks a box
     prizeRevealed --> idle: session ended
     lobby --> idle: admin cancels
@@ -140,13 +140,22 @@ the admin locks their screen.
 The same server tick drives **auto mode** (the *Auto* button on the control
 desk, on by default): with `autoAdvance` on, each self-advancing step stamps an
 `autoStepEndsAt` deadline and the tick calls `next()` once it passes, walking the
-round from question to answer to standings to the next question, and finally to
-the podium. One field serves both waiting steps because only one of them is ever
-on screen; how long each lasts is `AUTO_SECONDS` in the model, next to the
-question duration. It reuses the very transitions the
-admin's buttons send, so auto mode can never reach a state a host could not
-reach by hand — and it deliberately stops at the podium, because a tie for first
-place needs a human to choose the winner.
+round from question to answer to standings to the next question, and on to the
+final results. One field serves every waiting step because only one of them is
+ever on screen; how long each lasts is `AUTO_SECONDS` in the model, next to the
+question duration. It reuses the very transitions the admin's buttons send, so
+auto mode can never reach a state a host could not reach by hand. It runs to the
+end of the round: the podium hands over to the
+prize step by announcing whoever tops the leaderboard, which is why "move on"
+from the podium *is* `announceWinner` rather than a separate path into `prize`.
+
+It stops for exactly two things, and both are decisions rather than steps: a
+**tie for first place**, where no automatic rule can be fair and the desk shows
+the tied names to pick from, and the **prize box**, which is the winner's to tap.
+`AUTO_SECONDS` is the whole list of self-advancing steps — a state missing from
+that table is one auto mode never leaves by itself, and `#autoDeadlineFor` is
+where the tie exception lives, so a step that cannot move on is never armed in
+the first place instead of failing every tick.
 
 ## Three technical decisions worth remembering
 
