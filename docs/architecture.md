@@ -115,7 +115,7 @@ feature.
 stateDiagram-v2
     [*] --> idle
     idle --> lobby: admin opens a session
-    lobby --> question: admin starts
+    lobby --> question: admin starts (≥ 3 players)
     question --> reveal: time up / admin clicks
     reveal --> standings: 6s / admin clicks
     standings --> question: questions remain
@@ -131,6 +131,14 @@ The table of valid transitions fits in one `ALLOWED_NEXT` constant in
 scattered across controllers and views. An out-of-order action returns the very
 same instance, so double-clicking "Next question" skips nothing, and the
 repository knows nothing changed and broadcasts nothing.
+
+Leaving the lobby has one extra condition: `start` needs a playable quiz **and**
+at least `MIN_PLAYERS` (3) people in the lobby — `session.canStart`. Both Start
+buttons (the control desk and the big screen) grey out until then, and the
+control desk asks for a confirmation before sending the intent, because a round
+that has begun can only be cancelled, never rewound. The count is checked in the
+model rather than only in the views, since the admin page is not the only thing
+that can send `start`.
 
 **Only the server applies this state machine.** Clients send *intents* and the
 server broadcasts the outcome. Auto-closing a question when time is up belongs to

@@ -24,6 +24,15 @@ import { Quiz } from './Quiz.js'
 /** An avatar id is a short slug; anything else is a client sending junk. */
 const MAX_AVATAR_ID_LENGTH = 32
 
+/**
+ * How many players a round needs before it may start. A quiz with one or two
+ * people on the leaderboard is not a game, and at a stand it usually means the
+ * host pressed Start while the queue was still scanning the QR code. It is a
+ * rule of the round, so it is enforced here rather than only greying out the
+ * button — the admin page is not the only thing that can send `start`.
+ */
+export const MIN_PLAYERS = 3
+
 function cleanAvatarId(avatarId) {
   return typeof avatarId === 'string' ? avatarId.slice(0, MAX_AVATAR_ID_LENGTH) : ''
 }
@@ -408,8 +417,13 @@ export class SessionModel {
     return this.#to(SESSION_STATES.IDLE, { id: null, ...CLEARED_ROUND })
   }
 
+  /** A playable quiz and enough people in the lobby — what Start waits for. */
+  get canStart() {
+    return Boolean(this.quiz?.isPlayable) && this.playerCount >= MIN_PLAYERS
+  }
+
   start(now) {
-    if (!this.quiz?.isPlayable) return this
+    if (!this.canStart) return this
     return this.#to(SESSION_STATES.QUESTION, {
       currentIndex: 0,
       ...this.#timingOf(0, now),

@@ -12,6 +12,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { useState } from 'react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
@@ -27,6 +28,7 @@ import JoinLinkCard from './components/JoinLinkCard.jsx'
 import Panel from './components/Panel.jsx'
 import PlayerList from './components/PlayerList.jsx'
 import QuestionPreview from './components/QuestionPreview.jsx'
+import StartDialog from './components/StartDialog.jsx'
 import StateBadge from './components/StateBadge.jsx'
 import StatTile from './components/StatTile.jsx'
 
@@ -72,6 +74,7 @@ function IdlePage({ live }) {
 }
 
 function LiveBody({ live }) {
+  const [isConfirmingStart, setIsConfirmingStart] = useState(false)
   const isPlaying = [
     SESSION_STATES.QUESTION,
     SESSION_STATES.REVEAL,
@@ -107,15 +110,16 @@ function LiveBody({ live }) {
             <Button
               variant="primary"
               className="px-6 py-3 text-lg"
-              onClick={live.start}
+              disabled={!live.canStart}
+              onClick={() => setIsConfirmingStart(true)}
             >
               <Play className="size-5" aria-hidden="true" />
               Start
             </Button>
             <span className="text-sm opacity-70">
-              {live.playerCount === 0
-                ? 'Waiting for at least one player to join.'
-                : `${live.playerCount} player(s) ready.`}
+              {live.canStart
+                ? `${live.playerCount} player(s) ready.`
+                : `Waiting for ${live.minPlayers - live.playerCount} more player(s) — a round needs ${live.minPlayers}.`}
               {live.isAuto &&
                 ' Auto is on — the round runs itself to the final results.'}
             </span>
@@ -124,6 +128,19 @@ function LiveBody({ live }) {
               Cancel session
             </Button>
           </ActionBar>
+
+          {isConfirmingStart && (
+            <StartDialog
+              quiz={live.quiz}
+              playerCount={live.playerCount}
+              isAuto={live.isAuto}
+              onClose={() => setIsConfirmingStart(false)}
+              onConfirm={() => {
+                setIsConfirmingStart(false)
+                live.start()
+              }}
+            />
+          )}
         </>
       )}
 

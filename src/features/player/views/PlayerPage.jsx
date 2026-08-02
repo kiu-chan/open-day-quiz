@@ -7,7 +7,6 @@ import CountdownBar from '@common/views/CountdownBar.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
-import ProgressBar from '@common/views/ProgressBar.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
 import ScoreCounter from '@common/views/ScoreCounter.jsx'
 import StandingsBoard from '@common/views/StandingsBoard.jsx'
@@ -107,7 +106,6 @@ function PlayerBody({ player }) {
           percent={player.timeLeftPercent}
           seconds={player.secondsLeft}
         />
-        <ProgressBar value={player.progress} />
 
         {player.question.prompt && (
           <h2 className="text-text-h text-xl leading-snug">

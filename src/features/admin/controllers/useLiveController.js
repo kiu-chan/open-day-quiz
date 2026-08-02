@@ -12,6 +12,7 @@ import { useCallback, useMemo } from 'react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
+import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
 
 /** The link players scan to join — also the URL printed into the QR code in Phase 6. */
 function joinUrl() {
@@ -56,6 +57,8 @@ export function useLiveController() {
       autoSecondsLeft: session.autoRemainingSeconds(now),
       players: session.players,
       playerCount: session.playerCount,
+      canStart: session.canStart,
+      minPlayers: MIN_PLAYERS,
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
       joinUrl: joinUrl(),

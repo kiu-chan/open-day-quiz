@@ -51,20 +51,23 @@ function DisplayBody({ display }) {
           <PlayerWall players={display.players} />
 
           {/* Starting from the big screen saves the host walking back to the
-              laptop. Disabled until someone has joined: a round started in front
-              of an empty hall cannot be rewound, only cancelled from the desk. */}
+              laptop. Disabled until the lobby holds enough people: a round
+              started in front of a near-empty hall cannot be rewound, only
+              cancelled from the desk. */}
           <Button
             variant="primary"
             className="px-10 py-5 text-3xl"
-            disabled={display.playerCount === 0}
+            disabled={!display.canStart}
             onClick={display.start}
           >
             <Play className="size-8" aria-hidden="true" />
             Start the quiz
           </Button>
 
-          {display.playerCount === 0 && (
-            <p className="text-xl">Waiting for the first player to join.</p>
+          {!display.canStart && (
+            <p className="text-xl">
+              Waiting for {display.minPlayers} players to join.
+            </p>
           )}
         </div>
       </DisplayShell>

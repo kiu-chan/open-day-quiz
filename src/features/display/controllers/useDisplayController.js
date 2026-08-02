@@ -13,6 +13,7 @@ import { useCallback, useMemo } from 'react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
+import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
 
 export function useDisplayController() {
   const { session, isOffline, send } = useSession()
@@ -33,6 +34,8 @@ export function useDisplayController() {
       progress: session.progress,
       secondsLeft: session.remainingSeconds(now),
       playerCount: session.playerCount,
+      canStart: session.canStart,
+      minPlayers: MIN_PLAYERS,
       players: session.players,
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,

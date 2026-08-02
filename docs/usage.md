@@ -86,7 +86,7 @@ pick a jpg/png/webp/gif file.
 | --- | --- | --- | --- |
 | 1 | On `#/admin`, press **Open session** on a quiz | — | a large QR + the join count |
 | 2 | Visitors scan the QR, enter a name and pick an animal | "You're in, waiting to start" | their animal appearing on the wall, the count going up |
-| 3 | Press **Start** — on the control desk, or **Start the quiz** on the big screen itself | 4 option tiles + a clock | the question in large type + a clock |
+| 3 | Press **Start** — on the control desk (it asks you to confirm), or **Start the quiz** on the big screen itself. Both stay greyed out until 3 players have joined | 4 option tiles + a clock | the question in large type + a clock |
 | 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
 | 5 | Nothing — auto mode shows the standings after 6s (or press **Show standings**) | the top 10 + their own rank | the top 10, moving |
 | 6 | Nothing — auto mode starts the next question after 8s (or press **Next question**) | the new question | the new question |
