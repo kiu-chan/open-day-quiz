@@ -4,6 +4,7 @@ import { ROUTES } from '@common/routing/useHashRoute.js'
 const NAV = [
   { key: 'list', label: 'Quizzes', href: `#${ROUTES.ADMIN}` },
   { key: 'live', label: 'Control desk', href: `#${ROUTES.ADMIN_LIVE}` },
+  { key: 'home', label: 'Home page', href: `#${ROUTES.ADMIN_HOME}` },
 ]
 
 const EXTERNAL = [

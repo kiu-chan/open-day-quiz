@@ -14,6 +14,7 @@ export const ROUTES = {
   ADMIN: '/admin',
   ADMIN_QUIZ: '/admin/quiz/:id',
   ADMIN_LIVE: '/admin/live',
+  ADMIN_HOME: '/admin/home',
   PLAY: '/play',
   DISPLAY: '/display',
 }

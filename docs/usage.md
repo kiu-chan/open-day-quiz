@@ -7,13 +7,14 @@
 | Quiz list | `#/admin` | the host's laptop |
 | Quiz editor | `#/admin/quiz/<id>` | the host's laptop |
 | Control desk | `#/admin/live` | the host's laptop |
+| Home page text | `#/admin/home` | the host's laptop |
 | Player | `#/play` | visitors' phones (via QR) |
 | Big screen | `#/display` | the machine driving the projector |
 
 The admin pages carry two quick links to `#/display` and `#/play` in the top
 right, for testing.
 
-The three admin pages are **behind a password**; `#/play` and `#/display` are not,
+The admin pages are **behind a password**; `#/play` and `#/display` are not,
 since those are the two everybody in the room is meant to reach.
 
 ## The admin password
@@ -54,14 +55,21 @@ not put on the projector.
 4. A quiz has to be "playable" before a session can open: it needs a title, at
    least one question, and every question needs content plus a correct answer.
    The admin page lists exactly what is missing.
-5. Open `#/display` on the projector and leave it there.
-6. Scan the QR with one phone before visitors arrive — that catches a wifi that
+5. Optional: open `#/admin/home` and put the event's own wording on the page
+   visitors land on — the title, the paragraph, the three steps, what the prize
+   is. It saves the same way as the quiz editor (nothing is written until you
+   press **Save**), and emptying a box puts the original wording back. The next
+   visitor to open the home page reads the new text; phones already sitting on it
+   need a reload.
+6. Open `#/display` on the projector and leave it there.
+7. Scan the QR with one phone before visitors arrive — that catches a wifi that
    blocks devices from talking to each other early (see the networking section of
    [installation.md](installation.md)).
 
 Quizzes are stored on the game server (`server/quizzes.json`), so any machine
 that can reach the server sees the same list — you no longer have to open the
-session from the laptop you wrote them on.
+session from the laptop you wrote them on. The home page text sits next to them
+in `server/home.json`, for the same reason.
 
 ### Questions with images
 

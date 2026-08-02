@@ -3,26 +3,37 @@ import {
   ChevronDown,
   MonitorPlay,
   QrCode,
-  Settings2,
   Smartphone,
   Sparkles,
   UserPlus,
   Zap,
 } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
+import { useHeadlineLayout } from '../controllers/useHeadlineLayout.js'
 import { useHomeController } from '../controllers/useHomeController.js'
 import FloatingIcons from './components/FloatingIcons.jsx'
+import HeroTitle from './components/HeroTitle.jsx'
 import LiveStatus from './components/LiveStatus.jsx'
 import Marquee from './components/Marquee.jsx'
 import PrizeTeaser from './components/PrizeTeaser.jsx'
 import StepCard from './components/StepCard.jsx'
-import SurfaceCard from './components/SurfaceCard.jsx'
 
 const CTA_BASE =
   'inline-flex items-center justify-center gap-2 rounded-xl border-2 px-6 py-3.5 text-lg font-medium no-underline transition hover:opacity-85 active:scale-95'
 
+/* The three steps. Only the words are the admin's — the number, the icon and the
+   order are layout, and a step card without its icon is a different design, not
+   different content. */
+const STEPS = [
+  { number: '01', Icon: QrCode, title: 'step1Title', text: 'step1Text', delay: '0ms' },
+  { number: '02', Icon: UserPlus, title: 'step2Title', text: 'step2Text', delay: '120ms' },
+  { number: '03', Icon: Zap, title: 'step3Title', text: 'step3Text', delay: '240ms' },
+]
+
 function HomePage() {
   const home = useHomeController()
+  const headline = useHeadlineLayout()
+  const { content } = home
 
   return (
     <main className="flex flex-1 flex-col">
@@ -38,35 +49,18 @@ function HomePage() {
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <p className="animate-rise border-accent-border text-text-h inline-flex w-fit items-center gap-2 rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide uppercase">
             <Sparkles className="size-4 shrink-0" aria-hidden="true" />
-            Open Day · The campus game
+            {content.badge}
           </p>
 
-          <h1
-            className="animate-rise text-text-h text-6xl leading-[0.85] font-black tracking-tighter sm:text-8xl lg:text-9xl"
-            style={{ animationDelay: '80ms' }}
-          >
-            OPEN
-            <br />
-            DAY
-            <br />
-            {/* The tilted black block: the "festive" accent made out of shape
-                rather than colour. It rocks slowly around that tilt, which is
-                the one bit of movement in the headline itself. */}
-            <span className="mt-2 inline-block -rotate-2">
-              <span className="bg-accent animate-tilt inline-block px-4 pt-1 pb-2 text-white">
-                QUIZ
-              </span>
-            </span>
-          </h1>
+          <HeroTitle headline={content.headline} {...headline} />
 
           <p
             className="animate-rise max-w-2xl text-xl sm:text-2xl"
             style={{ animationDelay: '160ms' }}
           >
-            Scan the QR code, answer on your phone, and watch your name climb the
-            leaderboard on the big screen. Whoever finishes first gets to pick{' '}
+            {content.intro}{' '}
             <strong className="text-text-h font-semibold">
-              one of three mystery prize boxes
+              {content.introHighlight}
             </strong>
             .
           </p>
@@ -89,14 +83,14 @@ function HomePage() {
                 className="relative size-5 shrink-0"
                 aria-hidden="true"
               />
-              <span className="relative">Play now</span>
+              <span className="relative">{content.playCta}</span>
             </a>
             <a
               href={`#${ROUTES.DISPLAY}`}
               className={`${CTA_BASE} border-border text-text-h hover:border-accent-border`}
             >
               <MonitorPlay className="size-5 shrink-0" aria-hidden="true" />
-              Open the big screen
+              {content.displayCta}
             </a>
           </div>
 
@@ -114,94 +108,50 @@ function HomePage() {
         </div>
       </section>
 
-      <Marquee />
+      <Marquee items={content.marquee} />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
         <header className="reveal flex flex-col gap-2">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            How do you play?
+            {content.stepsTitle}
           </h2>
-          <p className="text-lg">Three steps, nothing to install.</p>
+          <p className="text-lg">{content.stepsSubtitle}</p>
         </header>
 
         <ul className="grid list-none gap-5 p-0 sm:grid-cols-3">
-          <StepCard number="01" Icon={QrCode} title="Scan the QR code">
-            The code is right there on the hall's big screen. Your phone camera is
-            enough — no app to download.
-          </StepCard>
-          <StepCard
-            number="02"
-            Icon={UserPlus}
-            title="Enter your name"
-            delay="120ms"
-          >
-            Type the name you want on the leaderboard, then wait for the host to
-            press start.
-          </StepCard>
-          <StepCard number="03" Icon={Zap} title="Answer fast" delay="240ms">
-            Every question has a countdown. Correct answers score points, and the
-            sooner you answer the more you get.
-          </StepCard>
+          {STEPS.map(({ number, Icon, title, text, delay }) => (
+            <StepCard
+              key={number}
+              number={number}
+              Icon={Icon}
+              title={content[title]}
+              delay={delay}
+            >
+              {content[text]}
+            </StepCard>
+          ))}
         </ul>
       </section>
 
       <section className="bg-code-bg border-border border-y">
         <div className="reveal mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-5 py-16 text-center">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            And the prize…
+            {content.prizeTitle}
           </h2>
-          <p className="max-w-xl text-lg">
-            The winner comes up and picks one of three boxes. The boxes are
-            reshuffled every round, so nobody can guess what is in which.
-          </p>
+          <p className="max-w-xl text-lg">{content.prizeText}</p>
 
           <PrizeTeaser />
         </div>
       </section>
 
-      <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
-        <header className="reveal flex flex-col gap-2">
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Three screens, one game
-          </h2>
-          <p className="text-lg">
-            Every device on the same wifi sees the same state.
-          </p>
-        </header>
-
-        <div className="grid gap-5 sm:grid-cols-3">
-          <SurfaceCard
-            href={`#${ROUTES.PLAY}`}
-            Icon={Smartphone}
-            title="Player"
-            description="On a phone: enter your name, pick answers, track your score."
-            featured
-          />
-          <SurfaceCard
-            href={`#${ROUTES.DISPLAY}`}
-            Icon={MonitorPlay}
-            title="Big screen"
-            description="For the projector: QR code, questions, clock, leaderboard."
-            delay="120ms"
-          />
-          <SurfaceCard
-            href={`#${ROUTES.ADMIN}`}
-            Icon={Settings2}
-            title="Admin"
-            description="Write the questions and drive the round from the host's laptop."
-            delay="240ms"
-          />
-        </div>
-      </section>
-
       <footer className="border-border border-t px-5 py-8">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 text-sm">
-          <span>Open Day Quiz — a demo that runs on the local network.</span>
+          <span>{content.footerNote}</span>
           <a
             href={`#${ROUTES.ADMIN_LIVE}`}
             className="text-text-h inline-flex items-center gap-1.5 no-underline"
           >
-            Control desk
+            {content.footerLink}
             <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
           </a>
         </div>

@@ -57,7 +57,7 @@ stateDiagram-v2
 
 | # | Page | Route | Content |
 | --- | --- | --- | --- |
-| H1 | Home | `/` | Introduces the game, the three steps, a prize-box teaser, and links to all three screens. Reads the session to show live status ("The lobby is open", the join count) — read-only, sends no intents |
+| H1 | Home | `/` | Introduces the game, the three steps and a prize-box teaser, with buttons to the player page and the big screen. Reads the session to show live status ("The lobby is open", the join count) — read-only, sends no intents. Every word on it is edited on A4; the title keeps rearranging itself between one line and a stacked column |
 
 ### 2.1 Admin — `features/admin/`
 
@@ -66,6 +66,7 @@ stateDiagram-v2
 | A1 | Quiz list | `/admin` | The table of quizzes, with New / Edit / Delete / Duplicate |
 | A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration |
 | A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winner button |
+| A4 | Home page text | `/admin/home` | Every string on H1 in one form — badge, title, paragraph, buttons, scrolling band, the three steps, the prize blurb, the footer. Saved on demand like A2; an emptied box goes back to its default |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
 allowed to **change the session state**. Player and display only read.
@@ -148,7 +149,8 @@ the original plan — noted underneath.
 | --- | --- | --- | --- |
 | `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow`, `useCountUp` | — |
 | `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `StandingsBoard`, `ScoreCounter`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
-| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController` | A1, A2, A3, `AdminGate` |
+| `common/home` | `HomeContent` (the fields + their defaults), `HomeContentRepository` | — | — |
+| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController` | A1, A2, A3, A4, `AdminGate` |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
@@ -188,7 +190,8 @@ realtime decision is deferred as long as possible**.
 | **5. Prize boxes** | Shuffling, P6 + D5, the opening animation | ✅ done |
 | **6. Polish** | Real QR codes (`qrcode.react`), projector type sizes, `docs/installation.md` + `docs/usage.md` + `docs/architecture.md` | ✅ done |
 | **7. Player avatars** | 50 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
-| **8. Admin password** | One password for the event, set on first run and stored as a scrypt hash in `.env`; `AdminGate` in front of A1–A3, token required to write a quiz or upload an image | ✅ done — see the admin password section of `docs/architecture.md` |
+| **8. Admin password** | One password for the event, set on first run and stored as a scrypt hash in `.env`; `AdminGate` in front of every admin page, token required to write a quiz or upload an image | ✅ done — see the admin password section of `docs/architecture.md` |
+| **9. Editable home page** | The text of H1 pulled out of the JSX into `common/home/models/HomeContent.js`, stored in `server/home.json` and edited on A4 | ✅ done — the "Three screens, one game" section was dropped at the same time; the two remaining buttons in the hero already lead to the player page and the big screen |
 
 The crux of this ordering held up in practice: **every other phase was completed
 without knowing which transport would be chosen**, because `SessionRepository` is

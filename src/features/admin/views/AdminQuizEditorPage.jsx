@@ -4,7 +4,6 @@ import {
   Check,
   ListChecks,
   LoaderCircle,
-  PencilLine,
   Plus,
   Save,
   Timer,
@@ -20,43 +19,8 @@ import Button from '@common/views/Button.jsx'
 import AdminShell from './components/AdminShell.jsx'
 import Panel from './components/Panel.jsx'
 import QuestionEditor from './components/QuestionEditor.jsx'
+import SaveBadge from './components/SaveBadge.jsx'
 import SaveDialog from './components/SaveDialog.jsx'
-
-/**
- * Whether what is on screen is what the server holds. Nothing is written until
- * the Save button is pressed, so this badge is the only thing telling an admin
- * their work is still only in this tab — the icon carries the meaning, the
- * colour never does.
- */
-const SAVE_BADGES = {
-  unsaved: { Icon: PencilLine, label: 'Unsaved changes', iconClass: '' },
-  saving: { Icon: LoaderCircle, label: 'Saving…', iconClass: 'animate-spin' },
-  saved: { Icon: Check, label: 'Saved', iconClass: '' },
-  error: {
-    Icon: TriangleAlert,
-    label: 'Not saved — the server did not answer',
-    iconClass: '',
-  },
-}
-
-function SaveBadge({ state }) {
-  const { Icon, label, iconClass } = SAVE_BADGES[state]
-  // Anything not safely on the server is marked by a heavier dashed border,
-  // not by a colour.
-  const border =
-    state === 'error' || state === 'unsaved'
-      ? 'border-accent-border border-2 border-dashed'
-      : 'border-border'
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs ${border}`}
-    >
-      <Icon className={`size-4 shrink-0 ${iconClass}`} aria-label={label} />
-      {label}
-    </span>
-  )
-}
 
 function AdminQuizEditorPage({ quizId }) {
   const editor = useQuizEditorController(quizId)

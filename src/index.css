@@ -305,6 +305,16 @@
   }
 }
 
+/* The home page headline travelling between its stacked and its one-line
+   arrangement. The transition lives here and the controller only sets and
+   releases a transform, so the movement is described in one place; `--stagger`
+   is set per word, which is what turns three words arriving together into a
+   cascade. Nothing else in the page sets a transform on these words, so a
+   transition that is always on has nothing else to catch. */
+.headline-word {
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) var(--stagger, 0s);
+}
+
 /* People who ask for reduced motion still have to be able to read the page: turn
    the animations off rather than subjecting them to an endlessly scrolling band. */
 @media (prefers-reduced-motion: reduce) {

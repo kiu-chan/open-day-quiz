@@ -13,6 +13,7 @@
  *  - `GET /api/quizzes`, `PUT|DELETE /api/quizzes/<id>` — the quizzes the admin
  *    writes. Plain REST rather than intents: these are content edited by one
  *    person, not shared match state the whole room has to watch.
+ *  - `GET|PUT /api/home` — the text of the home page, for the same reason.
  *  - `GET /api/admin/session`, `POST /api/admin/password`, `POST /api/admin/login`
  *    — the admin password (see `server/adminAuth.js`). Everything that only the
  *    admin does — writing a quiz, uploading an image — carries the token it
@@ -32,6 +33,7 @@
  * Public API: handleApi(req, res, next)
  */
 import { adminAuth, MIN_PASSWORD_LENGTH } from './adminAuth.js'
+import { homeStore } from './homeStore.js'
 import { imageStore, MAX_IMAGE_BYTES } from './imageStore.js'
 import { quizStore } from './quizStore.js'
 import { sessionStore } from './sessionStore.js'
@@ -210,6 +212,23 @@ export async function handleApi(req, res, next) {
     if (req.method === 'DELETE') {
       await quizStore.remove(id)
       return sendJson(res, 200, { ok: true })
+    }
+  }
+
+  if (path === '/api/home') {
+    if (req.method === 'GET') {
+      return sendJson(res, 200, { content: await homeStore.read() })
+    }
+
+    if (req.method === 'PUT') {
+      if (!isAdmin(req)) {
+        return sendJson(res, 401, { error: 'sign in to the admin page first' })
+      }
+
+      const raw = await readJson(req)
+      if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
+
+      return sendJson(res, 200, { content: await homeStore.write(raw) })
     }
   }
 

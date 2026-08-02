@@ -1,5 +1,6 @@
 import { ROUTES, useHashRoute } from '@common/routing/useHashRoute.js'
 import AdminGate from '@features/admin/views/AdminGate.jsx'
+import AdminHomeContentPage from '@features/admin/views/AdminHomeContentPage.jsx'
 import AdminLivePage from '@features/admin/views/AdminLivePage.jsx'
 import AdminQuizEditorPage from '@features/admin/views/AdminQuizEditorPage.jsx'
 import AdminQuizListPage from '@features/admin/views/AdminQuizListPage.jsx'
@@ -34,6 +35,12 @@ function App() {
       return (
         <AdminGate>
           <AdminLivePage />
+        </AdminGate>
+      )
+    case ROUTES.ADMIN_HOME:
+      return (
+        <AdminGate>
+          <AdminHomeContentPage />
         </AdminGate>
       )
     case ROUTES.PLAY:

@@ -41,19 +41,23 @@ boundary; everything else in `models/` stays pure.
 server/                            # game server, node:http only
 ├── index.js                       #   serves dist/ + prints the LAN URLs
 ├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
-│                                  #   + REST /api/quizzes
+│                                  #   + REST /api/quizzes + /api/home
 ├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
 ├── quizStore.js                   #   the quizzes, written to quizzes.json
+├── homeStore.js                   #   the home page text, written to home.json
 ├── imageStore.js                  #   question images, hash-named, written to uploads/
 └── adminAuth.js                   #   the admin password: scrypt hash in .env + tokens
 
 src/
 ├── main.jsx
-├── App.jsx                        # the routing table, 6 routes
+├── App.jsx                        # the routing table, 7 routes
 ├── index.css                      # @import tailwindcss + tokens in @theme
 ├── common/                        # shared by ≥2 features
 │   ├── ids.js
 │   ├── routing/useHashRoute.js    # ~60-line router on location.hash
+│   ├── home/models/               # the home page text: home reads it, admin writes it
+│   │   ├── HomeContent.js         #   the fields + their defaults
+│   │   └── HomeContentRepository.js # I/O: GET/PUT /api/home
 │   ├── session/                   # ← the heart of the app
 │   │   ├── models/
 │   │   │   ├── SessionModel.js    #   the session state machine
@@ -74,14 +78,17 @@ src/
 │                                  # PlayerAvatar, PrizeBoxRow + PrizeBox
 │                                  # + PrizeCelebration, QuizImage
 └── features/
-    ├── home/                      # H1 home page `/` — intro + entry to all 3 screens
-    │   ├── controllers/useHomeController.js
+    ├── home/                      # H1 home page `/` — the intro visitors read first
+    │   ├── controllers/           #   useHomeController (session + text),
+    │   │                          #   useHeadlineLayout (the rearranging title)
     │   └── views/
-    ├── admin/                     # A1 list, A2 quiz editor, A3 control desk
+    ├── admin/                     # A1 list, A2 quiz editor, A3 control desk,
+    │   │                          # A4 home page text
     │   ├── models/                #   QuizRepository (talks to /api/quizzes)
     │   │                          #   + AdminAuthRepository + the seed data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
-    │   │                          #   useLiveController, useAdminAuthController
+    │   │                          #   useLiveController, useAdminAuthController,
+    │   │                          #   useHomeContentController
     │   └── views/                 #   *Page.jsx + AdminGate.jsx (the password lock)
     ├── player/                    # P1–P6 on phones
     │   ├── controllers/usePlayerController.js
@@ -331,6 +338,31 @@ from different machines.
 — `Quiz`, `Question` and every view were untouched. It also carries a one-time
 migration that hands whatever an older version left in `localStorage` to the
 server and then clears the key.
+
+**The home page text travels the same road.** Everything a visitor reads on `/`
+— the badge, the title, the paragraph, the buttons, the scrolling band, the three
+steps, the prize blurb, the footer — is a flat record of strings in
+[HomeContent.js](../src/common/home/models/HomeContent.js), edited on A4 and
+served by `homeStore.js` from `server/home.json` (gitignored) over
+`GET|PUT /api/home`. It is content one person edits, exactly like a quiz, so it
+gets REST rather than the intent path, and the same "nothing is written until Save
+is pressed" rule — with the home page it matters more, because half-typed
+sentences would be published to everybody in the hall.
+
+The model sits in `common/` because two features genuinely need it: `home/` reads
+it, `admin/` writes it. Two rules live in it rather than in either feature. **A
+blank field falls back to its default**, so no edit can leave the page with a hole
+in it and "clear the box to get the original wording back" is one line on the
+form; and **every read is normalised through `homeContentFromJSON`**, so a
+`home.json` written before a field existed still produces a complete record. The
+consequence of the first rule is that no piece of copy can be *removed* by
+emptying it — a section that should disappear is a code change, which is what
+happened to the old "Three screens, one game" block.
+
+`useHomeController` swallows a failed load and keeps the defaults on purpose: a
+visitor standing at the stand is better served by the original copy than by an
+error where the headline should be, and `LiveStatus` already says when the server
+is unreachable.
 
 **One copy of the game rules.** `server/sessionStore.js` imports the exact
 `SessionModel.js` the client uses — there is no parallel "server-side rulebook" to
