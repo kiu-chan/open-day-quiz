@@ -8,11 +8,13 @@ const SIZES = {
     icon: 'size-4',
     avatar: 'size-7',
   },
+  // Sized so ten rows and a heading fit a projector without scrolling — the
+  // same proportions the standings board uses.
   display: {
-    row: 'gap-6 px-6 py-4 text-2xl lg:text-3xl',
-    rank: 'w-10 text-xl',
-    icon: 'size-8',
-    avatar: 'size-14',
+    row: 'gap-5 px-5 py-2 text-2xl',
+    rank: 'w-9 text-2xl',
+    icon: 'size-7',
+    avatar: 'size-10',
   },
 }
 

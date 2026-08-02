@@ -248,7 +248,8 @@ export function usePlayerController() {
         ? (session.previousLeaderboard.rowOf(identity.id)?.score ?? 0)
         : 0,
       standings: session.standings,
-      topRows: leaderboard.top,
+      /** The final board a phone may show: the top ten, never the whole hall. */
+      topTen: leaderboard.topTen,
       isWinner: identity !== null && session.winnerId === identity.id,
       winnerName: session.winner?.name ?? null,
       prizeBoxes: session.prizeBoxes,

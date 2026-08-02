@@ -102,7 +102,7 @@ The three screens **are not three applications**. All three read the same
 | `question` | how many have answered | 4 tappable tiles | the question in huge type + clock |
 | `reveal` | the pick distribution, Show standings | right/wrong + points | the correct answer |
 | `standings` | the top ten, Next button | the top ten + their own rank | the top ten, moving |
-| `podium` | the leaderboard, Announce button | their own rank | the top 3 |
+| `podium` | the full leaderboard, Announce button | their own rank + the top ten | the top ten |
 | `prize` | waiting | 3 boxes (winner only) | 3 boxes, prize opening |
 
 If every surface kept its own copy of the state, the three screens would drift
@@ -556,6 +556,41 @@ streamers set a `--stagger` that the animation adds to that shared start time
 as one mechanical pulse. The reduced-motion block has to zero `animation-delay`
 as well as the durations — shortening a duration does not shorten a delay, and
 the whole reveal is delays.
+
+## Ranking: shared ranks, and a board that stops at ten
+
+Two rules in [Leaderboard.js](../src/common/session/models/Leaderboard.js) shape
+every board in the app, and both are model rules rather than layout choices, so
+the three surfaces cannot disagree about them.
+
+**Equal scores share a rank.** `withRanks` compares scores only: 1, 2, 2, 4 —
+competition ranking, with the used-up place skipped. Total answering time still
+**orders** the list, it just no longer separates two equal scores into two
+different numbers. A rank a visitor cannot explain from the points on their own
+screen is a rank they will argue about at the stand.
+
+Time is still what hands out the **prize**, though, because a prize goes to
+exactly one person: the winner is the first row, so of the players sharing first
+place the fastest one takes it with no admin action. `hasTieAtTop` is therefore
+*not* "several rows with rank 1" — it is the players equal to the leader on
+score **and** total time, the one case with no rule left to apply, and the only
+one where the control desk asks a human to choose.
+
+**Every board a visitor sees stops at `TOP_COUNT` (10) rows** — the standings
+between questions and the final leaderboard, on the phone and on the projector
+alike. Below tenth place a player is shown their own rank (`leaderboard.rowOf`)
+and nothing about anybody else, which is why the player and display controllers
+expose `topTen` and no longer expose the full `rows` at all: a view cannot leak
+what its controller never handed it. The control desk keeps the whole list — the
+host is the one person who needs it, not least to break a tie.
+
+The cap is a rule about what is *drawn*. The SSE snapshot still carries every
+player and every answer, because all three surfaces recompute the same
+`Leaderboard` from it; a phone with the developer tools open can still work out
+the ranking of the whole hall. Hiding it properly would mean the server sending
+a different snapshot to every client, which is a different architecture than
+the one in "Realtime" below, for a demo where the roster is a wall of animals
+everyone can already see.
 
 ## The standings between two questions
 

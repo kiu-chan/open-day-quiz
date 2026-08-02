@@ -25,7 +25,7 @@ all look at **one single session state**, differing only in how they draw it:
 | `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
 | `reveal` | Show standings button | Right/wrong + their points | The correct answer + pick distribution |
 | `standings` | The top 10, Next question button | The top 10 + their own rank | The top 10, moving |
-| `podium` | The leaderboard, Announce winner button | Their own rank | Top 3 |
+| `podium` | The full leaderboard, Announce winner button | Their own rank + the top 10 | The top 10 |
 | `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
 
 The consequence: **this state machine is a shared model**, belonging to no single
@@ -82,7 +82,7 @@ held portrait.
 | P3 | Answering a question | `question` — 4 large tiles, a clock, locks after tapping |
 | P4 | Right/wrong + points | `reveal` |
 | P4b | The top 10 with the rank change | `standings` |
-| P5 | Their own rank | `podium` |
+| P5 | Their own rank + the top 10 | `podium` |
 | P6 | Pick a prize box | `prize`, **winner only**; everyone else gets a waiting screen |
 
 ### 2.3 Display — `features/display/`
@@ -97,7 +97,7 @@ D1 — the host is usually standing at the screen, not at the laptop.
 | D2 | The question, options and countdown | `question` |
 | D3 | The correct answer + the pick distribution | `reveal` |
 | D3b | The top 10 with the rank change, alone on the screen | `standings` |
-| D4 | The winner / top 3 | `podium` |
+| D4 | The top 10 | `podium` |
 | D5 | 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
 
 ---
@@ -232,7 +232,7 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 | 2 | **Routing** | Hand-written on `location.hash`, ~60 lines in `common/routing/useHashRoute.js` | Avoids react-router, avoids SPA fallback configuration, and the QR code never lands on a 404 |
 | 3 | **QR library** | `qrcode.react`, rendering SVG | Stays crisp blown up on a projector, and defaults to black on white, which fits the layout rules |
 | 4 | **Scoring** | Correct = 1000 points + a speed bonus of up to 500, decreasing linearly with time used | With ~5 questions, 1 point per question produces mass ties and no way to pick **one** winner to award a prize to |
-| 5 | **Ties for first place** | Broken by total answering time. Equal on both means both share first place, and the control desk lists them so the admin can click who gets the prize | Handles nearly every case automatically; only an exact tie needs a human |
+| 5 | **Ties** | Equal scores share a rank (1, 2, 2, 4). The list is still ordered by total answering time, and the fastest of the players sharing first place takes the prize automatically; equal on score *and* time is the only case the control desk asks the admin to decide | A rank should follow the score a player can see, but a prize has to go to exactly one person; only an exact tie needs a human |
 | 8 | **Who the winner is** | `winnerId` is stored in the session at announcement time, not derived from the leaderboard | The prize step needs to know exactly whose it is, and it lets the admin pick manually on a tie |
 | 1 | **Realtime** | A self-hosted Node server on the LAN (`node:http`, no dependencies), SSE `/api/events` + `POST /api/intent`, the server as source of truth | The project owner decided visitors share the wifi with the computer. No internet needed, no data leaves the room. SSE because `EventSource` reconnects itself — a phone that locks and unlocks its screen rejoins on its own; Socket.IO adds ~40 kB for bidirectional traffic this app does not use |
 | 9 | **Source of truth** | The server applies the rules, clients only send intents | With direct client writes, one phone could POST a fabricated session; and `msTaken` has to be measured by one clock, otherwise whoever has the slowest clock gets bonus points |

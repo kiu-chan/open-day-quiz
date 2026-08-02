@@ -178,9 +178,9 @@ function DisplayBody({ display }) {
         <div className="flex flex-col items-center gap-8">
           <h1 className="text-text-h flex items-center gap-4 text-5xl tracking-tight lg:text-6xl">
             <Trophy className="size-12" strokeWidth={1.5} aria-hidden="true" />
-            Leaderboard
+            Top 10
           </h1>
-          <LeaderboardTable rows={display.topRows} variant="display" />
+          <LeaderboardTable rows={display.topTen} variant="display" />
         </div>
       </DisplayShell>
     )

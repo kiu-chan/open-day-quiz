@@ -40,8 +40,8 @@ export function useDisplayController() {
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
       joinUrl: `${window.location.origin}${window.location.pathname}#${ROUTES.PLAY}`,
-      leaderboardRows: leaderboard.rows,
-      topRows: leaderboard.top,
+      /** The big screen shows the top ten and stops there, like the phones. */
+      topTen: leaderboard.topTen,
       /** The top ten with the move each player just made — drawn at the reveal. */
       standings: session.standings,
       winnerName: session.winner?.name ?? null,

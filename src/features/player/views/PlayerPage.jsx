@@ -231,11 +231,14 @@ function PlayerBody({ player }) {
             {player.myRow?.score ?? 0} points · {player.myRow?.correctCount ?? 0}/
             {player.total} correct
           </p>
+          <p className="text-xs opacity-70">of {player.playerCount} players</p>
         </section>
 
-        <h2 className="text-text-h text-lg">Top 3</h2>
+        {/* The board stops at ten; anyone below it reads their own rank above
+            and nobody else's. */}
+        <h2 className="text-text-h text-lg">Top 10</h2>
         <LeaderboardTable
-          rows={player.topRows}
+          rows={player.topTen}
           highlightId={player.myRow?.playerId}
         />
       </PlayerShell>

@@ -5,25 +5,34 @@
  * scoring that way leaves a crowd of people tied with no way to pick **one**
  * winner to hand a prize to. So a correct answer = base points + a speed bonus.
  *
- * Ties are broken by total answering time (faster ranks higher). Equal on both
- * score and time means both share a rank — at that point the admin picks the
- * winner by hand from the control desk.
+ * **Equal scores share a rank.** The ordering still puts the faster player
+ * first, but the number next to the row only follows the score: two people on
+ * 3200 are both 2nd and the row under them is 4th. Nobody is pushed down a place
+ * for something they cannot see, and it is the ranking a hall reads off a
+ * projector without arguing.
+ *
+ * Time is still the tiebreak that hands out the **prize**: the fastest of the
+ * players sharing first place wins it without the admin doing anything. Only an
+ * exact tie on score *and* time is undecidable — that is `hasTieAtTop`, and then
+ * the admin picks the winner by hand from the control desk.
  *
  * Does not import React and does not know where the session is stored — it only
  * takes a session in and returns a ranking.
  *
- * Public API: BASE_POINTS, MAX_SPEED_BONUS, STANDINGS_COUNT,
+ * Public API: BASE_POINTS, MAX_SPEED_BONUS, TOP_COUNT,
  * pointsOf(question, answer), Leaderboard.from(session)
  */
 export const BASE_POINTS = 1000
 export const MAX_SPEED_BONUS = 500
 
 /**
- * How many rows the standings shown between two questions carry. Ten is what a
- * projector holds at a readable size, and it is a rule of the round rather than
- * a layout choice — the phone and the big screen show the same ten.
+ * How many rows any public board carries — the standings between two questions
+ * and the final leaderboard alike. Ten is what a projector holds at a readable
+ * size, and it is a rule of the round rather than a layout choice: the phone and
+ * the big screen show the same ten, and everybody below the tenth place learns
+ * their own rank and nobody else's.
  */
-export const STANDINGS_COUNT = 10
+export const TOP_COUNT = 10
 
 /** Points for one answer. Wrong or unanswered scores 0. */
 export function pointsOf(question, answer) {
@@ -36,20 +45,18 @@ export function pointsOf(question, answer) {
 }
 
 /**
- * Attach ranks to an already sorted list. Competition ranking: equals share a
- * rank, then the used-up ranks are skipped (1, 2, 2, 4) — not 1, 2, 2, 3.
+ * Attach ranks to an already sorted list. Competition ranking on the score
+ * alone: equal scores share a rank, then the used-up ranks are skipped
+ * (1, 2, 2, 4) — not 1, 2, 2, 3. The faster of two equal scores still comes
+ * first in the list, it just does not get a better number for it.
  */
 function withRanks(sorted) {
   let rank = 0
-  let previous = null
+  let previousScore = null
 
   return sorted.map((row, index) => {
-    const isTied =
-      previous !== null &&
-      previous.score === row.score &&
-      previous.totalMs === row.totalMs
-    if (!isTied) rank = index + 1
-    previous = row
+    if (row.score !== previousScore) rank = index + 1
+    previousScore = row.score
 
     return { ...row, rank }
   })
@@ -104,17 +111,27 @@ export class Leaderboard {
     return this.rows.length === 0
   }
 
-  get top() {
-    return this.rows.slice(0, 3)
+  /** The only slice a player or the big screen is ever shown — see `TOP_COUNT`. */
+  get topTen() {
+    return this.rows.slice(0, TOP_COUNT)
   }
 
   get winner() {
     return this.rows[0] ?? null
   }
 
-  /** Several people sharing first place → the admin has to choose who gets the prize. */
+  /**
+   * The players the round cannot tell apart: same score **and** same total
+   * answering time as the leader, so there is no rule left to rank them by and
+   * the admin has to choose who gets the prize. Sharing first place on score
+   * alone is not one of these — the faster player takes the prize.
+   */
   get topRows() {
-    return this.rows.filter((row) => row.rank === 1)
+    const winner = this.winner
+    if (!winner) return []
+    return this.rows.filter(
+      (row) => row.score === winner.score && row.totalMs === winner.totalMs,
+    )
   }
 
   get hasTieAtTop() {
@@ -140,7 +157,7 @@ export class Leaderboard {
       previous.rows.map((row, index) => [row.playerId, { ...row, index }]),
     )
 
-    return this.rows.slice(0, STANDINGS_COUNT).map((row) => {
+    return this.topTen.map((row) => {
       const was = before.get(row.playerId) ?? null
 
       return {

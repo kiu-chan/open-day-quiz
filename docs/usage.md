@@ -90,7 +90,7 @@ pick a jpg/png/webp/gif file.
 | 4 | Let the clock run out (auto-closes) or press **Reveal answer** | right/wrong + points earned | the correct answer + how many picked each option |
 | 5 | Nothing — auto mode shows the standings after 6s (or press **Show standings**) | the top 10 + their own rank | the top 10, moving |
 | 6 | Nothing — auto mode starts the next question after 8s (or press **Next question**) | the new question | the new question |
-| 7 | After the last question, nothing again (or press **See results**) | their own rank + the top 3 | the leaderboard |
+| 7 | After the last question, nothing again (or press **See results**) | their own rank + the top 10 | the top 10 |
 | 8 | Nothing — auto mode announces the winner after 10s (or press **Announce the winner**) | the winner sees 3 prize boxes | 3 prize boxes |
 | 9 | The winner picks a box | the prize name | the box opens, prize name in large type |
 | 10 | Press **End session** | back to the waiting screen | back to the waiting screen |
@@ -159,9 +159,17 @@ or switch auto mode off to talk the hall through the changes.
   linearly with the time used. Answering instantly scores 1500, answering just
   before the buzzer scores about 1000.
 - Wrong or too late: **0 points**.
-- On equal scores, whoever has the lower **total answering time** ranks higher.
-- Equal on both means both share first place, and the control desk shows a list
-  so the admin can click who gets the prize.
+- **Equal scores share a rank.** Two people on 3200 are both 2nd and the row
+  under them is 4th; nobody is pushed down a place for a fraction of a second
+  they cannot see.
+- The list is still **ordered** by total answering time within an equal score,
+  and that is what hands out the prize: of the players sharing first place, the
+  fastest one wins it, automatically.
+- Equal on score **and** total time is the one case the round cannot decide, so
+  the control desk lists those names and the admin clicks who gets the prize.
+- Every board a visitor sees stops at **ten rows** — on the phone and on the big
+  screen. Below tenth place you are shown your own rank and nothing about
+  anybody else. The control desk keeps the full list, since the host needs it.
 
 Scoring by speed is deliberate: a round is only about 5 questions, and scoring
 1 point per question leaves a crowd of people tied with no way to pick **one**
