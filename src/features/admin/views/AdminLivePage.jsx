@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  Check,
   Eye,
   Gift,
   ListChecks,
@@ -31,6 +32,7 @@ import QuestionPreview from './components/QuestionPreview.jsx'
 import StartDialog from './components/StartDialog.jsx'
 import StateBadge from './components/StateBadge.jsx'
 import StatTile from './components/StatTile.jsx'
+import WinnerPicker from './components/WinnerPicker.jsx'
 
 /**
  * The button row for the current step. The move-on button is always on the left
@@ -278,45 +280,38 @@ function LiveBody({ live }) {
             <LeaderboardTable rows={live.leaderboardRows} />
           </Panel>
 
-          {live.hasTieAtTop ? (
-            <Panel title="Choose who gets the prize" Icon={Gift} dashed>
-              <p className="text-sm">
-                {live.topRows.length} people are tied on both score and time —
-                please pick one
-                {live.isAuto && ' (auto mode will not choose for you)'}:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {live.topRows.map((row) => (
-                  <Button
-                    key={row.playerId}
-                    variant="primary"
-                    onClick={() => live.announceWinner(row.playerId)}
-                  >
-                    <Trophy className="size-4" aria-hidden="true" />
-                    {row.name}
-                  </Button>
-                ))}
-              </div>
-            </Panel>
+          {live.hasTie ? (
+            <WinnerPicker
+              settled={live.settledRows}
+              candidates={live.tiedRows}
+              winnerCount={live.winnerCount}
+              isAuto={live.isAuto}
+              onAnnounce={live.announceWinners}
+            />
           ) : (
             <ActionBar>
               <Button
                 variant="primary"
                 className="px-6 py-3 text-lg"
-                disabled={live.leaderboardRows.length === 0}
+                disabled={live.winnerRows.length === 0}
                 onClick={() =>
-                  live.announceWinner(live.leaderboardRows[0].playerId)
+                  live.announceWinners(
+                    live.winnerRows.map((row) => row.playerId),
+                  )
                 }
               >
                 <Trophy className="size-5" aria-hidden="true" />
-                Announce the winner
-                {live.leaderboardRows.length > 0 &&
-                  `: ${live.leaderboardRows[0].name}`}
+                {live.winnerCount === 1
+                  ? 'Announce the winner'
+                  : `Announce the ${live.winnerCount} winners`}
+                {live.winnerRows.length > 0 &&
+                  `: ${live.winnerRows.map((row) => row.name).join(', ')}`}
               </Button>
-              {live.isAuto && live.leaderboardRows.length > 0 && (
+              {live.isAuto && live.winnerRows.length > 0 && (
                 <span className="text-sm opacity-70">
-                  Auto is on — the winner is announced in {live.autoSecondsLeft}
-                  s. Press to go now.
+                  Auto is on — the{' '}
+                  {live.winnerCount === 1 ? 'winner is' : 'winners are'}{' '}
+                  announced in {live.autoSecondsLeft}s. Press to go now.
                 </span>
               )}
             </ActionBar>
@@ -324,24 +319,49 @@ function LiveBody({ live }) {
         </>
       )}
 
-      {live.state === SESSION_STATES.PRIZE && (
-        <Panel title="Prize giving" Icon={Gift}>
-          <p className="text-base">
-            Waiting for{' '}
-            <span className="text-text-h font-semibold">{live.winnerName}</span>{' '}
-            to pick one of the three boxes on their phone.
-          </p>
-        </Panel>
-      )}
+      {(live.state === SESSION_STATES.PRIZE ||
+        live.state === SESSION_STATES.PRIZE_REVEALED) && (
+        <Panel
+          title={live.pickingName ? 'Prize giving' : 'Prizes awarded'}
+          Icon={Gift}
+        >
+          {/* Every winner in rank order, each opening their own set of boxes
+              when their turn comes round. */}
+          <ul className="flex list-none flex-col gap-2 p-0">
+            {live.prizeRows.map((row) => (
+              <li
+                key={row.playerId}
+                className="border-border flex flex-wrap items-center gap-2 rounded-xl border p-3 text-base"
+              >
+                <span className="text-text-h font-semibold">{row.name}</span>
+                {row.boxes.isPicked ? (
+                  <>
+                    <Check
+                      className="size-4 shrink-0"
+                      strokeWidth={2.5}
+                      aria-label="Opened a box"
+                    />
+                    got{' '}
+                    <span className="text-text-h font-semibold">
+                      {row.boxes.pickedPrize.name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm opacity-70">
+                    {row.isPicking
+                      ? 'is picking one of three boxes on their phone'
+                      : 'is waiting their turn'}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
 
-      {live.state === SESSION_STATES.PRIZE_REVEALED && (
-        <Panel title="Prize awarded" Icon={Gift}>
-          <p className="text-base">
-            <span className="text-text-h font-semibold">{live.winnerName}</span>{' '}
-            got{' '}
-            <span className="text-text-h font-semibold">{live.pickedPrize}</span>.
-          </p>
-          <p className="text-sm opacity-70">End the session to play another round.</p>
+          {live.pickingName === null && (
+            <p className="text-sm opacity-70">
+              End the session to play another round.
+            </p>
+          )}
         </Panel>
       )}
 

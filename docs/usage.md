@@ -52,17 +52,20 @@ not put on the projector.
    field shows "Mixed" when the questions no longer agree — typing in it makes
    them agree again. Players see this countdown both as the number and as a bar
    draining under it.
-4. A quiz has to be "playable" before a session can open: it needs a title, at
+4. Set **Winners per round** (1–5) next to the countdown — how many people the
+   round hands a prize to at the end. It is saved with the quiz, so bring as many
+   prizes as the number says.
+5. A quiz has to be "playable" before a session can open: it needs a title, at
    least one question, and every question needs content plus a correct answer.
    The admin page lists exactly what is missing.
-5. Optional: open `#/admin/home` and put the event's own wording on the page
+6. Optional: open `#/admin/home` and put the event's own wording on the page
    visitors land on — the title, the paragraph, the three steps, what the prize
    is. It saves the same way as the quiz editor (nothing is written until you
    press **Save**), and emptying a box puts the original wording back. The next
    visitor to open the home page reads the new text; phones already sitting on it
    need a reload.
-6. Open `#/display` on the projector and leave it there.
-7. Scan the QR with one phone before visitors arrive — that catches a wifi that
+7. Open `#/display` on the projector and leave it there.
+8. Scan the QR with one phone before visitors arrive — that catches a wifi that
    blocks devices from talking to each other early (see the networking section of
    [installation.md](installation.md)).
 
@@ -99,8 +102,8 @@ pick a jpg/png/webp/gif file.
 | 5 | Nothing — auto mode shows the standings after 6s (or press **Show standings**) | the top 10 + their own rank | the top 10, moving |
 | 6 | Nothing — auto mode starts the next question after 8s (or press **Next question**) | the new question | the new question |
 | 7 | After the last question, nothing again (or press **See results**) | their own rank + the top 10 | the top 10 |
-| 8 | Nothing — auto mode announces the winner after 10s (or press **Announce the winner**) | the winner sees 3 prize boxes | 3 prize boxes |
-| 9 | The winner picks a box | the prize name | the box opens, prize name in large type |
+| 8 | Nothing — auto mode announces the winners after 10s (or press **Announce the winners**) | each winner sees their own 3 prize boxes | every winner's 3 boxes |
+| 9 | The winners pick a box each, one at a time from the top of the leaderboard down | the prize name | the boxes open one after another, prize names in large type |
 | 10 | Press **End session** | back to the waiting screen | back to the waiting screen |
 
 **Visitors struggling to scan?** Click the QR code — on the control desk or on
@@ -135,11 +138,11 @@ desk. Switch it off if you want to talk the hall through each answer yourself.
 - Steps 4 to 8 of the table above happen by themselves. The buttons keep
   working: pressing **Show standings** or **Next question** during a pause goes
   now instead of waiting.
-- **Auto runs to the prize.** The final results stay up for 10 seconds and then
-  the winner is announced by itself. It stops for two things only: a **tie for
-  first place**, where the desk asks you to pick one of the tied names (auto will
-  not choose for you), and the **prize box**, which is the winner's to tap.
-  Ending the session is still yours to press.
+- **Auto runs to the prizes.** The final results stay up for 10 seconds and then
+  the winners are announced by themselves. It stops for two things only: a **tie
+  across the winning line**, where the desk asks you to fill the last slots from
+  the tied names (auto will not choose for you), and the **prize boxes**, which
+  are the winners' to tap. Ending the session is still yours to press.
 - The pause is timed by the server, so it is the same on every screen.
 
 ## The top 10 after each question
@@ -171,27 +174,42 @@ or switch auto mode off to talk the hall through the changes.
   under them is 4th; nobody is pushed down a place for a fraction of a second
   they cannot see.
 - The list is still **ordered** by total answering time within an equal score,
-  and that is what hands out the prize: of the players sharing first place, the
-  fastest one wins it, automatically.
-- Equal on score **and** total time is the one case the round cannot decide, so
-  the control desk lists those names and the admin clicks who gets the prize.
+  and that is what hands out the prizes: of the players sharing a place, the
+  faster one takes the winning slot, automatically.
+- Equal on score **and** total time, either side of the line between winning and
+  not, is the one case the round cannot decide, so the control desk lists those
+  names and the admin taps who fills the last slots.
 - Every board a visitor sees stops at **ten rows** — on the phone and on the big
   screen. Below tenth place you are shown your own rank and nothing about
   anybody else. The control desk keeps the full list, since the host needs it.
 
 Scoring by speed is deliberate: a round is only about 5 questions, and scoring
-1 point per question leaves a crowd of people tied with no way to pick **one**
-winner to hand a prize to.
+1 point per question leaves a crowd of people tied with no way to pick the few
+winners a prize is handed to.
+
+## How many people win
+
+Set **Winners per round** in the quiz editor: between 1 and 5, saved with the
+quiz. It is a property of the quiz rather than a switch on the control desk, so
+whoever runs the stand does not have to remember the number of prizes you brought
+while a hall is watching. The top players of the final leaderboard win, in order.
+
+A round never hands out more prizes than it has players, so a quiz asking for 3
+winners in front of 3 people simply makes everybody a winner.
 
 ## The three prize boxes
 
-The prize positions are reshuffled **every time a winner is announced**, so
-nobody can guess what is in which. Only the winner can click, and only once.
+Each winner gets **their own three boxes**, reshuffled separately, so nobody can
+guess what is in which and nobody is left with whatever the person before them
+did not take. They open them **one at a time, from the top of the leaderboard
+down**: a winner further down the list sees their boxes but cannot tap until the
+winners above them are done, and their phone says whose turn it is.
 
 Tapping a box unwraps it — on the phone and on the big screen at the same time.
-The other two boxes disappear, the chosen one slides to the middle of the screen
-and grows, fireworks go off, and the prize inside comes out with its name and a
-line describing it.
+The other two boxes disappear, the chosen one slides to the middle of its row and
+grows, fireworks go off, and the prize inside comes out with its name and a line
+describing it. The big screen keeps every winner on show throughout, so an opened
+box stays up while the next winner takes their turn.
 
 Edit the prize list in
 [src/common/session/models/PrizeBoxes.js](../src/common/session/models/PrizeBoxes.js),

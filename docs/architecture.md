@@ -110,7 +110,7 @@ The three screens **are not three applications**. All three read the same
 | `reveal` | the pick distribution, Show standings | right/wrong + points | the correct answer |
 | `standings` | the top ten, Next button | the top ten + their own rank | the top ten, moving |
 | `podium` | the full leaderboard, Announce button | their own rank + the top ten | the top ten |
-| `prize` | waiting | 3 boxes (winner only) | 3 boxes, prize opening |
+| `prize` | who has opened what | 3 boxes (winners only, in turn) | every winner's boxes, prize opening |
 
 If every surface kept its own copy of the state, the three screens would drift
 apart. So the state machine is **one** shared model, and it belongs to no
@@ -127,8 +127,8 @@ stateDiagram-v2
     reveal --> standings: 6s / admin clicks
     standings --> question: questions remain
     standings --> podium: no questions left
-    podium --> prize: 10s / admin announces the winner
-    prize --> prizeRevealed: the winner picks a box
+    podium --> prize: 10s / admin announces the winners
+    prize --> prizeRevealed: the last winner picks a box
     prizeRevealed --> idle: session ended
     lobby --> idle: admin cancels
 ```
@@ -161,12 +161,14 @@ ever on screen; how long each lasts is `AUTO_SECONDS` in the model, next to the
 question duration. It reuses the very transitions the admin's buttons send, so
 auto mode can never reach a state a host could not reach by hand. It runs to the
 end of the round: the podium hands over to the
-prize step by announcing whoever tops the leaderboard, which is why "move on"
-from the podium *is* `announceWinner` rather than a separate path into `prize`.
+prize step by announcing the top `winnerCount` of the leaderboard, which is why
+"move on" from the podium *is* `announceWinners` rather than a separate path into
+`prize`.
 
 It stops for exactly two things, and both are decisions rather than steps: a
-**tie for first place**, where no automatic rule can be fair and the desk shows
-the tied names to pick from, and the **prize box**, which is the winner's to tap.
+**tie across the winning line**, where no automatic rule can be fair and the desk
+shows the tied names to pick from, and the **prize boxes**, which are the
+winners' to tap.
 `AUTO_SECONDS` is the whole list of self-advancing steps — a state missing from
 that table is one auto mode never leaves by itself, and `#autoDeadlineFor` is
 where the tie exception lives, so a step that cannot move on is never armed in
@@ -549,6 +551,34 @@ which no amount of architecture turns into a pure render — and it is presentat
 machinery, not a game rule, so it stays in the view rather than being pushed into
 a controller. Nothing else touches the animation player.
 
+## How many winners, and how they open their boxes
+
+**The quiz says how many people win.** `Quiz.winnerCount` (1 to `MAX_WINNERS`,
+edited on A2 and written to `quizzes.json`) travels into the session with the
+rest of the quiz, so the host does not have to remember a number while a hall is
+watching. `SessionModel.winnerCount` caps it at the number of players: three
+prizes and two people in the room would otherwise leave the prize step waiting
+for somebody who does not exist.
+
+**Every winner gets their own three boxes.** `prizeBoxes` is an array of
+`PrizeBoxes`, one per entry in `winnerIds` and shuffled separately, rather than
+one shared set the winners take from in turn — everybody gets the same choice of
+three, and nobody is handed whatever the person before them left behind.
+
+**They open them one at a time, in rank order.** `pickingIndex` is just the first
+winner with an unopened set, so the turn moves on by itself and there is no
+"whose turn" field to keep in step with the boxes. The round stays in `prize`
+until the last set is opened and only then moves to `prizeRevealed`, which is
+what keeps the state machine unchanged for a round with one winner.
+
+The big screen shows **all** the winners at once, each with their own row of
+boxes, and dims the ones whose turn has not come. That is not decoration: if it
+drew only the current picker, the box that just opened would be swapped for the
+next winner's closed boxes the instant the pick landed, and the room would never
+see what was in it. A phone only ever draws its own row, and only receives
+`onPick` on its own turn — offering a tap the server is about to refuse is worse
+than offering none.
+
 ## Opening a prize box
 
 A box holds a **prize id**, not the prize itself: `PrizeBoxes.prizeIds` is a
@@ -601,12 +631,15 @@ competition ranking, with the used-up place skipped. Total answering time still
 different numbers. A rank a visitor cannot explain from the points on their own
 screen is a rank they will argue about at the stand.
 
-Time is still what hands out the **prize**, though, because a prize goes to
-exactly one person: the winner is the first row, so of the players sharing first
-place the fastest one takes it with no admin action. `hasTieAtTop` is therefore
-*not* "several rows with rank 1" — it is the players equal to the leader on
-score **and** total time, the one case with no rule left to apply, and the only
-one where the control desk asks a human to choose.
+Time is still what hands out the **prizes**, though, because there is a fixed
+number of them: `winnerRows(count)` is simply the top `count` rows, so of the
+players sharing a place the fastest one takes the slot with no admin action.
+`hasTieAt(count)` is therefore *not* "several rows share a rank" — it is two
+players equal on score **and** total time sitting either side of the line
+between winning and not, the one case with no rule left to apply, and the only
+one where the control desk asks a human to choose. It asks about the open slots
+only: `settledRows(count)` are the winners no decision can change, and the host
+fills the rest from `tiedRowsAt(count)`.
 
 **Every board a visitor sees stops at `TOP_COUNT` (10) rows** — the standings
 between questions and the final leaderboard, on the phone and on the projector

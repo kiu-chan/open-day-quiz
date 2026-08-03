@@ -29,8 +29,8 @@ export function useLiveController() {
   const start = useCallback(() => send({ type: 'start' }), [send])
   const reveal = useCallback(() => send({ type: 'reveal' }), [send])
   const goNext = useCallback(() => send({ type: 'next' }), [send])
-  const announceWinner = useCallback(
-    (winnerId) => send({ type: 'announceWinner', winnerId }),
+  const announceWinners = useCallback(
+    (winnerIds) => send({ type: 'announceWinners', winnerIds }),
     [send],
   )
   const cancel = useCallback(() => send({ type: 'cancel' }), [send])
@@ -42,6 +42,7 @@ export function useLiveController() {
 
   const state = useMemo(() => {
     const leaderboard = session.leaderboard
+    const winnerCount = session.winnerCount
 
     return {
       state: session.state,
@@ -64,11 +65,21 @@ export function useLiveController() {
       joinUrl: joinUrl(),
       leaderboardRows: leaderboard.rows,
       standings: session.standings,
-      /** Several people sharing first place means the admin picks who gets the prize. */
-      topRows: leaderboard.topRows,
-      hasTieAtTop: leaderboard.hasTieAtTop,
-      winnerName: session.winner?.name ?? null,
-      pickedPrize: session.prizeBoxes?.pickedPrize?.name ?? null,
+      /** How many people this round hands a prize to — the quiz decides. */
+      winnerCount,
+      /** The winners as the leaderboard sees them, before anyone is announced. */
+      winnerRows: leaderboard.winnerRows(winnerCount),
+      /**
+       * A tie the round cannot settle: the winning line falls between people on
+       * the same score *and* the same time, so the admin fills the last slots by
+       * hand from `tiedRows`, on top of the `settledRows` that are safe anyway.
+       */
+      hasTie: leaderboard.hasTieAt(winnerCount),
+      tiedRows: leaderboard.tiedRowsAt(winnerCount),
+      settledRows: leaderboard.settledRows(winnerCount),
+      /** One row per announced winner: their boxes, and whose turn it is. */
+      prizeRows: session.prizeRows,
+      pickingName: session.findPlayer(session.pickingPlayerId)?.name ?? null,
     }
   }, [session, now, isOffline])
 
@@ -77,7 +88,7 @@ export function useLiveController() {
     start,
     reveal,
     goNext,
-    announceWinner,
+    announceWinners,
     cancel,
     reset,
     setAuto,

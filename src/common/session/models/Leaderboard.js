@@ -2,8 +2,9 @@
  * Model: scoring and ranking for one game session.
  *
  * Why not 1 point per question: an Open Day round is only about 5 questions, and
- * scoring that way leaves a crowd of people tied with no way to pick **one**
- * winner to hand a prize to. So a correct answer = base points + a speed bonus.
+ * scoring that way leaves a crowd of people tied with no way to pick the few
+ * winners a prize is handed to. So a correct answer = base points + a speed
+ * bonus.
  *
  * **Equal scores share a rank.** The ordering still puts the faster player
  * first, but the number next to the row only follows the score: two people on
@@ -11,10 +12,11 @@
  * for something they cannot see, and it is the ranking a hall reads off a
  * projector without arguing.
  *
- * Time is still the tiebreak that hands out the **prize**: the fastest of the
- * players sharing first place wins it without the admin doing anything. Only an
- * exact tie on score *and* time is undecidable — that is `hasTieAtTop`, and then
- * the admin picks the winner by hand from the control desk.
+ * Time is still the tiebreak that hands out the **prizes**: the faster of two
+ * players sharing a place takes the winning slot without the admin doing
+ * anything. Only an exact tie on score *and* time is undecidable — and only when
+ * it falls across the line between winning and not, which is `hasTieAt(count)`.
+ * Then the admin fills the remaining slots by hand from the control desk.
  *
  * Does not import React and does not know where the session is stored — it only
  * takes a session in and returns a ranking.
@@ -116,26 +118,46 @@ export class Leaderboard {
     return this.rows.slice(0, TOP_COUNT)
   }
 
-  get winner() {
-    return this.rows[0] ?? null
+  /** The `count` players the round hands a prize to when nothing is tied. */
+  winnerRows(count) {
+    return this.rows.slice(0, Math.max(0, count))
   }
 
   /**
-   * The players the round cannot tell apart: same score **and** same total
-   * answering time as the leader, so there is no rule left to rank them by and
-   * the admin has to choose who gets the prize. Sharing first place on score
-   * alone is not one of these — the faster player takes the prize.
+   * The players the round cannot tell apart across the winning line: same score
+   * **and** same total answering time as the last winning slot, so there is no
+   * rule left to rank them by and more of them than there are prizes. Sharing a
+   * place on score alone is not one of these — the faster player takes the slot.
+   *
+   * Empty when the line falls cleanly, which is the normal case: the speed bonus
+   * is measured in milliseconds and two people almost never land on the very
+   * same number.
    */
-  get topRows() {
-    const winner = this.winner
-    if (!winner) return []
+  tiedRowsAt(count) {
+    const last = this.rows[count - 1]
+    const next = this.rows[count]
+    if (!last || !next) return []
+    if (last.score !== next.score || last.totalMs !== next.totalMs) return []
+
     return this.rows.filter(
-      (row) => row.score === winner.score && row.totalMs === winner.totalMs,
+      (row) => row.score === last.score && row.totalMs === last.totalMs,
     )
   }
 
-  get hasTieAtTop() {
-    return this.topRows.length > 1
+  hasTieAt(count) {
+    return this.tiedRowsAt(count).length > 0
+  }
+
+  /**
+   * The winners that are settled whatever the admin decides about a tie — the
+   * rows above the tied group. Equal to `winnerRows` when there is no tie, so
+   * the control desk can always show these as already won and only ask about
+   * the slots left over.
+   */
+  settledRows(count) {
+    const tied = this.tiedRowsAt(count)
+    if (tied.length === 0) return this.winnerRows(count)
+    return this.rows.slice(0, this.rows.indexOf(tied[0]))
   }
 
   rowOf(playerId) {

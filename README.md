@@ -3,7 +3,7 @@
 A live quiz web app for a university Open Day.
 
 Visitors scan a QR code and join on their phones, the game is shown on a big
-screen, and the administrator writes the questions and drives the round. The
+screen, and the administrator writes the questions and drives the round. Each
 winner picks 1 of 3 mystery prize boxes.
 
 This is a **demo prototype**, not a production product.
@@ -169,6 +169,8 @@ reach the server sees the same list.
   question" field at the top sets the whole set at once; the field under each
   question sets that one alone. The quiz-wide field reads "Mixed" once the
   questions no longer agree.
+- **Winners per round: 1–5** (1 by default) — how many people the round hands a
+  prize to at the end.
 - **Images:** every question can carry one image, and **so can every option** —
   which makes "which building is this?" questions with four photos to choose from
   possible. jpg / png / webp / gif, up to 2MB, written to `server/uploads/`.
@@ -200,11 +202,12 @@ This is where a running round is driven:
 4. During play the control desk shows the current question, how many have
    answered, the tally per option, and the buttons **Reveal** (show the answer) →
    **Next** (mid-round standings) → **Next** (next question).
-5. After the last question comes the **final leaderboard**. If several people are
-   tied at the top with no way to separate them, the control desk lists them so
-   the host can **pick by hand** who gets the prize.
-6. **Prize giving:** the winner picks a box on their own phone, and the prize
-   appears on the big screen.
+5. After the last question comes the **final leaderboard**. If people are tied
+   with no way to separate them right where the prizes run out, the control desk
+   lists them so the host can **pick by hand** who fills the last slots.
+6. **Prize giving:** each winner picks a box on their own phone, one at a time
+   from the top of the leaderboard down, and the prizes appear on the big
+   screen.
 7. **End the session** to play another round.
 
 **The Auto button** (on by default) lets the round walk itself from step to step
@@ -236,8 +239,8 @@ itself:
 - **Reveal:** the correct answer marked, and how many people picked each option.
 - **Standings:** the top 10, each row showing how many places that player moved
   since the previous question.
-- **Final leaderboard:** the summary and the winner.
-- **Prize:** the three mystery boxes, then the prize opening.
+- **Final leaderboard:** the summary and the winners.
+- **Prize:** every winner's three mystery boxes, then the prize openings.
 
 ### 3.6. Player page (`#/play`)
 
@@ -257,7 +260,8 @@ Where visitors play, on their phones:
 5. **Answering:** tap an option — once per question, and before time is up.
 6. After each question the phone shows right/wrong, the points just earned, your
    own rank and the top 10.
-7. **The winner** is invited to pick 1 of the 3 prize boxes on their own phone.
+7. **Each winner** is invited to pick 1 of 3 prize boxes on their own phone,
+   when their turn comes round.
 
 **A screen lock, a reload or a wifi drop costs nobody their points:** the phone
 remembers the player identity and rejoins in the same seat. But that identity
@@ -282,7 +286,7 @@ idle → lobby → question → reveal → standings → question → ... → po
 - `reveal` — the correct answer plus the tally of what people picked.
 - `standings` — the top 10 between two questions.
 - `podium` — the final leaderboard.
-- `prize` — the winner picks a box.
+- `prize` — the winners pick a box each, in rank order.
 - `prizeRevealed` — the prize is open.
 
 The server is the single source of truth: every device only sends intents, the
@@ -308,8 +312,8 @@ points = 1000 + round(500 × (1 − time_taken / time_allowed))
   1000.
 
 Why not 1 point per question: an Open Day round is only about 5 questions, and
-scoring that way leaves a crowd of people tied with no way to pick **one** winner
-to hand a prize to.
+scoring that way leaves a crowd of people tied with no way to pick the few
+winners a prize is handed to.
 
 ### 4.3. Ranking and ties
 
@@ -317,10 +321,11 @@ to hand a prize to.
   under them is 4th (not 3rd).
 - In the list the faster player still comes first, but does not get a better rank
   number for it.
-- **Total answering time decides the prize:** among the players sharing first
-  place, the fastest one wins it without the admin doing anything.
-- Only an exact tie on **score and total time** is a real tie — Auto stops there
-  and the admin picks the winner from the control desk.
+- **Total answering time decides the prizes:** among the players sharing a place,
+  the faster one takes the winning slot without the admin doing anything.
+- Only an exact tie on **score and total time**, falling right where the prizes
+  run out, is a real tie — Auto stops there and the admin picks from the control
+  desk.
 - Every public board (mid-round and final) shows the **top 10**. Players outside
   the top 10 still see their own rank on their phone.
 
@@ -330,9 +335,15 @@ to hand a prize to.
   and a correct answer.
 - **At least 3 players** in the lobby.
 
-### 4.5. The mystery prize boxes
+### 4.5. How many people win
 
-When the winner is announced, three boxes appear:
+The quiz says so: **Winners per round** in the quiz editor, between 1 and 5. The
+top of the final leaderboard wins, in order. A round never hands out more prizes
+than it has players.
+
+### 4.6. The mystery prize boxes
+
+When the winners are announced, three boxes appear for each of them:
 
 | Prize | Description |
 | --- | --- |
@@ -340,10 +351,12 @@ When the winner is announced, three boxes appear:
 | FabLab Sticker | a vinyl sticker cut in the university FabLab |
 | 3D Printed Figure | a small mascot printed on a lab 3D printer |
 
-- The positions are **reshuffled every round** with the Fisher–Yates algorithm,
-  so nobody can guess what is in which.
-- Only the winner may pick, and only **once** — no changing your mind.
-- The chosen box opens on the winner's phone and on the big screen alike.
+- The positions are **reshuffled for every winner** with the Fisher–Yates
+  algorithm, so nobody can guess what is in which.
+- Only a winner may pick, only **once** — no changing your mind — and only when
+  it is their turn.
+- The chosen box opens on that winner's phone and on the big screen alike, and
+  the big screen keeps every winner on show while the next one takes their turn.
 
 ---
 

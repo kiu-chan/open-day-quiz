@@ -186,23 +186,57 @@ function DisplayBody({ display }) {
     )
   }
 
-  // What is left: prize and prizeRevealed.
+  // What is left: prize and prizeRevealed. Every winner is on screen at once,
+  // each with their own three boxes: they open them one at a time, and a box
+  // that has been opened has to stay up while the next winner takes their turn.
+  const columns =
+    display.winnerCount === 1
+      ? 'grid-cols-1'
+      : display.winnerCount === 2
+        ? 'lg:grid-cols-2'
+        : 'lg:grid-cols-3'
+
   return (
     <DisplayShell>
       <div className="flex flex-col items-center gap-8 text-center">
         <h1 className="text-text-h flex items-center gap-4 text-5xl tracking-tight lg:text-6xl">
           <Gift className="size-12" strokeWidth={1.5} aria-hidden="true" />
-          {display.prizeBoxes?.isPicked ? 'The prize' : 'Pick a prize box'}
+          {display.isPrizeDone
+            ? display.winnerCount === 1
+              ? 'The prize'
+              : 'The prizes'
+            : 'Pick a prize box'}
         </h1>
-        <p className="flex items-center justify-center gap-3 text-3xl">
-          Winner:
-          <PlayerAvatar avatarId={display.winnerAvatarId} className="size-14" />
-          <span className="text-text-h font-medium">{display.winnerName}</span>
-        </p>
 
-        {display.prizeBoxes && (
-          <PrizeBoxRow boxes={display.prizeBoxes} variant="display" />
-        )}
+        <ul className={`grid w-full list-none gap-10 p-0 ${columns}`}>
+          {display.prizeRows.map((row) => {
+            // Whose turn it is: said in words and dimmed when it is not, never
+            // by colour.
+            const isWaiting = !row.boxes.isPicked && !row.isPicking
+
+            return (
+              <li
+                key={row.playerId}
+                className={`flex flex-col items-center gap-4 transition-opacity duration-500 ${
+                  isWaiting ? 'opacity-40' : ''
+                }`}
+              >
+                <p className="flex items-center justify-center gap-3 text-3xl">
+                  <PlayerAvatar avatarId={row.avatarId} className="size-14" />
+                  <span className="text-text-h font-medium">{row.name}</span>
+                </p>
+
+                {!row.boxes.isPicked && (
+                  <p className="text-2xl">
+                    {row.isPicking ? 'is picking now' : 'waiting their turn'}
+                  </p>
+                )}
+
+                <PrizeBoxRow boxes={row.boxes} variant="display" />
+              </li>
+            )
+          })}
+        </ul>
       </div>
     </DisplayShell>
   )

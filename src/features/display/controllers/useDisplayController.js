@@ -44,9 +44,11 @@ export function useDisplayController() {
       topTen: leaderboard.topTen,
       /** The top ten with the move each player just made — drawn at the reveal. */
       standings: session.standings,
-      winnerName: session.winner?.name ?? null,
-      winnerAvatarId: session.winner?.avatarId ?? null,
-      prizeBoxes: session.prizeBoxes,
+      /** One row per winner — the big screen keeps every opened box on show. */
+      prizeRows: session.prizeRows,
+      winnerCount: session.winnerIds.length,
+      /** Nobody left to open a box: the last prize is out. */
+      isPrizeDone: session.pickingPlayerId === null,
     }
   }, [session, now, isOffline])
 

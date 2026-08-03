@@ -14,7 +14,7 @@
  * by the caller, so the game rules stay pure functions.
  *
  * Public API: SESSION_STATES, SessionModel.empty()/fromJSON(), the getters, and
- * the actions openLobby / cancel / start / reveal / next / announceWinner /
+ * the actions openLobby / cancel / start / reveal / next / announceWinners /
  * setAutoAdvance / reset / join / leave / submitAnswer.
  */
 import { Leaderboard, pointsOf } from './Leaderboard.js'
@@ -84,8 +84,8 @@ const CLEARED_ROUND = {
   questionStartedAt: null,
   questionEndsAt: null,
   autoStepEndsAt: null,
-  winnerId: null,
-  prizeBoxes: null,
+  winnerIds: [],
+  prizeBoxes: [],
 }
 
 export class SessionModel {
@@ -99,8 +99,8 @@ export class SessionModel {
     autoStepEndsAt = null,
     players = [],
     answers = [],
-    winnerId = null,
-    prizeBoxes = null,
+    winnerIds = [],
+    prizeBoxes = [],
     autoAdvance = true,
   }) {
     /**
@@ -128,9 +128,18 @@ export class SessionModel {
     this.autoStepEndsAt = autoStepEndsAt
     this.players = players
     this.answers = answers
-    /** Who gets the prize; the admin confirms it at the announcement step (usually rank 1). */
-    this.winnerId = winnerId
-    /** The three prize boxes, only present once the winner has been announced. */
+    /**
+     * Who gets a prize, in rank order; the admin confirms them at the
+     * announcement step (usually simply the top of the leaderboard). How many
+     * there are is `winnerCount`, a rule the quiz carries.
+     */
+    this.winnerIds = winnerIds
+    /**
+     * One set of three boxes per winner, in the same order as `winnerIds`, and
+     * only present once the winners have been announced. A set each rather than
+     * one shared set: everybody gets the same choice of three, and a winner is
+     * never handed whatever the person before them left behind.
+     */
     this.prizeBoxes = prizeBoxes
     /**
      * Auto mode: the round walks itself from question to reveal to the next
@@ -153,7 +162,9 @@ export class SessionModel {
     return new SessionModel({
       ...raw,
       quiz: raw.quiz ? Quiz.fromJSON(raw.quiz) : null,
-      prizeBoxes: raw.prizeBoxes ? PrizeBoxes.fromJSON(raw.prizeBoxes) : null,
+      prizeBoxes: (raw.prizeBoxes ?? []).map((boxes) =>
+        PrizeBoxes.fromJSON(boxes),
+      ),
     })
   }
 
@@ -170,19 +181,21 @@ export class SessionModel {
   /**
    * When the step being entered should hand over by itself, or `null` when it
    * has to wait for a human: auto mode is off, the step is not one that moves on
-   * (a question ends on its own clock, the prize on a tap), or **several people
-   * are tied for first place** — that last one is a decision, not a step, and no
-   * automatic rule can be fair about it. The control desk shows the tied names
-   * for the host to choose from.
+   * (a question ends on its own clock, the prize on a tap), or **the line
+   * between winning and not falls between two people the round cannot tell
+   * apart** — that last one is a decision, not a step, and no automatic rule can
+   * be fair about it. The control desk shows the tied names for the host to
+   * choose from.
    */
   #autoDeadlineFor(state, now) {
     if (!this.autoAdvance || AUTO_SECONDS[state] === undefined) return null
 
     if (state === SESSION_STATES.PODIUM) {
       const leaderboard = this.leaderboard
-      // No clear single winner, no automatic announcement — an empty round has
-      // nobody to call out, and a tie has too many.
-      if (leaderboard.winner === null || leaderboard.hasTieAtTop) return null
+      // No clear set of winners, no automatic announcement — an empty round has
+      // nobody to call out, and a tie across the line has too many.
+      if (leaderboard.isEmpty) return null
+      if (leaderboard.hasTieAt(this.winnerCount)) return null
     }
 
     return now + AUTO_SECONDS[state] * 1000
@@ -387,8 +400,56 @@ export class SessionModel {
     return this.leaderboard.movementFrom(this.previousLeaderboard)
   }
 
-  get winner() {
-    return this.winnerId ? this.findPlayer(this.winnerId) : null
+  /**
+   * How many people this round hands a prize to. The quiz asks for a number, but
+   * a round can never have more winners than players — three prizes and two
+   * people in the hall would leave the prize step waiting for somebody who does
+   * not exist.
+   */
+  get winnerCount() {
+    return Math.min(this.quiz?.winnerCount ?? 1, this.playerCount)
+  }
+
+  get winners() {
+    return this.winnerIds
+      .map((playerId) => this.findPlayer(playerId))
+      .filter((player) => player !== null)
+  }
+
+  isWinner(playerId) {
+    return this.winnerIds.includes(playerId)
+  }
+
+  /**
+   * Whose turn it is to open a box, as a position in `winnerIds`, or `-1` once
+   * everybody has. The winners pick **one at a time and in rank order**: the
+   * room watches one box open, and the phone of the person after them stays a
+   * waiting screen until it is their turn.
+   */
+  get pickingIndex() {
+    return this.prizeBoxes.findIndex((boxes) => !boxes.isPicked)
+  }
+
+  get pickingPlayerId() {
+    return this.winnerIds[this.pickingIndex] ?? null
+  }
+
+  boxesOf(playerId) {
+    return this.prizeBoxes[this.winnerIds.indexOf(playerId)] ?? null
+  }
+
+  /** One row per winner, in rank order — what the prize step is drawn from. */
+  get prizeRows() {
+    return this.winnerIds.map((playerId, i) => {
+      const player = this.findPlayer(playerId)
+      return {
+        playerId,
+        name: player?.name ?? '',
+        avatarId: player?.avatarId ?? null,
+        boxes: this.prizeBoxes[i],
+        isPicking: i === this.pickingIndex,
+      }
+    })
   }
 
   /** How many people picked each option on the current question — the display draws this at reveal. */
@@ -451,7 +512,8 @@ export class SessionModel {
    *
    * "Move on" from the podium means announcing whoever tops the leaderboard, so
    * that auto mode and the host's button take the exact same route into the
-   * prize step. A tie for first place is refused here: that one needs a person.
+   * prize step. A tie across the winning line is refused here: that one needs a
+   * person.
    */
   next(now) {
     if (this.state === SESSION_STATES.REVEAL) {
@@ -461,9 +523,12 @@ export class SessionModel {
     }
 
     if (this.state === SESSION_STATES.PODIUM) {
+      const count = this.winnerCount
       const leaderboard = this.leaderboard
-      if (leaderboard.hasTieAtTop) return this
-      return this.announceWinner(leaderboard.winner?.playerId)
+      if (leaderboard.hasTieAt(count)) return this
+      return this.announceWinners(
+        leaderboard.winnerRows(count).map((row) => row.playerId),
+      )
     }
 
     if (this.state !== SESSION_STATES.STANDINGS) return this
@@ -498,29 +563,53 @@ export class SessionModel {
   }
 
   /**
-   * Announce the winner. The winner has to be named explicitly — the prize step
-   * needs to know whose it is. The three boxes are shuffled right here, so every
-   * round gets a different arrangement.
+   * Announce the winners, in rank order. They have to be named explicitly — the
+   * prize step needs to know whose phones the boxes belong to — and there have
+   * to be exactly `winnerCount` of them, so a stray click cannot open the prize
+   * step with fewer people than there are prizes to give.
+   *
+   * Every winner is given their own three boxes, each shuffled here, so every
+   * round *and* every winner gets a different arrangement. They are a parameter
+   * for the same reason `PrizeBoxes.shuffled` takes its random function from
+   * outside: a caller can hand in a fixed set to reproduce a situation.
    */
-  announceWinner(winnerId, boxes = PrizeBoxes.shuffled()) {
-    if (!winnerId || !this.findPlayer(winnerId)) return this
+  announceWinners(winnerIds, boxes = null) {
+    if (!Array.isArray(winnerIds) || winnerIds.length === 0) return this
+    if (winnerIds.length !== this.winnerCount) return this
+    if (new Set(winnerIds).size !== winnerIds.length) return this
+    if (winnerIds.some((playerId) => !this.findPlayer(playerId))) return this
+
     // The prize step waits for a tap, so the auto deadline stops here — leaving
     // the podium's behind would have the server trying to move on every tick.
     return this.#to(SESSION_STATES.PRIZE, {
-      winnerId,
-      prizeBoxes: boxes,
+      winnerIds,
+      prizeBoxes: boxes ?? winnerIds.map(() => PrizeBoxes.shuffled()),
       autoStepEndsAt: null,
     })
   }
 
-  /** Pick a prize box. Only the winner may pick, and only once. */
+  /**
+   * Pick a prize box. Only the winner whose turn it is may pick, and only once —
+   * the turn moves on by itself because `pickingIndex` is simply the first
+   * winner with an unopened set. The round leaves the prize step when the last
+   * winner has opened theirs; until then it stays put, which is what keeps every
+   * box that has already been opened on the big screen.
+   */
   pickBox({ playerId, index }) {
     if (this.state !== SESSION_STATES.PRIZE) return this
-    if (playerId !== this.winnerId) return this
 
-    const prizeBoxes = this.prizeBoxes.withPicked(index)
-    if (prizeBoxes === this.prizeBoxes) return this
+    const turn = this.pickingIndex
+    if (turn === -1 || this.winnerIds[turn] !== playerId) return this
 
+    const picked = this.prizeBoxes[turn].withPicked(index)
+    if (picked === this.prizeBoxes[turn]) return this
+
+    const prizeBoxes = this.prizeBoxes.map((boxes, i) =>
+      i === turn ? picked : boxes,
+    )
+    if (prizeBoxes.some((boxes) => !boxes.isPicked)) {
+      return this.#with({ prizeBoxes })
+    }
     return this.#to(SESSION_STATES.PRIZE_REVEALED, { prizeBoxes })
   }
 

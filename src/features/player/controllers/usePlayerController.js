@@ -250,9 +250,16 @@ export function usePlayerController() {
       standings: session.standings,
       /** The final board a phone may show: the top ten, never the whole hall. */
       topTen: leaderboard.topTen,
-      isWinner: identity !== null && session.winnerId === identity.id,
-      winnerName: session.winner?.name ?? null,
-      prizeBoxes: session.prizeBoxes,
+      isWinner: identity !== null && session.isWinner(identity.id),
+      /**
+       * Winners open their boxes one at a time, so a phone that has won still
+       * waits its turn — and the screen says whose turn it is either way.
+       */
+      isMyTurn: identity !== null && session.pickingPlayerId === identity.id,
+      pickingName: session.findPlayer(session.pickingPlayerId)?.name ?? null,
+      /** Our own three boxes, or null for everybody who did not win. */
+      myBoxes: identity ? session.boxesOf(identity.id) : null,
+      winnerNames: session.winners.map((player) => player.name),
     }
   }, [session, identity, me, now, isOffline, avatarTaken])
 

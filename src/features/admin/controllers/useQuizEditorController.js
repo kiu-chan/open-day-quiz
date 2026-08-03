@@ -109,6 +109,11 @@ export function useQuizEditorController(quizId) {
     [apply],
   )
 
+  const setWinnerCount = useCallback(
+    (count) => apply((current) => current.withWinnerCount(count)),
+    [apply],
+  )
+
   const addQuestion = useCallback(() => {
     // Generate the id outside the mutate function so a React re-run cannot
     // produce two different ids.
@@ -204,6 +209,7 @@ export function useQuizEditorController(quizId) {
     notFound: !isLoading && !loadError && quiz === null,
     errors: quiz?.errors ?? [],
     setTitle,
+    setWinnerCount,
     addQuestion,
     duplicateQuestion,
     removeQuestion,

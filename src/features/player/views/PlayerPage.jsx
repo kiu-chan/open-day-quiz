@@ -245,22 +245,29 @@ function PlayerBody({ player }) {
     )
   }
 
-  // What is left: prize and prizeRevealed — the winner picks a box, everyone
-  // else watches.
-  if (player.isWinner && player.prizeBoxes) {
+  // What is left: prize and prizeRevealed — the winners open a box each, in rank
+  // order, and everyone else watches.
+  if (player.isWinner && player.myBoxes) {
     return (
       <PlayerShell name={player.name} avatarId={player.avatarId}>
         <section className="flex flex-col items-center gap-2 text-center">
           <PlayerAvatar avatarId={player.avatarId} className="size-20 border-2" />
           <h2 className="text-text-h text-2xl">You won!</h2>
           <p className="text-sm opacity-70">
-            {player.prizeBoxes.isPicked
+            {player.myBoxes.isPicked
               ? 'Your prize'
-              : 'Pick one of the three boxes'}
+              : player.isMyTurn
+                ? 'Pick one of the three boxes'
+                : `Wait for ${player.pickingName} to open theirs first`}
           </p>
         </section>
 
-        <PrizeBoxRow boxes={player.prizeBoxes} onPick={player.pickBox} />
+        {/* The boxes only become tappable on this phone's turn: handing `onPick`
+            over early would offer a tap the server is going to refuse. */}
+        <PrizeBoxRow
+          boxes={player.myBoxes}
+          onPick={player.isMyTurn ? player.pickBox : undefined}
+        />
       </PlayerShell>
     )
   }
@@ -270,11 +277,15 @@ function PlayerBody({ player }) {
       <StatusScreen
         icon={Gift}
         title={
-          player.prizeBoxes?.isPicked
-            ? `${player.winnerName} got ${player.prizeBoxes.pickedPrize.name}`
-            : `${player.winnerName} is picking a prize`
+          player.pickingName
+            ? `${player.pickingName} is picking a prize`
+            : 'The prizes are out'
         }
-        note="Watch the big screen."
+        note={
+          player.pickingName
+            ? 'Watch the big screen.'
+            : `Winners: ${player.winnerNames.join(', ')}`
+        }
       />
     </PlayerShell>
   )

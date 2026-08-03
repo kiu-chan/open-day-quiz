@@ -68,8 +68,8 @@ function reduce(session, intent, now) {
       return session.reveal(now)
     case 'next':
       return session.next(now)
-    case 'announceWinner':
-      return session.announceWinner(intent.winnerId)
+    case 'announceWinners':
+      return session.announceWinners(intent.winnerIds)
     case 'setAutoAdvance':
       return session.setAutoAdvance(intent.enabled === true, now)
     case 'reset':

@@ -5,11 +5,36 @@
  */
 import { Question } from './Question.js'
 
+export const MIN_WINNERS = 1
+/**
+ * The most people one round may hand a prize to. Not a storage limit: every
+ * winner opens their own set of boxes, and past five the prize giving takes
+ * longer than the quiz did and the projector runs out of room for the boxes.
+ */
+export const MAX_WINNERS = 5
+
+function clampWinners(count) {
+  return Math.min(
+    MAX_WINNERS,
+    Math.max(MIN_WINNERS, Math.round(count) || MIN_WINNERS),
+  )
+}
+
 export class Quiz {
-  constructor({ id, title = '', questions = [] }) {
+  constructor({ id, title = '', questions = [], winnerCount = MIN_WINNERS }) {
     this.id = id
     this.title = title
     this.questions = questions
+    /**
+     * How many people this quiz hands a prize to at the end. A rule of the
+     * round, so it travels with the quiz into the session rather than being
+     * typed again on the control desk every time.
+     *
+     * Clamped here and not only in `withWinnerCount`: `quizzes.json` is a plain
+     * file on the server and can be edited by hand, and a quiz asking for 40
+     * winners would strand the round at the prize step.
+     */
+    this.winnerCount = clampWinners(winnerCount)
   }
 
   static fromJSON(raw) {
@@ -78,6 +103,11 @@ export class Quiz {
     return this.#with({ title })
   }
 
+  /** How many winners the round ends with; the constructor keeps it in range. */
+  withWinnerCount(count) {
+    return this.#with({ winnerCount: count })
+  }
+
   /**
    * Give every question the same countdown. The clamping to a playable range is
    * `Question.withDuration`'s job, so setting it for the whole quiz cannot slip
@@ -122,6 +152,7 @@ export class Quiz {
     return {
       id: this.id,
       title: this.title,
+      winnerCount: this.winnerCount,
       questions: this.questions.map((question) => question.toJSON()),
     }
   }

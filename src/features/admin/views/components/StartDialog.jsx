@@ -32,7 +32,8 @@ function StartDialog({ quiz, playerCount, isAuto, onConfirm, onClose }) {
           </p>
           <p className="flex items-center gap-1.5 font-mono text-xs">
             <Users className="size-3.5 shrink-0" aria-hidden="true" />
-            {playerCount} players · {quiz.total} questions
+            {playerCount} players · {quiz.total} questions ·{' '}
+            {quiz.winnerCount === 1 ? '1 winner' : `${quiz.winnerCount} winners`}
           </p>
         </div>
 

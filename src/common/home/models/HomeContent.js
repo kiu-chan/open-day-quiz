@@ -48,7 +48,7 @@ export const DEFAULT_HOME_CONTENT = {
     'Every question has a countdown. Correct answers score points, and the sooner you answer the more you get.',
   prizeTitle: 'And the prize…',
   prizeText:
-    'The winner comes up and picks one of three boxes. The boxes are reshuffled every round, so nobody can guess what is in which.',
+    'The winners come up and each pick one of three boxes. The boxes are reshuffled for every winner, so nobody can guess what is in which.',
   footerNote: 'Open Day Quiz — a demo that runs on the local network.',
   footerLink: 'Control desk',
 }

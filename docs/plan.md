@@ -5,7 +5,7 @@ in, and what still has to be decided.
 
 Source: [README.md](../README.md) (the product spec). Coding rules: `CLAUDE.md`.
 
-**Status:** all 8 phases are done (0 → 7). Phase 3 settled on a **self-hosted Node
+**Status:** all phases are done (0 → 10). Phase 3 settled on a **self-hosted Node
 server on the LAN**, SSE + intents, no added dependencies. The architecture is
 written up in [architecture.md](architecture.md); how to run it is in
 [installation.md](installation.md) and [usage.md](usage.md).
@@ -25,8 +25,8 @@ all look at **one single session state**, differing only in how they draw it:
 | `question` | The question + how many answered | 4 tappable option tiles | The question in huge type + clock |
 | `reveal` | Show standings button | Right/wrong + their points | The correct answer + pick distribution |
 | `standings` | The top 10, Next question button | The top 10 + their own rank | The top 10, moving |
-| `podium` | The full leaderboard, Announce winner button | Their own rank + the top 10 | The top 10 |
-| `prize` | Waiting | 3 boxes to pick from (winner only) | 3 boxes + the opening animation |
+| `podium` | The full leaderboard, Announce winners button | Their own rank + the top 10 | The top 10 |
+| `prize` | Who has opened what | 3 boxes to pick from (winners only, in turn) | Every winner's 3 boxes + the opening animation |
 
 The consequence: **this state machine is a shared model**, belonging to no single
 surface. It lives in `src/common/session/`. The three surfaces are just three sets
@@ -42,7 +42,7 @@ stateDiagram-v2
     standings --> question: questions remain
     standings --> podium: no questions left
     podium --> prize: 10s / admin announces
-    prize --> prizeRevealed: the winner picks a box
+    prize --> prizeRevealed: the last winner picks a box
     prizeRevealed --> [*]
     lobby --> idle: admin cancels
 ```
@@ -64,8 +64,8 @@ stateDiagram-v2
 | # | Page | Route | Content |
 | --- | --- | --- | --- |
 | A1 | Quiz list | `/admin` | The table of quizzes, with New / Edit / Delete / Duplicate |
-| A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration |
-| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winner button |
+| A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration; how many winners the round ends with |
+| A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winners button |
 | A4 | Home page text | `/admin/home` | Every string on H1 in one form — badge, title, paragraph, buttons, scrolling band, the three steps, the prize blurb, the footer. Saved on demand like A2; an emptied box goes back to its default |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
@@ -84,7 +84,7 @@ held portrait.
 | P4 | Right/wrong + points | `reveal` |
 | P4b | The top 10 with the rank change | `standings` |
 | P5 | Their own rank + the top 10 | `podium` |
-| P6 | Pick a prize box | `prize`, **winner only**; everyone else gets a waiting screen |
+| P6 | Pick a prize box | `prize`, **winners only**, and only on their own turn; everyone else gets a waiting screen |
 
 ### 2.3 Display — `features/display/`
 
@@ -99,7 +99,7 @@ D1 — the host is usually standing at the screen, not at the laptop.
 | D3 | The correct answer + the pick distribution | `reveal` |
 | D3b | The top 10 with the rank change, alone on the screen | `standings` |
 | D4 | The top 10 | `podium` |
-| D5 | 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
+| D5 | Every winner's 3 prize boxes + the opening animation | `prize`, `prizeRevealed` |
 
 ---
 
@@ -109,12 +109,12 @@ Placed in `common/session/models/` because all three surfaces read it.
 
 | Entity | Fields | Notes |
 | --- | --- | --- |
-| `Quiz` | `id`, `title`, `questions[]` | Created by the admin, outlives individual sessions |
+| `Quiz` | `id`, `title`, `questions[]`, `winnerCount` | Created by the admin, outlives individual sessions. `winnerCount` (1–5) is how many people the round hands a prize to |
 | `Question` | `id`, `prompt`, `options[]`, `correctIndex`, `durationSeconds` | [Question.js](../src/common/session/models/Question.js) |
 | `Session` | `id`, `quiz`, `state`, `currentIndex`, `questionEndsAt` | One game session; `state` is the machine from section 1. `id` is minted on every `openLobby` and is what makes phones join afresh each session |
 | `Player` | `id`, `name`, `avatarId`, `joinedAt`, `score` | `id` generated on the client, stored in `localStorage` with the avatar **and the session id** — a refresh keeps your place, a new session starts a new person. `avatarId` is **unique within a session**, first come first served, which caps a round at one player per animal |
 | `Answer` | `playerId`, `questionId`, `optionIndex`, `msTaken` | `msTaken` is what speed scoring needs |
-| `PrizeBoxes` | `prizeIds[]` (a permutation of the prize catalogue), `pickedIndex` | Reshuffled every session. A prize is `{ id, name, description }`; only the id travels in the session state |
+| `PrizeBoxes` | `prizeIds[]` (a permutation of the prize catalogue), `pickedIndex` | One set **per winner**, each reshuffled on its own. A prize is `{ id, name, description }`; only the id travels in the session state |
 
 ### Two technical details that are easy to get wrong
 
@@ -192,6 +192,7 @@ realtime decision is deferred as long as possible**.
 | **7. Player avatars** | 50 Lottie animals to pick from when joining, one per player per round, shown on the lobby wall, the leaderboard and next to the winner | ✅ done — see `docs/credits.md` |
 | **8. Admin password** | One password for the event, set on first run and stored as a scrypt hash in `.env`; `AdminGate` in front of every admin page, token required to write a quiz or upload an image | ✅ done — see the admin password section of `docs/architecture.md` |
 | **9. Editable home page** | The text of H1 pulled out of the JSX into `common/home/models/HomeContent.js`, stored in `server/home.json` and edited on A4 | ✅ done — the "Three screens, one game" section was dropped at the same time; the two remaining buttons in the hero already lead to the player page and the big screen |
+| **10. Several winners per round** | `Quiz.winnerCount` (1–5) edited on A2; the podium announces that many, each winner opening their own three boxes in rank order | ✅ done — see the winners section of `docs/architecture.md` |
 
 The crux of this ordering held up in practice: **every other phase was completed
 without knowing which transport would be chosen**, because `SessionRepository` is
@@ -235,8 +236,8 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 | 2 | **Routing** | Hand-written on `location.hash`, ~60 lines in `common/routing/useHashRoute.js` | Avoids react-router, avoids SPA fallback configuration, and the QR code never lands on a 404 |
 | 3 | **QR library** | `qrcode.react`, rendering SVG | Stays crisp blown up on a projector, and defaults to black on white, which fits the layout rules |
 | 4 | **Scoring** | Correct = 1000 points + a speed bonus of up to 500, decreasing linearly with time used | With ~5 questions, 1 point per question produces mass ties and no way to pick **one** winner to award a prize to |
-| 5 | **Ties** | Equal scores share a rank (1, 2, 2, 4). The list is still ordered by total answering time, and the fastest of the players sharing first place takes the prize automatically; equal on score *and* time is the only case the control desk asks the admin to decide | A rank should follow the score a player can see, but a prize has to go to exactly one person; only an exact tie needs a human |
-| 8 | **Who the winner is** | `winnerId` is stored in the session at announcement time, not derived from the leaderboard | The prize step needs to know exactly whose it is, and it lets the admin pick manually on a tie |
+| 5 | **Ties** | Equal scores share a rank (1, 2, 2, 4). The list is still ordered by total answering time, and the faster of the players sharing a place takes the winning slot automatically; equal on score *and* time across the winning line is the only case the control desk asks the admin to decide | A rank should follow the score a player can see, but there is a fixed number of prizes; only an exact tie needs a human |
+| 8 | **Who the winners are** | `winnerIds[]` is stored in the session at announcement time, not derived from the leaderboard | The prize step needs to know exactly whose boxes are whose, and it lets the admin pick manually on a tie |
 | 1 | **Realtime** | A self-hosted Node server on the LAN (`node:http`, no dependencies), SSE `/api/events` + `POST /api/intent`, the server as source of truth | The project owner decided visitors share the wifi with the computer. No internet needed, no data leaves the room. SSE because `EventSource` reconnects itself — a phone that locks and unlocks its screen rejoins on its own; Socket.IO adds ~40 kB for bidirectional traffic this app does not use |
 | 9 | **Source of truth** | The server applies the rules, clients only send intents | With direct client writes, one phone could POST a fabricated session; and `msTaken` has to be measured by one clock, otherwise whoever has the slowest clock gets bonus points |
 

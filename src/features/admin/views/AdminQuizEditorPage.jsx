@@ -8,12 +8,14 @@ import {
   Save,
   Timer,
   TriangleAlert,
+  Trophy,
 } from 'lucide-react'
 import { ROUTES } from '@common/routing/useHashRoute.js'
 import {
   MAX_DURATION_SECONDS,
   MIN_DURATION_SECONDS,
 } from '@common/session/models/Question.js'
+import { MAX_WINNERS, MIN_WINNERS } from '@common/session/models/Quiz.js'
 import { useQuizEditorController } from '../controllers/useQuizEditorController.js'
 import Button from '@common/views/Button.jsx'
 import AdminShell from './components/AdminShell.jsx'
@@ -128,6 +130,10 @@ function AdminQuizEditorPage({ quizId }) {
             <Timer className="size-3.5 shrink-0" aria-hidden="true" />
             {quiz.totalSeconds}s
           </span>
+          <span className="border-border inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs">
+            <Trophy className="size-3.5 shrink-0" aria-hidden="true" />
+            {quiz.winnerCount === 1 ? '1 winner' : `${quiz.winnerCount} winners`}
+          </span>
         </div>
 
         {/* One countdown for the whole set. It stays empty while the questions
@@ -156,6 +162,32 @@ function AdminQuizEditorPage({ quizId }) {
             {quiz.uniformDurationSeconds === null && quiz.total > 0
               ? 'The questions run for different times — type here to give them all the same one.'
               : 'A single question can still be set on its own below.'}
+          </span>
+        </label>
+
+        {/* How many people the round ends up giving a prize to. It belongs to
+            the quiz rather than to the control desk so the host does not have to
+            remember it while a hall is watching. */}
+        <label
+          className="flex flex-wrap items-center gap-2 text-sm"
+          htmlFor="quiz-winners"
+        >
+          Winners per round
+          <input
+            id="quiz-winners"
+            type="number"
+            value={quiz.winnerCount}
+            min={MIN_WINNERS}
+            max={MAX_WINNERS}
+            onChange={(event) =>
+              editor.setWinnerCount(Number(event.target.value))
+            }
+            className="border-border focus:border-accent-border text-text-h w-24 rounded-lg border-2 px-3 py-1.5 font-mono text-sm outline-none"
+          />
+          <span className="text-xs opacity-70">
+            The top {quiz.winnerCount === 1 ? 'player' : quiz.winnerCount} of the
+            leaderboard each open their own set of three mystery boxes, one at a
+            time. Between {MIN_WINNERS} and {MAX_WINNERS}.
           </span>
         </label>
 
