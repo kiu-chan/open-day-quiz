@@ -93,11 +93,26 @@ export class Quiz {
     return this.errors.length === 0
   }
 
-  // ---- editing the quiz (admin), immutable ----
-
   #with(patch) {
     return new Quiz({ ...this, ...patch })
   }
+
+  /**
+   * Every question with its options reshuffled — what a session plays instead of
+   * the quiz as it was typed. Each question draws its own arrangement, so the
+   * correct answer moves from question to question as well as from round to
+   * round. Called once, when the lobby opens: reshuffling between questions
+   * would rearrange an answer under a finger that is already reaching for it.
+   */
+  withShuffledOptions(random = Math.random) {
+    return this.#with({
+      questions: this.questions.map((question) =>
+        question.shuffledOptions(random),
+      ),
+    })
+  }
+
+  // ---- editing the quiz (admin), immutable ----
 
   withTitle(title) {
     return this.#with({ title })

@@ -72,6 +72,38 @@ export class Question {
     )
   }
 
+  /**
+   * The same question with its options in a new order.
+   *
+   * Without this the correct answer sits wherever the admin typed it, and a
+   * quiz written top to bottom hands the room a pattern to play instead of a
+   * question — at a stand people do notice that "it is always B". A rule of the
+   * round rather than a view concern, so it lives here, and it is the whole
+   * question that is permuted: the option images and `correctIndex` are carried
+   * along by the same shuffled order, so no arrangement can put A's text next to
+   * B's picture or mark the wrong slot correct.
+   *
+   * Fisher–Yates over an array of positions (every permutation equally likely,
+   * unlike `sort(() => Math.random() - 0.5)`), and `random` comes from outside
+   * for the same reason as in `PrizeBoxes.shuffled`: the model stays pure and a
+   * caller can hand in a fixed function to reproduce a situation.
+   */
+  shuffledOptions(random = Math.random) {
+    const order = this.options.map((_, i) => i)
+    for (let i = order.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(random() * (i + 1))
+      const swap = order[i]
+      order[i] = order[j]
+      order[j] = swap
+    }
+
+    return this.with({
+      options: order.map((from) => this.options[from]),
+      optionImages: order.map((from) => this.optionImages[from]),
+      correctIndex: order.indexOf(this.correctIndex),
+    })
+  }
+
   // ---- editing a question (admin), immutable like every other model ----
 
   /** A new copy with a few fields replaced. */

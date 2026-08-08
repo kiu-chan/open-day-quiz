@@ -464,10 +464,21 @@ export class SessionModel {
 
   // ---- admin actions ----
 
-  openLobby(quiz, id) {
+  /**
+   * Open the lobby on a copy of the quiz, with every question's options
+   * reshuffled. Here and not in the editor: the admin keeps reading the quiz in
+   * the order they wrote it, and each round deals a fresh arrangement, so a
+   * visitor who watched the previous round learns nothing but the answers.
+   *
+   * The arrangement is part of the session, which is why it is drawn once, on
+   * the server, and travels in the snapshot — phones and the projector have to
+   * label the same answer B, and a stored `optionIndex` has to mean the same
+   * thing to everyone scoring it.
+   */
+  openLobby(quiz, id, random = Math.random) {
     return this.#to(SESSION_STATES.LOBBY, {
       id,
-      quiz,
+      quiz: quiz.withShuffledOptions(random),
       ...CLEARED_ROUND,
       players: [],
       answers: [],

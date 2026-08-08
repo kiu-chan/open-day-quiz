@@ -63,7 +63,8 @@ src/
 │   │   │   ├── SessionModel.js    #   the session state machine
 │   │   │   ├── SessionRepository.js #  I/O: SSE in, POST intents out
 │   │   │   ├── Quiz.js            #   the quiz (+ its editing methods)
-│   │   │   ├── Question.js        #   a question, right/wrong marking, duration
+│   │   │   ├── Question.js        #   a question, right/wrong marking, duration,
+│   │   │   │                      #   the option shuffle (Fisher–Yates)
 │   │   │   ├── Leaderboard.js     #   scoring, ranking, ties, the top-ten movement
 │   │   │   ├── PrizeBoxes.js      #   the prize catalogue + the shuffle (Fisher–Yates)
 │   │   │   ├── Avatars.js         #   the 12 animals a player can pick
@@ -173,6 +174,37 @@ winners' to tap.
 that table is one auto mode never leaves by itself, and `#autoDeadlineFor` is
 where the tie exception lives, so a step that cannot move on is never armed in
 the first place instead of failing every tick.
+
+## The options are reshuffled every round
+
+A quiz is written top to bottom, so its correct answers end up clustered
+wherever the author happened to type them. Play the same quiz twice at a stand
+and the room stops reading the options and starts reading the pattern — "it is
+always B" is a strategy, and it beats knowing the answer.
+
+So the session never plays the quiz as it was saved. `openLobby` takes a copy
+through `Quiz.withShuffledOptions`, which permutes each question's options with
+Fisher–Yates (`Question.shuffledOptions`) and carries `correctIndex` **and** the
+option images along with the same order — there is no arrangement that can put
+one option's text next to another's picture, or leave the tick on the wrong slot.
+Every question draws its own permutation, so the answer moves between questions
+as well as between rounds. The `random` function is a parameter, exactly as in
+`PrizeBoxes.shuffled`, so the model stays pure and a test can reproduce a
+particular deal.
+
+Three things follow from *where* it happens:
+
+- **In the session, not in the editor.** A2 keeps showing the quiz in the order
+  it was typed, which is the only order the person maintaining it can check.
+  `quizzes.json` is never rewritten by playing a round.
+- **Once, when the lobby opens** — not per question and not per player. A phone
+  and the projector have to agree that the third answer is the one labelled C,
+  and a stored `optionIndex` has to mean the same thing to everyone scoring it;
+  reshuffling mid-round would also move an option out from under a finger that
+  was already reaching for it.
+- **On the server**, like every other rule. The arrangement travels inside the
+  snapshot with the rest of the quiz, so all three surfaces receive it rather
+  than each drawing their own.
 
 ## Three technical decisions worth remembering
 
