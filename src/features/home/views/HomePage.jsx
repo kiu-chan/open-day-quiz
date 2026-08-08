@@ -13,6 +13,7 @@ import { useHeadlineLayout } from '../controllers/useHeadlineLayout.js'
 import { useHomeController } from '../controllers/useHomeController.js'
 import FloatingIcons from './components/FloatingIcons.jsx'
 import HeroTitle from './components/HeroTitle.jsx'
+import JoinPanel from './components/JoinPanel.jsx'
 import LiveStatus from './components/LiveStatus.jsx'
 import Marquee from './components/Marquee.jsx'
 import PrizeTeaser from './components/PrizeTeaser.jsx'
@@ -109,6 +110,12 @@ function HomePage() {
       </section>
 
       <Marquee items={content.marquee} />
+
+      <JoinPanel
+        url={home.homeUrl}
+        title={content.joinTitle}
+        text={content.joinText}
+      />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">
         <header className="reveal flex flex-col gap-2">

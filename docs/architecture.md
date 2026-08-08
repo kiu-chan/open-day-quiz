@@ -393,6 +393,29 @@ consequence of the first rule is that no piece of copy can be *removed* by
 emptying it — a section that should disappear is a code change, which is what
 happened to the old "Three screens, one game" block.
 
+**The QR code on that page is not content.** Every address a code carries is
+built from `window.location` by
+[useHashRoute.js](../src/common/routing/useHashRoute.js) — `joinUrl()` for the
+player route, `homeUrl()` for the page itself. They belong next to the routes
+because they *are* routes, and a second copy of the same template string is
+exactly how two screens end up printing different addresses. Building them from
+the location is what makes them right without anybody configuring anything:
+served over the LAN they print the LAN address, and served on `localhost` they
+honestly print `localhost` (see docs/installation.md).
+
+**The two codes do not lead to the same place, and that is the point.** The
+control desk and the big screen carry `joinUrl()`: those are shown to a room that
+has already been told what is happening, and the shortest path in is the join
+form. The home page carries `homeUrl()` — the projector is not always showing
+`/display`, and between rounds this page is what stands on it, where a visitor
+scanning from across the hall has read none of it yet. Dropping them into a form
+asking for a name is asking them to join something nobody has explained, so the
+scan hands them the page instead and the Play button on it is their next step.
+
+It is also why the code is sized in `vh` rather than pixels and is
+tap-to-fullscreen: this one page has to work at arm's length on a phone and from
+the back of a hall.
+
 `useHomeController` swallows a failed load and keeps the defaults on purpose: a
 visitor standing at the stand is better served by the original copy than by an
 error where the headline should be, and `LiveStatus` already says when the server

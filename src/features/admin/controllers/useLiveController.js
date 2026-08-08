@@ -9,16 +9,10 @@
  * Public API: useLiveController()
  */
 import { useCallback, useMemo } from 'react'
-import { ROUTES } from '@common/routing/useHashRoute.js'
+import { joinUrl } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
-
-/** The link players scan to join — also the URL printed into the QR code in Phase 6. */
-function joinUrl() {
-  const { origin, pathname } = window.location
-  return `${origin}${pathname}#${ROUTES.PLAY}`
-}
 
 export function useLiveController() {
   const { session, isOffline, send } = useSession()

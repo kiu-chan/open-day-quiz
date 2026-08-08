@@ -117,9 +117,19 @@ are not, since those are the two everybody in the room is meant to reach.
 ### 3.1. Home page
 
 The home page carries the basic information about the app: the event title, an
-intro paragraph, the three steps of how to play, the prize teaser, and the state
-of the current session. The links on it lead to the player page and the big
-screen.
+intro paragraph, a **QR code to join**, the three steps of how to play, the prize
+teaser, and the state of the current session. The links on it lead to the player
+page and the big screen.
+
+**This code leads back to the home page**, not to the join form — the one on the
+big screen is the one that goes straight into the game. Somebody scanning the
+projector from across the hall has read nothing yet, so the scan hands them this
+page on their own phone and they press **Play now** from there. It is built from
+whatever address the page was opened with, so a laptop reached over the LAN
+prints a code phones can scan (the `localhost` warning in section 2 applies here
+too). Tap it and it fills the screen, which is what makes the home page usable as
+a standing invitation on the projector between rounds; the address is printed
+under it for anyone whose camera will not focus.
 
 All of the text on the home page **is editable from the admin area**
 (`#/admin/home`) — see section 3.3.
@@ -184,7 +194,7 @@ reach the server sees the same list.
 **Home page text (`#/admin/home`)**
 
 - Edit all of the wording on the home page: the title, the intro, the marquee,
-  the three steps, the prize section, the footer.
+  the scan-to-join band, the three steps, the prize section, the footer.
 - Saves the same way as the quiz editor (you have to press Save).
 - **Emptying a field puts the original wording back.**
 - The text is stored in `server/home.json`; the next visitor to open the home

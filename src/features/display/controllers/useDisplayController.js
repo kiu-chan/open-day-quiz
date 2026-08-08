@@ -10,7 +10,7 @@
  * Public API: useDisplayController()
  */
 import { useCallback, useMemo } from 'react'
-import { ROUTES } from '@common/routing/useHashRoute.js'
+import { joinUrl } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
@@ -39,7 +39,7 @@ export function useDisplayController() {
       players: session.players,
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
-      joinUrl: `${window.location.origin}${window.location.pathname}#${ROUTES.PLAY}`,
+      joinUrl: joinUrl(),
       /** The big screen shows the top ten and stops there, like the phones. */
       topTen: leaderboard.topTen,
       /** The top ten with the move each player just made — drawn at the reveal. */

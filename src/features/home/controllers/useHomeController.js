@@ -14,12 +14,13 @@
  * standing at the stand is better served by the original copy than by an error
  * where the headline should be. `LiveStatus` already says the server is down.
  *
- * Public API: useHomeController() → { content, isOpen, isPlaying, playerCount,
- * quizTitle, statusLabel, isOffline }
+ * Public API: useHomeController() → { content, homeUrl, isOpen, isPlaying,
+ * playerCount, quizTitle, statusLabel, isOffline }
  */
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_HOME_CONTENT } from '@common/home/models/HomeContent.js'
 import { homeContentRepository } from '@common/home/models/HomeContentRepository.js'
+import { homeUrl } from '@common/routing/useHashRoute.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 
@@ -59,6 +60,12 @@ export function useHomeController() {
   return useMemo(
     () => ({
       content,
+      /**
+       * What the QR code on this page encodes: this page itself, on this very
+       * host. Scanning it off the projector hands the visitor the page they were
+       * reading, and they start the game from the button on it.
+       */
+      homeUrl: homeUrl(),
       /** There is a session to join — someone scanning the QR now gets in. */
       isOpen: !session.isIdle,
       isPlaying: session.state === SESSION_STATES.QUESTION,

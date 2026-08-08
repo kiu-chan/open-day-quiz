@@ -5,7 +5,8 @@
  * page: with a hash every URL is `index.html`, no SPA fallback to configure on
  * the server, and scanning the QR never lands on a 404.
  *
- * Public API: ROUTES, useHashRoute() → { pattern, params }, navigate(path).
+ * Public API: ROUTES, joinUrl(), homeUrl(), useHashRoute() → { pattern, params },
+ * navigate(path).
  */
 import { useEffect, useState } from 'react'
 
@@ -53,6 +54,36 @@ function currentPath() {
 
 export function navigate(path) {
   window.location.hash = `#${path}`
+}
+
+/**
+ * The address that drops a phone straight into the join form — what the control
+ * desk and the big screen print into their QR codes, worked out here rather than
+ * a second time in a second controller.
+ *
+ * Both this and `homeUrl` are built from wherever the page is being served,
+ * which is the whole point: on the laptop running the round that is the LAN
+ * address a phone can actually reach. Open the page on `localhost` and the code
+ * says `localhost`, which no phone can scan its way to — see docs/usage.md.
+ */
+export function joinUrl() {
+  const { origin, pathname } = window.location
+  return `${origin}${pathname}#${ROUTES.PLAY}`
+}
+
+/**
+ * The address of the home page — what the home page's own QR code carries, so a
+ * visitor who scans it off the projector gets the page in their hand and walks
+ * into the round from there rather than landing in a join form with no idea
+ * what they have joined.
+ *
+ * No `#/` on the end: an empty hash already routes home, and every character
+ * left out is one less module in the code, which is what makes it scannable from
+ * the back of a hall.
+ */
+export function homeUrl() {
+  const { origin, pathname } = window.location
+  return `${origin}${pathname}`
 }
 
 export function useHashRoute() {

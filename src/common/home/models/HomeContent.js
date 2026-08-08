@@ -35,6 +35,9 @@ export const DEFAULT_HOME_CONTENT = {
   displayCta: 'Open the big screen',
   marquee:
     'Scan to play\nFaster answers score more\nThe whole hall answers together\nLive leaderboard\nThree mystery prize boxes',
+  joinTitle: 'Scan to get started',
+  joinText:
+    'Point your phone camera at the code — no app, no account. It opens this page on your phone, and you go into the round from there.',
   stepsTitle: 'How do you play?',
   stepsSubtitle: 'Three steps, nothing to install.',
   step1Title: 'Scan the QR code',
@@ -84,6 +87,19 @@ export const HOME_SECTIONS = [
         label: 'Items',
         hint: 'One per line. Each line gets an icon; empty lines are dropped.',
         rows: 5,
+      },
+    ],
+  },
+  {
+    key: 'join',
+    title: 'Scan to get started',
+    fields: [
+      { key: 'joinTitle', label: 'Heading' },
+      {
+        key: 'joinText',
+        label: 'Text',
+        rows: 3,
+        hint: 'The QR code itself is not content: it is built from the address this page is open on, so it always points at the right machine. It leads back to this page — the code on the big screen is the one that goes straight to the game.',
       },
     ],
   },
