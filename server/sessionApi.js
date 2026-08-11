@@ -14,6 +14,11 @@
  *    writes. Plain REST rather than intents: these are content edited by one
  *    person, not shared match state the whole room has to watch.
  *  - `GET|PUT /api/home` — the text of the home page, for the same reason.
+ *  - `GET|PUT /api/wifi` — the network visitors have to join. Readable by
+ *    anybody, because the projector and the home page draw its QR code.
+ *  - `GET /api/wifi/networks` — the networks this machine knows about, for the
+ *    picker on the admin page. Admin only: it says something about the room the
+ *    server is standing in, which no visitor needs.
  *  - `GET /api/admin/session`, `POST /api/admin/password`, `POST /api/admin/login`
  *    — the admin password (see `server/adminAuth.js`). Everything that only the
  *    admin does — writing a quiz, uploading an image — carries the token it
@@ -37,6 +42,8 @@ import { homeStore } from './homeStore.js'
 import { imageStore, MAX_IMAGE_BYTES } from './imageStore.js'
 import { quizStore } from './quizStore.js'
 import { sessionStore } from './sessionStore.js'
+import { wifiScanner } from './wifiScanner.js'
+import { wifiStore } from './wifiStore.js'
 
 /** Wifi and proxies like to drop connections silently when no bytes flow. */
 const HEARTBEAT_MS = 15_000
@@ -229,6 +236,30 @@ export async function handleApi(req, res, next) {
       if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
 
       return sendJson(res, 200, { content: await homeStore.write(raw) })
+    }
+  }
+
+  // Before `/api/wifi`, and an exact match, so a network never reads as a path.
+  if (req.method === 'GET' && path === '/api/wifi/networks') {
+    if (!isAdmin(req)) return sendJson(res, 401, { error: 'sign in to the admin page first' })
+
+    return sendJson(res, 200, await wifiScanner.list())
+  }
+
+  if (path === '/api/wifi') {
+    if (req.method === 'GET') {
+      return sendJson(res, 200, { wifi: await wifiStore.read() })
+    }
+
+    if (req.method === 'PUT') {
+      if (!isAdmin(req)) {
+        return sendJson(res, 401, { error: 'sign in to the admin page first' })
+      }
+
+      const raw = await readJson(req)
+      if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
+
+      return sendJson(res, 200, { wifi: await wifiStore.write(raw) })
     }
   }
 

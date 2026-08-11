@@ -115,6 +115,8 @@ function HomePage() {
         url={home.homeUrl}
         title={content.joinTitle}
         text={content.joinText}
+        ssid={home.wifi.ssid}
+        password={home.wifi.password}
       />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-16">

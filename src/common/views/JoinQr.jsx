@@ -3,7 +3,10 @@ import { Maximize2, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 
 /**
- * The QR code that points at the player page.
+ * The QR code a visitor scans. It carries the player page on most screens, and
+ * the Wi-Fi credentials in `WifiQr` — hence `value` rather than `url`, and the
+ * `caption` printed under the enlarged code, which for a Wi-Fi payload is the
+ * network name rather than the raw `WIFI:…` string nobody can read.
  *
  * Rendered as SVG (not canvas) so it stays crisp blown up on a projector, and
  * left at the default black on white — which follows the layout rules and also
@@ -20,10 +23,17 @@ import { QRCodeSVG } from 'qrcode.react'
  * local UI state of the viewing device only, not session state, so it is never
  * sent to the server.
  *
- * The URL must be the LAN address of the machine running the server, not
+ * A join URL must be the LAN address of the machine running the server, not
  * `localhost` — phones cannot scan their way to `localhost`. See docs/usage.md.
  */
-function JoinQr({ url, size = 200, className = '', zoomable = false }) {
+function JoinQr({
+  value,
+  size = 200,
+  className = '',
+  zoomable = false,
+  label = 'QR code to join the game',
+  caption = value,
+}) {
   const [isZoomed, setIsZoomed] = useState(false)
 
   // Esc to exit: listened for on window because the overlay does not keep focus
@@ -44,11 +54,11 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
       className={`border-border max-w-full rounded-2xl border-2 bg-white p-4 ${className}`}
     >
       <QRCodeSVG
-        value={url}
+        value={value}
         size={512}
         level="M"
         marginSize={0}
-        title="QR code to join the game"
+        title={label}
         className="h-auto w-full"
       />
     </div>
@@ -61,7 +71,7 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
       <button
         type="button"
         onClick={() => setIsZoomed(true)}
-        aria-label="Enlarge the QR code"
+        aria-label={`Enlarge the QR code — ${label}`}
         title="Enlarge the QR code"
         className="group relative max-w-full cursor-pointer rounded-2xl border-0 bg-transparent p-0 transition hover:opacity-85 active:scale-95"
       >
@@ -75,21 +85,21 @@ function JoinQr({ url, size = 200, className = '', zoomable = false }) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Enlarged QR code"
+          aria-label={`Enlarged QR code — ${label}`}
           onClick={() => setIsZoomed(false)}
           className="bg-bg fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 p-6"
         >
           <QRCodeSVG
-            value={url}
+            value={value}
             size={1000}
             level="M"
             marginSize={0}
-            title="QR code to join the game"
+            title={label}
             className="h-auto w-[min(78vh,92vw)]"
           />
 
           <p className="text-text-h max-w-full text-center font-mono text-lg break-all">
-            {url}
+            {caption}
           </p>
 
           <p className="flex items-center gap-2 text-sm opacity-70">

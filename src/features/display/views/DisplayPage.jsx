@@ -3,7 +3,6 @@ import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 import Button from '@common/views/Button.jsx'
 import ConnectionBanner from '@common/views/ConnectionBanner.jsx'
 import Countdown from '@common/views/Countdown.jsx'
-import JoinQr from '@common/views/JoinQr.jsx'
 import LeaderboardTable from '@common/views/LeaderboardTable.jsx'
 import PlayerAvatar from '@common/views/PlayerAvatar.jsx'
 import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
@@ -13,6 +12,7 @@ import StandingsBoard from '@common/views/StandingsBoard.jsx'
 import { useDisplayController } from '../controllers/useDisplayController.js'
 import BigOption from './components/BigOption.jsx'
 import DisplayShell from './components/DisplayShell.jsx'
+import LobbyCodes from './components/LobbyCodes.jsx'
 import PlayerWall from './components/PlayerWall.jsx'
 
 function DisplayBody({ display }) {
@@ -32,15 +32,16 @@ function DisplayBody({ display }) {
       <DisplayShell>
         <div className="flex flex-col items-center gap-6 text-center">
           <h1 className="text-text-h text-5xl tracking-tight lg:text-6xl">
-            Scan the QR code to join
+            {display.wifiSsid
+              ? 'Wi-Fi first, then scan to join'
+              : 'Scan the QR code to join'}
           </h1>
 
-          {/* On a projector the QR size is derived from the viewport height: a
-              4:3 hall screen is shorter than a laptop screen, so a hardcoded
-              320px is either too small or pushes the text below off-screen. */}
-          <JoinQr url={display.joinUrl} size="min(42vh, 80vw)" zoomable />
-
-          <p className="font-mono text-lg break-all lg:text-xl">{display.joinUrl}</p>
+          <LobbyCodes
+            joinUrl={display.joinUrl}
+            ssid={display.wifiSsid}
+            password={display.wifiPassword}
+          />
 
           <p className="text-text-h flex items-center gap-3 text-4xl font-medium">
             <Users className="size-9" aria-hidden="true" />

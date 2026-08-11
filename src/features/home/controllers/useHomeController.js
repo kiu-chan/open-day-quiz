@@ -14,13 +14,17 @@
  * standing at the stand is better served by the original copy than by an error
  * where the headline should be. `LiveStatus` already says the server is down.
  *
- * Public API: useHomeController() → { content, homeUrl, isOpen, isPlaying,
+ * The Wi-Fi step of the join band comes from `useWifiSettings` instead: it is
+ * configuration, edited on its own page, not a word anybody writes.
+ *
+ * Public API: useHomeController() → { content, homeUrl, wifi, isOpen, isPlaying,
  * playerCount, quizTitle, statusLabel, isOffline }
  */
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_HOME_CONTENT } from '@common/home/models/HomeContent.js'
 import { homeContentRepository } from '@common/home/models/HomeContentRepository.js'
 import { homeUrl } from '@common/routing/useHashRoute.js'
+import { useWifiSettings } from '@common/wifi/controllers/useWifiSettings.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { SESSION_STATES } from '@common/session/models/SessionModel.js'
 
@@ -38,6 +42,7 @@ const STATUS_LABELS = {
 export function useHomeController() {
   const { session, isOffline } = useSession()
   const [content, setContent] = useState(DEFAULT_HOME_CONTENT)
+  const wifi = useWifiSettings()
 
   useEffect(() => {
     let cancelled = false
@@ -66,6 +71,8 @@ export function useHomeController() {
        * reading, and they start the game from the button on it.
        */
       homeUrl: homeUrl(),
+      /** `{ ssid, password }`; an empty ssid means the band shows one code. */
+      wifi,
       /** There is a session to join — someone scanning the QR now gets in. */
       isOpen: !session.isIdle,
       isPlaying: session.state === SESSION_STATES.QUESTION,
@@ -74,6 +81,6 @@ export function useHomeController() {
       statusLabel: STATUS_LABELS[session.state],
       isOffline,
     }),
-    [content, session, isOffline],
+    [content, wifi, session, isOffline],
   )
 }

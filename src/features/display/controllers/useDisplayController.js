@@ -7,6 +7,10 @@
  * `start` is the same intent the admin sends — the server applies the same
  * SessionModel rule, so a stray second click starts nothing twice.
  *
+ * It also reads the Wi-Fi the admin configured. The lobby is the screen where
+ * that code has to be — a phone on mobile data cannot load the page the join
+ * code points at, so on this screen the network comes before the game.
+ *
  * Public API: useDisplayController()
  */
 import { useCallback, useMemo } from 'react'
@@ -14,10 +18,12 @@ import { joinUrl } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
+import { useWifiSettings } from '@common/wifi/controllers/useWifiSettings.js'
 
 export function useDisplayController() {
   const { session, isOffline, send } = useSession()
   const now = useNow(session.isCounting)
+  const wifi = useWifiSettings()
 
   const start = useCallback(() => send({ type: 'start' }), [send])
 
@@ -40,6 +46,9 @@ export function useDisplayController() {
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
       joinUrl: joinUrl(),
+      /** Empty when the stand has no Wi-Fi of its own: then no code is drawn. */
+      wifiSsid: wifi.ssid,
+      wifiPassword: wifi.password,
       /** The big screen shows the top ten and stops there, like the phones. */
       topTen: leaderboard.topTen,
       /** The top ten with the move each player just made — drawn at the reveal. */
@@ -50,7 +59,7 @@ export function useDisplayController() {
       /** Nobody left to open a box: the last prize is out. */
       isPrizeDone: session.pickingPlayerId === null,
     }
-  }, [session, now, isOffline])
+  }, [session, now, isOffline, wifi])
 
   return { ...state, start }
 }

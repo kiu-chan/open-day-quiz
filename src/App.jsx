@@ -1,55 +1,24 @@
 import { ROUTES, useHashRoute } from '@common/routing/useHashRoute.js'
 import AdminGate from '@features/admin/views/AdminGate.jsx'
-import AdminHomeContentPage from '@features/admin/views/AdminHomeContentPage.jsx'
-import AdminLivePage from '@features/admin/views/AdminLivePage.jsx'
-import AdminQuizEditorPage from '@features/admin/views/AdminQuizEditorPage.jsx'
-import AdminQuizListPage from '@features/admin/views/AdminQuizListPage.jsx'
-import DisplayPage from '@features/display/views/DisplayPage.jsx'
-import HomePage from '@features/home/views/HomePage.jsx'
-import PlayerPage from '@features/player/views/PlayerPage.jsx'
+import { ROUTE_PAGES } from './routes.jsx'
 
 /**
- * App shell: the routing table, each route pointing at exactly one *Page.jsx.
+ * App shell: matches the hash against the route table in
+ * [routes.jsx](routes.jsx) and draws the one page it names. Adding a page is a
+ * line in that table — there is nothing to change here.
  *
- * The three admin routes go through `<AdminGate>`, which renders the page only
- * once this browser has typed the event password. The player and display routes
- * stay open — they are the two anybody in the room is meant to reach.
+ * A pattern with no page falls back to the home page rather than a blank screen:
+ * the two lines a new route needs can be written one at a time, and half-added
+ * is not worth a white page in the middle of an event.
  */
 function App() {
   const { pattern, params } = useHashRoute()
+  const { Page, admin } = ROUTE_PAGES[pattern] ?? ROUTE_PAGES[ROUTES.HOME]
 
-  switch (pattern) {
-    case ROUTES.ADMIN:
-      return (
-        <AdminGate>
-          <AdminQuizListPage />
-        </AdminGate>
-      )
-    case ROUTES.ADMIN_QUIZ:
-      return (
-        <AdminGate>
-          <AdminQuizEditorPage quizId={params.id} />
-        </AdminGate>
-      )
-    case ROUTES.ADMIN_LIVE:
-      return (
-        <AdminGate>
-          <AdminLivePage />
-        </AdminGate>
-      )
-    case ROUTES.ADMIN_HOME:
-      return (
-        <AdminGate>
-          <AdminHomeContentPage />
-        </AdminGate>
-      )
-    case ROUTES.PLAY:
-      return <PlayerPage />
-    case ROUTES.DISPLAY:
-      return <DisplayPage />
-    default:
-      return <HomePage />
-  }
+  // The URL parameters become props, named as the pattern names them.
+  const page = <Page {...params} />
+
+  return admin ? <AdminGate>{page}</AdminGate> : page
 }
 
 export default App

@@ -36,6 +36,9 @@ server/quizzes.json
 # Home page text edited in the admin page — event content, not source
 server/home.json
 
+# The stand's Wi-Fi, typed on the admin page — per-venue, and it holds a password
+server/wifi.json
+
 # The admin password hash, written by the first-run screen — per-machine secret
 .env
 .env.local

@@ -84,6 +84,11 @@ second process.
 
 - Visitors' phones must be on **the same wifi** as the machine running the
   server. People on 4G cannot join.
+- Pick that network on the **Wi-Fi** tab (`#/admin/wifi`) — it lists the networks
+  the server machine knows — type its password, and the big screen shows a
+  **Wi-Fi QR code before the join code**: one scan connects the phone to the
+  network, the next one opens the game. Leave the name empty at a stand where
+  everybody is already connected and no Wi-Fi code is shown.
 - Some public wifi networks turn on "client isolation" (devices cannot talk to
   each other) — a phone scanning the QR then fails to open the page. Scan it with
   one phone **before** the event to catch that early.
@@ -104,10 +109,11 @@ The app routes on `location.hash`, so every URL has the form `#/...`:
 | Quiz editor | `#/admin/quiz/<id>` | the host's laptop |
 | Control desk | `#/admin/live` | the host's laptop |
 | Home page text | `#/admin/home` | the host's laptop |
+| Wi-Fi | `#/admin/wifi` | the machine running the server |
 | Player | `#/play` | visitors' phones (via QR) |
 | Big screen | `#/display` | the machine driving the projector |
 
-The four `#/admin/*` pages are **behind a password**; `#/play` and `#/display`
+The five `#/admin/*` pages are **behind a password**; `#/play` and `#/display`
 are not, since those are the two everybody in the room is meant to reach.
 
 ---
@@ -199,6 +205,18 @@ reach the server sees the same list.
 - **Emptying a field puts the original wording back.**
 - The text is stored in `server/home.json`; the next visitor to open the home
   page reads the new wording, while phones already sitting on it need a reload.
+
+**Wi-Fi (`#/admin/wifi`)**
+
+- Sets the network visitors have to join before they can reach the game, and puts
+  a **Wi-Fi QR code in front of the join code** on the big screen and the home
+  page.
+- The page lists the networks the **machine running the server** knows about and
+  fills the name in when you pick one — the spelling has to match the router
+  exactly. A hidden network, or a machine that lists nothing, is typed in by hand.
+- The **password is always typed**: no operating system hands a stored one back
+  to a program that asks.
+- Stored in `server/wifi.json`. Empty name = no Wi-Fi code anywhere.
 
 ### 3.4. Control desk (`#/admin/live`)
 

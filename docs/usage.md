@@ -8,11 +8,16 @@
 | Quiz editor | `#/admin/quiz/<id>` | the host's laptop |
 | Control desk | `#/admin/live` | the host's laptop |
 | Home page text | `#/admin/home` | the host's laptop |
+| Wi-Fi | `#/admin/wifi` | **the machine running the server** |
 | Player | `#/play` | visitors' phones (via QR) |
 | Big screen | `#/display` | the machine driving the projector |
 
 The admin pages carry two quick links to `#/display` and `#/play` in the top
 right, for testing.
+
+The Wi-Fi page is the one worth opening **on the machine running the server**
+rather than from another laptop: the list of networks it offers is read on that
+machine, since that is the network visitors have to join.
 
 The admin pages are **behind a password**; `#/play` and `#/display` are not,
 since those are the two everybody in the room is meant to reach.
@@ -64,8 +69,14 @@ not put on the projector.
    press **Save**), and emptying a box puts the original wording back. The next
    visitor to open the home page reads the new text; phones already sitting on it
    need a reload.
-7. Open `#/display` on the projector and leave it there.
-8. Scan the QR with one phone before visitors arrive — that catches a wifi that
+7. Optional but recommended: open the **Wi-Fi** tab (`#/admin/wifi`), pick the
+   network the stand hands out from the list, type its password and save. The
+   big screen and the home page then show a second QR code that puts a phone on
+   that network with one scan — see below. Leave the network name empty and no
+   Wi-Fi code appears anywhere, which is the right setting when everybody in the
+   room is already on the network.
+8. Open `#/display` on the projector and leave it there.
+9. Scan the QR with one phone before visitors arrive — that catches a wifi that
    blocks devices from talking to each other early (see the networking section of
    [installation.md](installation.md)).
 
@@ -109,6 +120,45 @@ pick a jpg/png/webp/gif file.
 **Visitors struggling to scan?** Click the QR code — on the control desk or on
 the big screen — to blow it up full screen. Click anywhere or press `Esc` to
 close.
+
+### The Wi-Fi code
+
+The game only exists on the local network, so a phone on mobile data that scans
+the join code lands on a browser error, not on the quiz. Once the **Wi-Fi** tab
+(`#/admin/wifi`) has a network saved, the lobby screen and the home page stop
+showing one code and show two numbered ones instead: **01 · Join the Wi-Fi**,
+then **02 · Scan to play**.
+
+On that page:
+
+- **Pick the network from the list at the bottom**, which fills the name in for
+  you — the spelling has to be exact, and a hand-typed `open day` will not find
+  `Open Day`. The list comes from the **computer running the server**, not from
+  the laptop you are reading the admin page on, which is the right one to ask:
+  that is the machine visitors have to end up next to on the network.
+- On macOS the list is **the networks that computer has joined before**, not the
+  ones in range. Since Sonoma, macOS only tells a program the names of nearby
+  networks if it has been granted Location Services, and a server started from a
+  terminal has not been — every name comes back as `<redacted>`, which is worse
+  than useless in a QR code. The remembered list needs no permission and gives
+  real names. On Linux and Windows it is a live scan.
+- **Type the name yourself** if the network is hidden, or if the list came back
+  empty. The box above the list is what actually gets saved; the list only fills
+  it in.
+- **The password has to be typed.** No operating system hands a stored Wi-Fi
+  password back to a program that asks for it. Leave it empty for an open
+  network and the code says so instead of asking for one.
+- Scanning the finished code connects the phone to the network outright. The
+  camera app does it on iOS 11+ and on Android 10+; older phones may need the QR
+  reader in the browser, or the name and password, which is why both are printed
+  under the code in large type.
+- The password is shown in the clear on this page, because two minutes later it
+  is on the projector in large letters. Do not put a staff network in there — use
+  the guest network the stand hands out anyway.
+- **Show no Wi-Fi code** empties both boxes: the screens go back to a single join
+  code.
+- The codes are drawn from what was saved when the screen was opened, so a
+  network changed mid-event needs the projector page reloaded.
 
 Control commands come from the control desk, with one exception: the big screen
 has its own **Start the quiz** button under the QR code, so the host standing at

@@ -10,12 +10,21 @@
  */
 import { useEffect, useState } from 'react'
 
+/**
+ * Every address in the app, and nothing else — no components, so any view may
+ * import this to link to another page. Which page each of these draws is
+ * [src/routes.jsx](../../routes.jsx); adding a route means a line in both.
+ *
+ * A `:name` segment is a parameter, and the shell hands it to the page as a prop
+ * of that name, so it is worth naming it the way the page wants to read it.
+ */
 export const ROUTES = {
   HOME: '/',
   ADMIN: '/admin',
-  ADMIN_QUIZ: '/admin/quiz/:id',
+  ADMIN_QUIZ: '/admin/quiz/:quizId',
   ADMIN_LIVE: '/admin/live',
   ADMIN_HOME: '/admin/home',
+  ADMIN_WIFI: '/admin/wifi',
   PLAY: '/play',
   DISPLAY: '/display',
 }

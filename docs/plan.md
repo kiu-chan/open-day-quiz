@@ -67,6 +67,7 @@ stateDiagram-v2
 | A2 | Quiz editor | `/admin/quiz/:id` | Quiz title; add/edit/delete questions; per question: text, illustration image, 2–4 options (text and/or image), mark the correct answer, countdown duration; how many winners the round ends with |
 | A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winners button |
 | A4 | Home page text | `/admin/home` | Every string on H1 in one form — badge, title, paragraph, buttons, scrolling band, the three steps, the prize blurb, the footer. Saved on demand like A2; an emptied box goes back to its default |
+| A5 | Wi-Fi | `/admin/wifi` | The network visitors must join: a picker listing the networks the **server machine** knows (live scan on Linux/Windows, remembered networks on macOS — see architecture.md), the name it fills in, and the password, which is always typed. Saving puts a second QR code before the join code on D1 and H1; an empty name shows none |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
 allowed to **change the session state**. Player and display only read.
@@ -94,7 +95,7 @@ D1 — the host is usually standing at the screen, not at the laptop.
 
 | # | Screen | When |
 | --- | --- | --- |
-| D1 | Giant QR + the join count + a Start button | `lobby` |
+| D1 | Giant QR (preceded by a Wi-Fi QR when the stand has one) + the join count + a Start button | `lobby` |
 | D2 | The question, options and countdown | `question` |
 | D3 | The correct answer + the pick distribution | `reveal` |
 | D3b | The top 10 with the rank change, alone on the screen | `standings` |
@@ -148,9 +149,10 @@ the original plan — noted underneath.
 | Feature | Model (rules) | Controller | View |
 | --- | --- | --- | --- |
 | `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow`, `useCountUp` | — |
-| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `StandingsBoard`, `ScoreCounter`, `JoinQr`, `ConnectionBanner`, `PlayerAvatar` |
+| `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `StandingsBoard`, `ScoreCounter`, `JoinQr`, `WifiQr`, `ConnectionBanner`, `PlayerAvatar` |
 | `common/home` | `HomeContent` (the fields + their defaults), `HomeContentRepository` | — | — |
-| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController` | A1, A2, A3, A4, `AdminGate` |
+| `common/wifi` | `WifiSettings` (ssid + password + the `WIFI:` QR string), `WifiRepository` | `useWifiSettings` — read once on mount, silent when no network is configured | — |
+| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController`, `useWifiController` | A1, A2, A3, A4, A5, `AdminGate` |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
@@ -233,7 +235,7 @@ Phase 3 is done, and this is where the original prediction was not quite right:
 
 | # | Item | Decision | Why |
 | --- | --- | --- | --- |
-| 2 | **Routing** | Hand-written on `location.hash`, ~60 lines in `common/routing/useHashRoute.js` | Avoids react-router, avoids SPA fallback configuration, and the QR code never lands on a 404 |
+| 2 | **Routing** | Hand-written on `location.hash`, ~60 lines in `common/routing/useHashRoute.js`, with the path → page table in `src/routes.jsx` | Avoids react-router, avoids SPA fallback configuration, and the QR code never lands on a 404. A new page is one line in `ROUTES` and one in the table, with nothing to change in `App.jsx` |
 | 3 | **QR library** | `qrcode.react`, rendering SVG | Stays crisp blown up on a projector, and defaults to black on white, which fits the layout rules |
 | 4 | **Scoring** | Correct = 1000 points + a speed bonus of up to 500, decreasing linearly with time used | With ~5 questions, 1 point per question produces mass ties and no way to pick **one** winner to award a prize to |
 | 5 | **Ties** | Equal scores share a rank (1, 2, 2, 4). The list is still ordered by total answering time, and the faster of the players sharing a place takes the winning slot automatically; equal on score *and* time across the winning line is the only case the control desk asks the admin to decide | A rank should follow the score a player can see, but there is a fixed number of prizes; only an exact tie needs a human |

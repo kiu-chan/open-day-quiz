@@ -5,6 +5,7 @@ const NAV = [
   { key: 'list', label: 'Quizzes', href: `#${ROUTES.ADMIN}` },
   { key: 'live', label: 'Control desk', href: `#${ROUTES.ADMIN_LIVE}` },
   { key: 'home', label: 'Home page', href: `#${ROUTES.ADMIN_HOME}` },
+  { key: 'wifi', label: 'Wi-Fi', href: `#${ROUTES.ADMIN_WIFI}` },
 ]
 
 const EXTERNAL = [
@@ -23,11 +24,11 @@ const EXTERNAL = [
 ]
 
 /**
- * The shared frame of the three admin pages: a sticky nav bar, the page title,
- * then the content.
+ * The shared frame of the admin pages: a sticky nav bar, the page title, then
+ * the content.
  *
- * The title lives in the shell rather than in each page so all three admin pages
- * keep the same rhythm: same font size, same spacing, same place for the action
+ * The title lives in the shell rather than in each page so every admin page
+ * keeps the same rhythm: same font size, same spacing, same place for the action
  * buttons (`actions`). The open tab is marked with a black fill, not a colour.
  */
 function AdminShell({ current, title, subtitle, actions, children }) {

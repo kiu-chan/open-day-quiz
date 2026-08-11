@@ -17,6 +17,11 @@
  * the form in one line. The consequence is that no piece of the copy can be
  * removed by emptying it — a section that should disappear is a code change.
  *
+ * That rule is also why the stand's Wi-Fi is **not** in here, even though its QR
+ * code sits in the middle of this page: a network name has no original wording
+ * to fall back to, and emptying it has to mean "show no code". It lives in
+ * `common/wifi/` with its own page (A5).
+ *
  * Both the browser and `server/homeStore.js` normalise through
  * `homeContentFromJSON`, so the file on disk and the props the views read hold
  * exactly the same shape.

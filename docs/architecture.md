@@ -41,16 +41,19 @@ boundary; everything else in `models/` stays pure.
 server/                            # game server, node:http only
 ├── index.js                       #   serves dist/ + prints the LAN URLs
 ├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
-│                                  #   + REST /api/quizzes + /api/home
+│                                  #   + REST /api/quizzes + /api/home + /api/wifi
 ├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
 ├── quizStore.js                   #   the quizzes, written to quizzes.json
 ├── homeStore.js                   #   the home page text, written to home.json
+├── wifiStore.js                   #   the stand's network, written to wifi.json
+├── wifiScanner.js                 #   asks the OS which networks it knows (admin picker)
 ├── imageStore.js                  #   question images, hash-named, written to uploads/
 └── adminAuth.js                   #   the admin password: scrypt hash in .env + tokens
 
 src/
 ├── main.jsx
-├── App.jsx                        # the routing table, 7 routes
+├── App.jsx                        # the shell: draws the page the table names
+├── routes.jsx                     # the route table — path → page, + the admin gate
 ├── index.css                      # @import tailwindcss + tokens in @theme
 ├── common/                        # shared by ≥2 features
 │   ├── ids.js
@@ -58,6 +61,13 @@ src/
 │   ├── home/models/               # the home page text: home reads it, admin writes it
 │   │   ├── HomeContent.js         #   the fields + their defaults
 │   │   └── HomeContentRepository.js # I/O: GET/PUT /api/home
+│   ├── wifi/                      # the stand's network: home + display draw its
+│   │   │                          # code, admin types it
+│   │   ├── models/
+│   │   │   ├── WifiSettings.js    #   ssid + password + the WIFI: QR string
+│   │   │   └── WifiRepository.js  #   I/O: GET/PUT /api/wifi, GET the network list
+│   │   └── controllers/
+│   │       └── useWifiSettings.js #   reads it once on mount, silent when absent
 │   ├── session/                   # ← the heart of the app
 │   │   ├── models/
 │   │   │   ├── SessionModel.js    #   the session state machine
@@ -75,7 +85,7 @@ src/
 │   │       └── useCountUp.js      #   the ticker a climbing score is drawn from
 │   └── views/                     # Button, Countdown + CountdownBar, ProgressBar,
 │                                  # LeaderboardTable, StandingsBoard,
-│                                  # ScoreCounter, JoinQr, ConnectionBanner,
+│                                  # ScoreCounter, JoinQr + WifiQr, ConnectionBanner,
 │                                  # PlayerAvatar, PrizeBoxRow + PrizeBox
 │                                  # + PrizeCelebration, QuizImage
 └── features/
@@ -84,12 +94,12 @@ src/
     │   │                          #   useHeadlineLayout (the rearranging title)
     │   └── views/
     ├── admin/                     # A1 list, A2 quiz editor, A3 control desk,
-    │   │                          # A4 home page text
+    │   │                          # A4 home page text, A5 Wi-Fi
     │   ├── models/                #   QuizRepository (talks to /api/quizzes)
     │   │                          #   + AdminAuthRepository + the seed data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
     │   │                          #   useLiveController, useAdminAuthController,
-    │   │                          #   useHomeContentController
+    │   │                          #   useHomeContentController, useWifiController
     │   └── views/                 #   *Page.jsx + AdminGate.jsx (the password lock)
     ├── player/                    # P1–P6 on phones
     │   ├── controllers/usePlayerController.js
@@ -393,6 +403,11 @@ consequence of the first rule is that no piece of copy can be *removed* by
 emptying it — a section that should disappear is a code change, which is what
 happened to the old "Three screens, one game" block.
 
+Both records are fetched once on mount rather than watched over SSE: this is
+content one person saves between rounds, not match state the room watches change.
+A screen left open while the admin saves keeps the old text — and the old Wi-Fi
+code — until it is reloaded.
+
 **The QR code on that page is not content.** Every address a code carries is
 built from `window.location` by
 [useHashRoute.js](../src/common/routing/useHashRoute.js) — `joinUrl()` for the
@@ -411,6 +426,49 @@ form. The home page carries `homeUrl()` — the projector is not always showing
 scanning from across the hall has read none of it yet. Dropping them into a form
 asking for a name is asking them to join something nobody has explained, so the
 scan hands them the page instead and the Play button on it is their next step.
+
+**The Wi-Fi code is the one that has to be configured**, and it gets its own
+everything: `common/wifi/` for the model, `server/wifi.json` for the file,
+`GET|PUT /api/wifi` for the road between them, and A5 for the page. The name of a
+network cannot be derived from anything the browser knows, so somebody has to
+type it — but it is not *copy*, which is why it is not two more fields on A4.
+The rule that makes that page work, a blank field falling back to its original
+wording, is exactly the wrong rule here: an empty network name has to mean **show
+no code at all**, for a stand where the whole room is already connected.
+
+`wifiQrValue()` in [WifiSettings.js](../src/common/wifi/models/WifiSettings.js)
+builds the `WIFI:T:…;S:…;P:…;;` string both phone cameras read, escaping the
+characters that carry meaning inside it and switching to `nopass` on an open
+network; [WifiQr.jsx](../src/common/views/WifiQr.jsx) draws nothing at all when
+there is no network, which is why no caller checks first.
+
+It goes **before** the join code, on the lobby screen and in the home page's join
+band, and both places number the two. This is not decoration: the join code
+points at an address that exists only on the LAN (see the realtime section), so
+scanning it from mobile data is a browser error, and a hall reading the codes in
+the wrong order is a queue of people at the stand asking why the link is broken.
+
+**Why the network list is read on the server.** No web API lists the networks
+around a device — SSIDs locate you, so browsers do not hand them out. The picker
+on A5 therefore comes from `GET /api/wifi/networks`, which asks the operating
+system of the machine running the server, and that is the machine worth asking
+anyway: visitors have to end up on *its* network, not on whatever the admin's
+laptop can see from another building.
+[wifiScanner.js](../server/wifiScanner.js) shells out read-only — it cannot join,
+forget or change a network — and answers with a `source` the page repeats to the
+admin, because the honest answer differs per platform. Linux (`nmcli`) and
+Windows (`netsh`) scan for what is in range. **macOS is asked for the networks it
+has joined before**, because since Sonoma it hands SSIDs only to processes
+granted Location Services: a server started from a terminal gets `<redacted>`
+from `ipconfig getsummary` and from `system_profiler SPAirPortDataType` alike,
+and `networksetup -getairportnetwork` claims the machine is on no network at all.
+`-listpreferredwirelessnetworks` needs no permission and returns real names, and
+the stand's network is nearly always one the laptop has joined before.
+
+The list is never the only way in — an unknown platform, a machine with no
+wireless card and a hidden network all end at the same place, so the name is a
+plain text box that the list merely fills in. The password is always typed: no
+operating system hands a stored one back.
 
 It is also why the code is sized in `vh` rather than pixels and is
 tap-to-fullscreen: this one page has to work at arm's length on a phone and from
@@ -440,8 +498,8 @@ no longer apply the rules themselves.
 
 ## The admin password
 
-The three admin pages sit behind one password for the whole event — no accounts,
-no roles, because the control desk is one machine run by one host.
+Every admin page sits behind one password for the whole event — no accounts, no
+roles, because the control desk is one machine run by one host.
 
 **The password is never stored, only a scrypt hash of it**, in `.env` under
 `ADMIN_PASSWORD_HASH` (gitignored, and invisible to the client bundle since Vite
@@ -764,3 +822,34 @@ every animation cannot reach a number counted in JavaScript.
 4. Interface → `views/`.
 
 Code only moves into `src/common/` once a **second** feature genuinely needs it.
+
+## Adding a page
+
+A page is two lines and no edit to `App.jsx`:
+
+1. the address in `ROUTES`, in
+   [useHashRoute.js](../src/common/routing/useHashRoute.js);
+2. the page it draws in the table in [routes.jsx](../src/routes.jsx), with
+   `admin: true` if it belongs behind the event password.
+
+```js
+// common/routing/useHashRoute.js
+ADMIN_STATS: '/admin/stats',
+
+// routes.jsx
+[ROUTES.ADMIN_STATS]: { Page: AdminStatsPage, admin: true },
+```
+
+`App.jsx` looks the pattern up and renders it, wrapped in `<AdminGate>` when the
+entry asks for it. A route's URL parameters arrive as props named exactly as the
+pattern names them — `/admin/quiz/:quizId` renders
+`<AdminQuizEditorPage quizId="…" />` — so a page with a parameter needs nothing
+more than its line.
+
+**Why the address and the page are not in the same file.** Half the views link to
+another page and import `ROUTES` for it; were the constants in `routes.jsx`, any
+one of those imports would pull every page in the app in behind it, and
+`HomePage → routes.jsx → HomePage` is an import cycle that works until the day it
+quietly does not. Paths are strings anybody may import; pages are components only
+the shell may. A pattern with no entry in the table falls back to the home page,
+so the two lines can be written one at a time without a white screen in between.
