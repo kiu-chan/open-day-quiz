@@ -14,7 +14,7 @@
  * Public API: useDisplayController()
  */
 import { useCallback, useMemo } from 'react'
-import { joinUrl } from '@common/routing/useHashRoute.js'
+import { homeUrl, joinUrl } from '@common/routing/useHashRoute.js'
 import { useNow } from '@common/session/controllers/useNow.js'
 import { useSession } from '@common/session/controllers/useSession.js'
 import { MIN_PLAYERS } from '@common/session/models/SessionModel.js'
@@ -46,6 +46,12 @@ export function useDisplayController() {
       answeredCount: session.answeredCount,
       distribution: session.currentDistribution,
       joinUrl: joinUrl(),
+      /**
+       * What the idle screen prints instead: with no round open the join form
+       * only tells a phone to come back later, so the code hands over the home
+       * page, which explains the stand and holds its own way in.
+       */
+      homeUrl: homeUrl(),
       /** Empty when the stand has no Wi-Fi of its own: then no code is drawn. */
       wifiSsid: wifi.ssid,
       wifiPassword: wifi.password,

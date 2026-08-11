@@ -16,12 +16,29 @@ import LobbyCodes from './components/LobbyCodes.jsx'
 import PlayerWall from './components/PlayerWall.jsx'
 
 function DisplayBody({ display }) {
+  // Between rounds the screen is idle for far longer than it is playing, so it
+  // carries the same two codes as the lobby: a hall that scans early is a hall
+  // that is ready the moment the next session opens.
   if (display.state === SESSION_STATES.IDLE) {
     return (
       <DisplayShell>
         <div className="flex flex-col items-center gap-6 text-center">
-          <MonitorOff className="text-text-h size-20" strokeWidth={1.5} aria-hidden="true" />
-          <h1 className="text-text-h text-5xl tracking-tight">No session open</h1>
+          <h1 className="text-text-h text-5xl tracking-tight lg:text-6xl">
+            {display.wifiSsid
+              ? 'Wi-Fi first, then scan to be ready'
+              : 'Scan the QR code to be ready'}
+          </h1>
+
+          <LobbyCodes
+            url={display.homeUrl}
+            ssid={display.wifiSsid}
+            password={display.wifiPassword}
+          />
+
+          <p className="flex items-center gap-3 text-2xl">
+            <MonitorOff className="size-8 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+            No round open yet — the next one starts shortly.
+          </p>
         </div>
       </DisplayShell>
     )
@@ -38,7 +55,7 @@ function DisplayBody({ display }) {
           </h1>
 
           <LobbyCodes
-            joinUrl={display.joinUrl}
+            url={display.joinUrl}
             ssid={display.wifiSsid}
             password={display.wifiPassword}
           />

@@ -2,7 +2,10 @@ import JoinQr from '@common/views/JoinQr.jsx'
 import WifiQr from '@common/views/WifiQr.jsx'
 
 /**
- * The codes the hall scans from the lobby screen.
+ * The codes the hall scans from the big screen — drawn both while a lobby is
+ * open and while the screen sits idle between rounds. `url` is whichever page
+ * the moment calls for — the join form once a lobby is open, the home page while
+ * the screen is idle — the caller decides, this only draws it.
  *
  * With no Wi-Fi configured this is the join code alone, the size it has always
  * been. With one, it becomes two numbered columns and the Wi-Fi goes first:
@@ -16,17 +19,17 @@ import WifiQr from '@common/views/WifiQr.jsx'
  * page was laid out on, and a fixed pixel size pushes the start button off the
  * bottom of it.
  */
-function LobbyCodes({ joinUrl, ssid, password }) {
+function LobbyCodes({ url, ssid, password }) {
   const hasWifi = Boolean(ssid)
 
   const joinColumn = (
     <>
       <JoinQr
-        value={joinUrl}
+        value={url}
         size={hasWifi ? 'min(30vh, 36vw)' : 'min(42vh, 80vw)'}
         zoomable
       />
-      <p className="font-mono text-lg break-all lg:text-xl">{joinUrl}</p>
+      <p className="font-mono text-lg break-all lg:text-xl">{url}</p>
     </>
   )
 
