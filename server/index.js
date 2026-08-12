@@ -93,6 +93,9 @@ server.listen(PORT, '0.0.0.0', () => {
   }
 
   console.log('Game server running.\n')
+  // No `#/` on the home line: an empty hash already routes home, and the shorter
+  // the address the easier it is to read out loud at the stand.
+  console.log(`  Home           ${base}/`)
   console.log(`  Control desk   ${base}/#/admin`)
   console.log(`  Big screen     ${base}/#/display`)
   console.log(`  Player         ${base}/#/play\n`)
