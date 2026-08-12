@@ -27,6 +27,7 @@ export const ROUTES = {
   ADMIN_WIFI: '/admin/wifi',
   PLAY: '/play',
   DISPLAY: '/display',
+  MAP: '/map',
 }
 
 const PATTERNS = Object.values(ROUTES)

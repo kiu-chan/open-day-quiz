@@ -29,6 +29,7 @@ import AdminQuizListPage from '@features/admin/views/AdminQuizListPage.jsx'
 import AdminWifiPage from '@features/admin/views/AdminWifiPage.jsx'
 import DisplayPage from '@features/display/views/DisplayPage.jsx'
 import HomePage from '@features/home/views/HomePage.jsx'
+import MapPage from '@features/map/views/MapPage.jsx'
 import PlayerPage from '@features/player/views/PlayerPage.jsx'
 
 /**
@@ -42,6 +43,7 @@ export const ROUTE_PAGES = {
   [ROUTES.HOME]: { Page: HomePage },
   [ROUTES.PLAY]: { Page: PlayerPage },
   [ROUTES.DISPLAY]: { Page: DisplayPage },
+  [ROUTES.MAP]: { Page: MapPage },
   [ROUTES.ADMIN]: { Page: AdminQuizListPage, admin: true },
   [ROUTES.ADMIN_QUIZ]: { Page: AdminQuizEditorPage, admin: true },
   [ROUTES.ADMIN_LIVE]: { Page: AdminLivePage, admin: true },

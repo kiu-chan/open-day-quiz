@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   ChevronDown,
+  Map,
   MonitorPlay,
   QrCode,
   Smartphone,
@@ -92,6 +93,13 @@ function HomePage() {
             >
               <MonitorPlay className="size-5 shrink-0" aria-hidden="true" />
               {content.displayCta}
+            </a>
+            <a
+              href={`#${ROUTES.MAP}`}
+              className={`${CTA_BASE} border-border text-text-h hover:border-accent-border`}
+            >
+              <Map className="size-5 shrink-0" aria-hidden="true" />
+              {content.mapCta}
             </a>
           </div>
 

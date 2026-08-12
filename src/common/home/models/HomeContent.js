@@ -38,6 +38,7 @@ export const DEFAULT_HOME_CONTENT = {
   introHighlight: 'one of three mystery prize boxes',
   playCta: 'Play now',
   displayCta: 'Open the big screen',
+  mapCta: 'Campus map',
   marquee:
     'Scan to play\nFaster answers score more\nThe whole hall answers together\nLive leaderboard\nThree mystery prize boxes',
   joinTitle: 'Scan to get started',
@@ -81,6 +82,7 @@ export const HOME_SECTIONS = [
       },
       { key: 'playCta', label: 'Button — play' },
       { key: 'displayCta', label: 'Button — big screen' },
+      { key: 'mapCta', label: 'Button — campus map' },
     ],
   },
   {

@@ -93,6 +93,10 @@ src/
     │   ├── controllers/           #   useHomeController (session + text),
     │   │                          #   useHeadlineLayout (the rearranging title)
     │   └── views/
+    ├── map/                       # M1 campus map `/map` — the plan of the four
+    │   ├── models/                #   blocks; CampusMap.js holds them + the layout
+    │   ├── controllers/           #   useCampusMapController (which block is open)
+    │   └── views/
     ├── admin/                     # A1 list, A2 quiz editor, A3 control desk,
     │   │                          # A4 home page text, A5 Wi-Fi
     │   ├── models/                #   QuizRepository (talks to /api/quizzes)

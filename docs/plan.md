@@ -153,6 +153,7 @@ the original plan — noted underneath.
 | `common/home` | `HomeContent` (the fields + their defaults), `HomeContentRepository` | — | — |
 | `common/wifi` | `WifiSettings` (ssid + password + the `WIFI:` QR string), `WifiRepository` | `useWifiSettings` — read once on mount, silent when no network is configured | — |
 | `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController`, `useWifiController` | A1, A2, A3, A4, A5, `AdminGate` |
+| `map` | `CampusMap` (the four blocks and their two-row plan) | `useCampusMapController` — which block is open | M1 |
 | `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
