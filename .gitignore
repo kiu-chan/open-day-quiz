@@ -39,6 +39,9 @@ server/home.json
 # The stand's Wi-Fi, typed on the admin page — per-venue, and it holds a password
 server/wifi.json
 
+# What visitors wrote about the stand — their words, collected at one event
+server/feedback.json
+
 # The admin password hash, written by the first-run screen — per-machine secret
 .env
 .env.local

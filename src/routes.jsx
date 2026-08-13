@@ -22,6 +22,7 @@
  * Public API: ROUTE_PAGES
  */
 import { ROUTES } from '@common/routing/useHashRoute.js'
+import AdminFeedbackPage from '@features/admin/views/AdminFeedbackPage.jsx'
 import AdminHomeContentPage from '@features/admin/views/AdminHomeContentPage.jsx'
 import AdminLivePage from '@features/admin/views/AdminLivePage.jsx'
 import AdminQuizEditorPage from '@features/admin/views/AdminQuizEditorPage.jsx'
@@ -49,4 +50,5 @@ export const ROUTE_PAGES = {
   [ROUTES.ADMIN_LIVE]: { Page: AdminLivePage, admin: true },
   [ROUTES.ADMIN_HOME]: { Page: AdminHomeContentPage, admin: true },
   [ROUTES.ADMIN_WIFI]: { Page: AdminWifiPage, admin: true },
+  [ROUTES.ADMIN_FEEDBACK]: { Page: AdminFeedbackPage, admin: true },
 }

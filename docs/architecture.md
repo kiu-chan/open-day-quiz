@@ -42,11 +42,13 @@ server/                            # game server, node:http only
 ├── index.js                       #   serves dist/ + prints the LAN URLs
 ├── sessionApi.js                  #   SSE /api/events + POST /api/intent + /api/images
 │                                  #   + REST /api/quizzes + /api/home + /api/wifi
+│                                  #   + /api/feedback
 ├── sessionStore.js                #   holds the SessionModel, applies intents, broadcasts
 ├── quizStore.js                   #   the quizzes, written to quizzes.json
 ├── homeStore.js                   #   the home page text, written to home.json
 ├── wifiStore.js                   #   the stand's network, written to wifi.json
 ├── wifiScanner.js                 #   asks the OS which networks it knows (admin picker)
+├── feedbackStore.js               #   what visitors said, written to feedback.json
 ├── imageStore.js                  #   question images, hash-named, written to uploads/
 └── adminAuth.js                   #   the admin password: scrypt hash in .env + tokens
 
@@ -61,6 +63,11 @@ src/
 │   ├── home/models/               # the home page text: home reads it, admin writes it
 │   │   ├── HomeContent.js         #   the fields + their defaults
 │   │   └── HomeContentRepository.js # I/O: GET/PUT /api/home
+│   ├── feedback/models/           # what a visitor thought: the phone writes it,
+│   │   │                          # the admin reads it. Not session state — it
+│   │   │                          # arrives after the round, so it is plain REST
+│   │   ├── Feedback.js            #   one answer + the summary of a pile of them
+│   │   └── FeedbackRepository.js  #   I/O: POST open, GET/DELETE admin only
 │   ├── wifi/                      # the stand's network: home + display draw its
 │   │   │                          # code, admin types it
 │   │   ├── models/
@@ -98,15 +105,16 @@ src/
     │   ├── controllers/           #   useCampusMapController (which block is open)
     │   └── views/
     ├── admin/                     # A1 list, A2 quiz editor, A3 control desk,
-    │   │                          # A4 home page text, A5 Wi-Fi
+    │   │                          # A4 home page text, A5 Wi-Fi, A6 feedback
     │   ├── models/                #   QuizRepository (talks to /api/quizzes)
     │   │                          #   + AdminAuthRepository + the seed data
     │   ├── controllers/           #   useQuizListController, useQuizEditorController,
     │   │                          #   useLiveController, useAdminAuthController,
-    │   │                          #   useHomeContentController, useWifiController
+    │   │                          #   useHomeContentController, useWifiController,
+    │   │                          #   useFeedbackListController
     │   └── views/                 #   *Page.jsx + AdminGate.jsx (the password lock)
-    ├── player/                    # P1–P6 on phones
-    │   ├── controllers/usePlayerController.js
+    ├── player/                    # P1–P7 on phones
+    │   ├── controllers/           #   usePlayerController + useFeedbackController
     │   └── views/
     └── display/                   # D1–D5 on the projector
         ├── controllers/useDisplayController.js
@@ -499,6 +507,44 @@ still returns a `SessionModel` (it reads the most recent snapshot received), so
 **`SessionModel` and every view needed zero changes** when the app moved from
 localStorage to a server. What changed is `update(fn)` → `send(intent)`: clients
 no longer apply the rules themselves.
+
+## Feedback: what the visitors thought
+
+The round ends on the podium, and that is the moment a visitor is most willing to
+say whether they enjoyed the stand. The phone shows a card there (P7): a rating
+from 1 to 5 and an optional sentence. `common/feedback/` holds the model,
+`server/feedbackStore.js` writes `server/feedback.json` (gitignored), and A6 is
+the page the university reads it on.
+
+**It is not session state, and that decides everything about it.** Feedback is
+written *after* the game, one phone at a time, and no screen in the hall redraws
+itself when a rating lands — so it travels plain REST on `/api/feedback` rather
+than through the intent path, and no snapshot carries it. It is also written to
+disk, unlike the session in RAM: losing a half-played round on a restart is
+correct, losing what people typed about the event is not.
+
+**A player has one answer per session.** There is no entry id; `feedbackKey` is
+`sessionId:playerId`, and sending again overwrites. A phone that taps the button
+twice, reloads, or comes back to change its mind cannot put two voices into the
+average — which is what makes *Change my answer* a button on the card rather than
+a problem to be prevented. The session id has to be in the key because a player
+id is only unique within a session (see the identity rules below).
+
+The name and animal are **copied into the entry** rather than looked up later:
+the session they belong to is gone the moment the next lobby opens, and an
+unattributed pile of ratings is worth much less in the morning.
+
+**Writing is open, reading is not.** A phone that just played has no password, so
+`POST` is open like the intents; `GET` and `DELETE` carry the admin token,
+because the replies belong to the organisers and not to the next visitor who
+guesses the address. The server stamps `submittedAt` itself — a phone with a
+wrong clock would otherwise sort to the top of the list for the rest of the day.
+
+The rating is required and the comment is not. At a stand most people tap a star
+and walk off; a form that insists on a sentence collects nothing at all. On both
+ends the stars are drawn **filled against outlines**, never in colour, and the
+number is always printed in words next to them (`RATING_LABELS`), because four
+out of five means different things to different people.
 
 ## The admin password
 

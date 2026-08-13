@@ -14,6 +14,10 @@
  *    writes. Plain REST rather than intents: these are content edited by one
  *    person, not shared match state the whole room has to watch.
  *  - `GET|PUT /api/home` — the text of the home page, for the same reason.
+ *  - `POST /api/feedback` — what a visitor thought of the stand, sent by their
+ *    phone once the round is over. Open, like the intents: a phone has no
+ *    password. `GET` and `DELETE` on the same path are admin only — the replies
+ *    are for the organisers, not for the next visitor who guesses the address.
  *  - `GET|PUT /api/wifi` — the network visitors have to join. Readable by
  *    anybody, because the projector and the home page draw its QR code.
  *  - `GET /api/wifi/networks` — the networks this machine knows about, for the
@@ -38,6 +42,7 @@
  * Public API: handleApi(req, res, next)
  */
 import { adminAuth, MIN_PASSWORD_LENGTH } from './adminAuth.js'
+import { feedbackStore } from './feedbackStore.js'
 import { homeStore } from './homeStore.js'
 import { imageStore, MAX_IMAGE_BYTES } from './imageStore.js'
 import { quizStore } from './quizStore.js'
@@ -236,6 +241,37 @@ export async function handleApi(req, res, next) {
       if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
 
       return sendJson(res, 200, { content: await homeStore.write(raw) })
+    }
+  }
+
+  if (path === '/api/feedback') {
+    // Writing is open — the phone that just played has no password, and asking
+    // for one is a sure way to collect nothing.
+    if (req.method === 'POST') {
+      const raw = await readJson(req)
+      if (!raw) return sendJson(res, 400, { error: 'unreadable payload' })
+
+      // The server stamps the time: a phone with a wrong clock would otherwise
+      // file its answer under next Tuesday and sort to the top of the list for
+      // the rest of the event.
+      const entry = await feedbackStore.save(raw, Date.now())
+      if (!entry) return sendJson(res, 400, { error: 'a rating from 1 to 5 is required' })
+
+      return sendJson(res, 201, { entry })
+    }
+
+    // Reading it back, and clearing it, are the organisers' business alone.
+    if (!isAdmin(req)) {
+      return sendJson(res, 401, { error: 'sign in to the admin page first' })
+    }
+
+    if (req.method === 'GET') {
+      return sendJson(res, 200, { feedback: await feedbackStore.list() })
+    }
+
+    if (req.method === 'DELETE') {
+      await feedbackStore.clear()
+      return sendJson(res, 200, { ok: true })
     }
   }
 

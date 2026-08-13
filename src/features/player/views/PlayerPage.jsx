@@ -10,8 +10,10 @@ import PrizeBoxRow from '@common/views/PrizeBoxRow.jsx'
 import QuizImage from '@common/views/QuizImage.jsx'
 import ScoreCounter from '@common/views/ScoreCounter.jsx'
 import StandingsBoard from '@common/views/StandingsBoard.jsx'
+import { useFeedbackController } from '../controllers/useFeedbackController.js'
 import { usePlayerController } from '../controllers/usePlayerController.js'
 import AnswerOption from './components/AnswerOption.jsx'
+import FeedbackPanel from './components/FeedbackPanel.jsx'
 import JoinForm from './components/JoinForm.jsx'
 import PlayerShell from './components/PlayerShell.jsx'
 import StatusScreen from './components/StatusScreen.jsx'
@@ -39,7 +41,25 @@ function Verdict({ isCorrect }) {
   )
 }
 
-function PlayerBody({ player }) {
+/**
+ * The feedback card and its wiring, written once and dropped at the foot of
+ * every screen the round can end on — the podium, a winner's boxes and the
+ * waiting screen everybody else watches them from. A visitor who has finished
+ * playing must find it wherever they happen to be standing.
+ */
+function Feedback({ feedback }) {
+  return (
+    <FeedbackPanel
+      isSent={feedback.isSent}
+      isSending={feedback.isSending}
+      error={feedback.error}
+      onSubmit={feedback.submit}
+      onReopen={feedback.reopen}
+    />
+  )
+}
+
+function PlayerBody({ player, feedback }) {
   if (player.sessionState === SESSION_STATES.IDLE) {
     return (
       <PlayerShell name="">
@@ -241,6 +261,8 @@ function PlayerBody({ player }) {
           rows={player.topTen}
           highlightId={player.myRow?.playerId}
         />
+
+        <Feedback feedback={feedback} />
       </PlayerShell>
     )
   }
@@ -268,6 +290,8 @@ function PlayerBody({ player }) {
           boxes={player.myBoxes}
           onPick={player.isMyTurn ? player.pickBox : undefined}
         />
+
+        <Feedback feedback={feedback} />
       </PlayerShell>
     )
   }
@@ -287,17 +311,29 @@ function PlayerBody({ player }) {
             : `Winners: ${player.winnerNames.join(', ')}`
         }
       />
+
+      <Feedback feedback={feedback} />
     </PlayerShell>
   )
 }
 
 function PlayerPage() {
   const player = usePlayerController()
+  // Two controllers on purpose: the round redraws itself several times a second
+  // from the session, while this one sends a single request by hand once the
+  // game is over. It is called here rather than inside the card because only a
+  // page-level view may call a controller.
+  const feedback = useFeedbackController({
+    sessionId: player.sessionId,
+    playerId: player.playerId,
+    name: player.name,
+    avatarId: player.avatarId,
+  })
 
   return (
     <>
       <ConnectionBanner isOffline={player.isOffline} />
-      <PlayerBody player={player} />
+      <PlayerBody player={player} feedback={feedback} />
     </>
   )
 }

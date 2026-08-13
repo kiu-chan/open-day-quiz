@@ -51,7 +51,8 @@ stateDiagram-v2
 
 ## 2. Pages needed
 
-**6 routes** in total, 12 screens.
+**10 routes** in total. Every screen is listed below except the campus map (M1,
+`/map`), which arrived after this section — see section 4.
 
 ### 2.0 Home page — `features/home/`
 
@@ -68,6 +69,7 @@ stateDiagram-v2
 | A3 | Control desk | `/admin/live` | QR + join link; the list of connected players; Start / Next question / Reveal answer / End buttons; an **Auto** toggle (on by default) that walks the round to the prize by itself; the leaderboard; the Announce winners button |
 | A4 | Home page text | `/admin/home` | Every string on H1 in one form — badge, title, paragraph, buttons, scrolling band, the three steps, the prize blurb, the footer. Saved on demand like A2; an emptied box goes back to its default |
 | A5 | Wi-Fi | `/admin/wifi` | The network visitors must join: a picker listing the networks the **server machine** knows (live scan on Linux/Windows, remembered networks on macOS — see architecture.md), the name it fills in, and the password, which is always typed. Saving puts a second QR code before the join code on D1 and H1; an empty name shows none |
+| A6 | Feedback | `/admin/feedback` | What the visitors said after playing: the number of answers, the average rating, how the ratings split, and every comment with the name and animal that left it. Read-only, refreshed on a button — the answers arrive from phones long after the round. One button empties the book, behind a confirmation |
 
 A3 is the most important page and the easiest to get wrong — it is the only one
 allowed to **change the session state**. Player and display only read.
@@ -86,6 +88,7 @@ held portrait.
 | P4b | The top 10 with the rank change | `standings` |
 | P5 | Their own rank + the top 10 | `podium` |
 | P6 | Pick a prize box | `prize`, **winners only**, and only on their own turn; everyone else gets a waiting screen |
+| P7 | Leave feedback | `podium` onwards, at the foot of whichever end-of-round screen this phone is on. A rating of 1–5 and an optional sentence; sent once, changeable afterwards |
 
 ### 2.3 Display — `features/display/`
 
@@ -151,10 +154,11 @@ the original plan — noted underneath.
 | `common/session` | `SessionModel` (state machine, `questionEndsAt`), `Quiz`, `Question`, `Leaderboard`, `PrizeBoxes`, `SessionRepository` | `useSession`, `useNow`, `useCountUp` | — |
 | `common/views` | — | — | `Button`, `Countdown`, `ProgressBar`, `LeaderboardTable`, `StandingsBoard`, `ScoreCounter`, `JoinQr`, `WifiQr`, `ConnectionBanner`, `PlayerAvatar` |
 | `common/home` | `HomeContent` (the fields + their defaults), `HomeContentRepository` | — | — |
+| `common/feedback` | `Feedback` (one answer, its key, the summary of a pile of them), `FeedbackRepository` | — | — |
 | `common/wifi` | `WifiSettings` (ssid + password + the `WIFI:` QR string), `WifiRepository` | `useWifiSettings` — read once on mount, silent when no network is configured | — |
-| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController`, `useWifiController` | A1, A2, A3, A4, A5, `AdminGate` |
+| `admin` | `QuizRepository`, `AdminAuthRepository` + sample data | `useQuizListController`, `useQuizEditorController`, `useLiveController`, `useAdminAuthController`, `useHomeContentController`, `useWifiController`, `useFeedbackListController` | A1, A2, A3, A4, A5, A6, `AdminGate` |
 | `map` | `CampusMap` (the four blocks and their two-row plan) | `useCampusMapController` — which block is open | M1 |
-| `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box | P1–P6 |
+| `player` | — (reads the session) | `usePlayerController` — join, submit answers, pick a prize box; `useFeedbackController` — the one request sent after the game | P1–P7 |
 | `display` | — (reads the session) | `useDisplayController` — reads, plus the one `start` intent from D1 | D1–D5 |
 
 **Deviation 1 — no separate `leaderboard` and `prizes` features.** Scoring rules

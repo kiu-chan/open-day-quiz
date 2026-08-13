@@ -6,6 +6,7 @@ const NAV = [
   { key: 'live', label: 'Control desk', href: `#${ROUTES.ADMIN_LIVE}` },
   { key: 'home', label: 'Home page', href: `#${ROUTES.ADMIN_HOME}` },
   { key: 'wifi', label: 'Wi-Fi', href: `#${ROUTES.ADMIN_WIFI}` },
+  { key: 'feedback', label: 'Feedback', href: `#${ROUTES.ADMIN_FEEDBACK}` },
 ]
 
 const EXTERNAL = [

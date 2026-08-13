@@ -207,6 +207,14 @@ export function usePlayerController() {
       isOffline,
       hasJoined: me !== null,
       /**
+       * Who this phone is, for the one thing outside the session that has to
+       * know: the feedback card, which files an answer under this player in
+       * this round. Null before joining, and it changes with every new lobby —
+       * which is exactly what makes the next visitor a new respondent.
+       */
+      sessionId: session.id,
+      playerId: identity?.id ?? null,
+      /**
        * Empty for anyone this session does not know — which, deliberately,
        * includes a phone that played the previous round. Prefilled only while
        * the identity is still the current session's, so a refresh mid-round

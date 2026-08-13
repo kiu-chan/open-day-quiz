@@ -25,6 +25,7 @@ export const ROUTES = {
   ADMIN_LIVE: '/admin/live',
   ADMIN_HOME: '/admin/home',
   ADMIN_WIFI: '/admin/wifi',
+  ADMIN_FEEDBACK: '/admin/feedback',
   PLAY: '/play',
   DISPLAY: '/display',
   MAP: '/map',

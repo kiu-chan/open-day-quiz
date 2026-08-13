@@ -9,6 +9,7 @@
 | Control desk | `#/admin/live` | the host's laptop |
 | Home page text | `#/admin/home` | the host's laptop |
 | Wi-Fi | `#/admin/wifi` | **the machine running the server** |
+| Feedback | `#/admin/feedback` | the host's laptop |
 | Player | `#/play` | visitors' phones (via QR) |
 | Big screen | `#/display` | the machine driving the projector |
 
@@ -267,6 +268,24 @@ constant `PRIZES`: three entries of `{ id, name, description }`. The id is what 
 box stores, so keep it stable; if you add a prize, give
 `PRIZE_ICONS` in [src/common/views/PrizeBox.jsx](../src/common/views/PrizeBox.jsx)
 a lucide icon for it (unknown ids fall back to the gift icon).
+
+## What the visitors thought
+
+Once the round reaches the final leaderboard, every phone that played gets a
+**How was it?** card at the foot of the screen: five stars and an optional
+sentence. It stays there through the prize handing-out, which is when most people
+are still holding their phone and waiting, so that is when most answers arrive.
+
+Read them on the **Feedback** tab (`#/admin/feedback`): how many answered, the
+average out of five, how the ratings split, and every comment with the name and
+animal that left it. The page does not update by itself — press **Refresh** to
+pull in what has come in since you opened it.
+
+A phone can send once and change its mind afterwards; the second answer replaces
+the first, so nobody can vote twice. Answers survive a restart of the server
+(they are kept in `server/feedback.json`), unlike the round in progress. **Clear**
+throws the whole lot away — worth doing between two event days, and there is no
+copy anywhere else, which is why it asks first.
 
 ## Troubleshooting
 

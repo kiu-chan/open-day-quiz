@@ -110,10 +110,11 @@ The app routes on `location.hash`, so every URL has the form `#/...`:
 | Control desk | `#/admin/live` | the host's laptop |
 | Home page text | `#/admin/home` | the host's laptop |
 | Wi-Fi | `#/admin/wifi` | the machine running the server |
+| Feedback | `#/admin/feedback` | the host's laptop |
 | Player | `#/play` | visitors' phones (via QR) |
 | Big screen | `#/display` | the machine driving the projector |
 
-The five `#/admin/*` pages are **behind a password**; `#/play` and `#/display`
+The six `#/admin/*` pages are **behind a password**; `#/play` and `#/display`
 are not, since those are the two everybody in the room is meant to reach.
 
 ---
@@ -218,6 +219,17 @@ reach the server sees the same list.
   to a program that asks.
 - Stored in `server/wifi.json`. Empty name = no Wi-Fi code anywhere.
 
+**Feedback (`#/admin/feedback`)**
+
+- What the visitors said after playing: how many answered, the average rating out
+  of five, how the ratings split, and every comment with the name and animal it
+  came from.
+- Read-only, and refreshed with a button rather than live — the answers trickle in
+  from phones long after the round has ended.
+- Stored in `server/feedback.json`, so they are still there after a restart.
+  **Clear** empties the lot, behind a confirmation, for starting a fresh event
+  day.
+
 ### 3.4. Control desk (`#/admin/live`)
 
 This is where a running round is driven:
@@ -290,6 +302,11 @@ Where visitors play, on their phones:
    own rank and the top 10.
 7. **Each winner** is invited to pick 1 of 3 prize boxes on their own phone,
    when their turn comes round.
+8. **Once the round is over**, every phone that played is asked how it was: five
+   stars and, if they feel like typing, a sentence for the university. The rating
+   is required, the sentence is not, and an answer can be changed afterwards — it
+   replaces the first rather than counting twice. The organisers read them on
+   `#/admin/feedback`.
 
 **A screen lock, a reload or a wifi drop costs nobody their points:** the phone
 remembers the player identity and rejoins in the same seat. But that identity
